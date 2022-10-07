@@ -20,7 +20,7 @@ def default_preprocess(img_bytes, data):
     
     
 class RawDataset(Dataset):
-    def __init__(self, df, cols_to_return, preprocess_f=default_preprocess):
+    def __init__(self, df, cols_to_return=[], preprocess_f=default_preprocess):
         super(RawDataset).__init__()
         self.data_to_iterate = df[['image_path']+cols_to_return].values
         self.preprocess_f = preprocess_f
@@ -37,7 +37,7 @@ class RawDataset(Dataset):
 
 
 class ShardsDataset(IterableDataset):
-    def __init__(self, df, cols_to_return, preprocess_f=default_preprocess):
+    def __init__(self, df, cols_to_return=[], preprocess_f=default_preprocess):
         super(ShardsDataset).__init__()
         self.tar_to_data = df.groupby('archive_path').apply(
             lambda x: [tuple(v.values()) for v in x[['image_path']+cols_to_return].to_dict('records')]
@@ -74,7 +74,7 @@ FORMAT_TO_DATASET = {
 class UniversalT2IDataloader:
     def __init__(self, 
                  df, 
-                 cols_to_return, 
+                 cols_to_return=[], 
                  preprocess_f=default_preprocess,
                  **dataloader_kwargs):
         
