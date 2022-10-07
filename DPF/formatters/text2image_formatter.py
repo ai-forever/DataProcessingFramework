@@ -21,7 +21,7 @@ class T2IFormatter:
             raise NotImplementedError(f"Unknown file format: {filetype}")
     
     def _normalize_dataframe_cols(self, df: pd.DataFrame):
-        columns = ['image_name', 'image_path', 'table_path', 'data_format']
+        columns = ['image_name', 'image_path', 'table_path', 'archive_path', 'data_format']
         columns = [i for i in columns if i in df.columns]
         orig_columns = [i for i in df.columns if i not in columns]
         columns.extend(list(orig_columns))
@@ -36,13 +36,41 @@ class T2IFormatter:
     def from_shards(
         self,
         dataset_path: str,
+        archive_ext: str = 'tar',
         datafiles_ext: str = 'csv', 
         imagename_colname: str = 'image_name',
+        image_ext: str = None,
         use_abs_path: bool = False,
         progress_bar: bool = False
     ) -> pd.DataFrame:
-        ### TODO
-        raise NotImplementedError()
+        
+        dataset_path = dataset_path.rstrip('/')
+        if use_abs_path:
+            dataset_path = os.path.abspath(dataset_path)
+        datafiles_ext = datafiles_ext.lstrip('.')
+        archive_ext = archive_ext.lstrip('.')
+        
+        datafiles = glob.glob(f'{dataset_path}/*.{datafiles_ext}')
+        
+        dataframes = []
+        for datafile in tqdm(datafiles, disable=not progress_bar):
+            df = self._read_dataframe(datafile, datafiles_ext)
+            #
+            df['table_path'] = datafile
+            #
+            df['image_name'] = df[imagename_colname]
+            if image_ext:
+                image_ext = image_ext.lstrip('.')
+                df['image_name'] += '.'+image_ext
+            #
+            df['archive_path'] = df['table_path'].str.rstrip(datafiles_ext)+archive_ext
+            df['image_path'] = df['archive_path']+'/'+df['image_name']
+            dataframes.append(df)
+        
+        df = pd.concat(dataframes, ignore_index=True)
+        df['data_format'] = 'shards'
+        df = self._normalize_dataframe_cols(df)
+        return df
     
     def from_raw(
         self,
