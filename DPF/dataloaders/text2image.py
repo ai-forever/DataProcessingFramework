@@ -80,7 +80,7 @@ class UniversalT2IDataloader:
         
         self.df = df
         self.df_formats = df['data_format'].unique().tolist()
-        assert all([f in FORMAT_TO_DATASET for f in self.df_formats]), "Unknown data format"
+        assert all([f in FORMAT_TO_DATASET for f in self.df_formats]), "Unknown data format in dataloader"
         self.cols_to_return = cols_to_return
         self.preprocess_f = preprocess_f
         self.dataloader_kwargs = dataloader_kwargs

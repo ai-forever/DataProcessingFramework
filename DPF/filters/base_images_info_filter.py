@@ -10,6 +10,7 @@ from argparse import ArgumentParser
 import multiprocessing as mp
 
 from torch.utils.data import Dataset
+from torch.utils.data.dataloader import default_collate
 from torch.utils.data import BatchSampler, DataLoader
 
 from .t2ifilter import T2IFilter
@@ -51,6 +52,7 @@ class ImageInfoGatherer(T2IFilter):
         self.save_parquets_dir = save_parquets_dir.rstrip('/')
         self.save_parquets = save_parquets
         self.num_workers = workers
+        self.collate_fn = lambda x: x
         self.task_name = task_name if task_name else ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
         
         os.makedirs(self.save_parquets_dir, exist_ok=True)
@@ -80,10 +82,9 @@ class ImageInfoGatherer(T2IFilter):
             df_batch_labels['channels'].append(channels)
             df_batch_labels['error'].append(error)
         return df_batch_labels
-    
-    def add_values_from_batch(self, main_dict, batch_dict):
-        for k, v in batch_dict.items():
-            main_dict[k].extend(v)
+        
+    def preprocess(self, img_bytes, data):
+        return get_image_info(img_bytes, data)
         
     def run(self, df):
         self.logger.info(f'Starting task {self.task_name}')
@@ -91,7 +92,7 @@ class ImageInfoGatherer(T2IFilter):
         
         dataloader = UniversalT2IDataloader(
             df, num_workers=self.num_workers, batch_size=1,
-            preprocess_f=get_image_info, collate_fn=lambda x: x
+            preprocess_f=self.preprocess, collate_fn=self.collate_fn
         )
         
         df_labels = {
