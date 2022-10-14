@@ -6,10 +6,6 @@ from tqdm import tqdm
 from DPF.utils.utils import get_file_extension
 
 
-ALLOWED_IMAGES_FORMATS = {'jpg', 'jpeg', 'png', 'bmp', 'mpo', 'ppm', 'tiff', 'gif', 'webp'}
-DATASETS_FORMATS = {'raw', 'shards', 'image_only'}
-
-
 class T2IFormatter:
     
     def _read_dataframe(self, filepath: str, filetype: str, **kwargs) -> pd.DataFrame:
@@ -20,25 +16,20 @@ class T2IFormatter:
         else:
             raise NotImplementedError(f"Unknown file format: {filetype}")
     
-    def _normalize_dataframe_cols(self, df: pd.DataFrame):
-        columns = ['image_name', 'image_path', 'table_path', 'archive_path', 'data_format']
+    def _postprocess_dataframe(self, df: pd.DataFrame):
+        columns = ['image_name', 'image_path', 'table_path', 'archive_path', 'data_format', 'caption']
         columns = [i for i in columns if i in df.columns]
         orig_columns = [i for i in df.columns if i not in columns]
         columns.extend(list(orig_columns))
         return df[columns]
-    
-    def from_webdataset(
-        self
-    ) -> pd.DataFrame:
-        ### TODO
-        raise NotImplementedError()
     
     def from_shards(
         self,
         dataset_path: str,
         archive_ext: str = 'tar',
         datafiles_ext: str = 'csv', 
-        imagename_colname: str = 'image_name',
+        imagename_column: str = 'image_name',
+        caption_column: str = 'caption',
         image_ext: str = None,
         use_abs_path: bool = False,
         progress_bar: bool = False
@@ -53,30 +44,40 @@ class T2IFormatter:
         datafiles = glob.glob(f'{dataset_path}/*.{datafiles_ext}')
         
         dataframes = []
+        df_needed_columns = None
         for datafile in tqdm(datafiles, disable=not progress_bar):
             df = self._read_dataframe(datafile, datafiles_ext)
-            #
+            
+            if df_needed_columns is None:
+                df_needed_columns = set(df.columns)
+                
+            assert set(df.columns) == df_needed_columns, \
+                f'Dataframe {datafile} have different columns. Expected {df_needed_columns}, got {set(df.columns)}'
+            assert imagename_column in df.columns, f'Dataframe {datafile} does not have "{imagename_column}" column'
+            assert caption_column in df.columns, f'Dataframe {datafile} does not have "{caption_column}" column'
+
             df['table_path'] = datafile
-            #
-            df['image_name'] = df[imagename_colname]
+            df['caption'] = df[caption_column]
+            df['image_name'] = df[imagename_column]
             if image_ext:
                 image_ext = image_ext.lstrip('.')
                 df['image_name'] += '.'+image_ext
-            #
+
             df['archive_path'] = df['table_path'].str.rstrip(datafiles_ext)+archive_ext
             df['image_path'] = df['archive_path']+'/'+df['image_name']
             dataframes.append(df)
         
         df = pd.concat(dataframes, ignore_index=True)
         df['data_format'] = 'shards'
-        df = self._normalize_dataframe_cols(df)
+        df = self._postprocess_dataframe(df)
         return df
     
     def from_raw(
         self,
         dataset_path: str, 
         datafiles_ext: str = 'csv', 
-        imagename_colname: str = 'image_name',
+        imagename_column: str = 'image_name',
+        caption_column: str = 'caption',
         image_ext: str = None,
         use_abs_path: bool = False,
         progress_bar: bool = False
@@ -90,65 +91,29 @@ class T2IFormatter:
         datafiles = glob.glob(f'{dataset_path}/*.{datafiles_ext}')
         
         dataframes = []
+        df_needed_columns = None
         for datafile in tqdm(datafiles, disable=not progress_bar):
             df = self._read_dataframe(datafile, datafiles_ext)
-            #
+            
+            if df_needed_columns is None:
+                df_needed_columns = set(df.columns)
+                
+            assert set(df.columns) == df_needed_columns, \
+                f'Dataframe {datafile} have different columns. Expected {df_needed_columns}, got {set(df.columns)}'
+            assert imagename_column in df.columns, f'Dataframe {datafile} does not have "{imagename_column}" column'
+            assert caption_column in df.columns, f'Dataframe {datafile} does not have "{caption_column}" column'
+            
             df['table_path'] = datafile
-            #
-            df['image_name'] = df[imagename_colname]
+            df['caption'] = df[caption_column]
+            df['image_name'] = df[imagename_column]
             if image_ext:
                 image_ext = image_ext.lstrip('.')
                 df['image_name'] += '.'+image_ext
-            #
+
             df['image_path'] = df['table_path'].str.slice(0,-(len(datafiles_ext)+1))+'/'+df['image_name']
             dataframes.append(df)
         
         df = pd.concat(dataframes, ignore_index=True)
         df['data_format'] = 'raw'
-        df = self._normalize_dataframe_cols(df)
-        return df
-    
-    def from_images_in_folder(
-        self,
-        dirpath: str,
-        allowed_image_formats: set = ALLOWED_IMAGES_FORMATS,
-        use_abs_path: bool = False,
-        progress_bar: bool = False
-    ) -> pd.DataFrame:
-        
-        dirpath = dirpath.rstrip('/')
-        if use_abs_path:
-            dirpath = os.path.abspath(dirpath)
-        
-        image_paths = []
-        image_names = []
-        pbar = tqdm(disable=not progress_bar)
-        for root, dirs, files in os.walk(dirpath):
-            for filename in files:
-                pbar.update(1)
-                file_ext = get_file_extension(filename)[1:]
-                if file_ext in allowed_image_formats:
-                    path = os.path.join(root, filename)
-                    image_paths.append(path)
-                    image_names.append(filename)
-                    
-        df = pd.DataFrame({'image_path': image_paths, 'image_name': image_names})
-        df['data_format'] = 'image_only'
-        return df
-    
-    def from_image_paths(
-        self,
-        image_paths: list,
-        allowed_image_formats: set = ALLOWED_IMAGES_FORMATS,
-        use_abs_path: bool = False,
-    ) -> pd.DataFrame:
-        ### TODO
-        raise NotImplementedError()
-        
-        image_paths_filtered = []
-        for path in image_paths:
-            pass
-                    
-        df = pd.DataFrame({'image_path': image_paths, 'image_name': image_names})
-        df['data_format'] = 'image_only'
+        df = self._postprocess_dataframe(df)
         return df
