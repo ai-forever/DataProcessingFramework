@@ -6,6 +6,7 @@ import hashlib
 import numpy as np
 from scipy.fftpack import dct
 
+from DPF.utils import read_image_rgb_from_bytes
 from .img_filter import ImageFilter
 
 
@@ -43,7 +44,7 @@ class HashFilter(ImageFilter):
     def preprocess(self, img_bytes, data):
         image_path = data[0]
         img_md5 = get_md5_hash(img_bytes)
-        img_simhash = get_sim_hash(Image.open(io.BytesIO(img_bytes)), size=self.sim_hash_size)
+        img_simhash = get_sim_hash(read_image_rgb_from_bytes(img_bytes), size=self.sim_hash_size)
         return image_path, img_md5, img_simhash
     
     def process_batch(self, batch) -> dict:
