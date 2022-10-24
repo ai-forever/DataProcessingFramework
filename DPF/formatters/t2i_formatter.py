@@ -3,19 +3,13 @@ import os
 import glob
 from tqdm import tqdm
 
-from DPF.utils.utils import get_file_extension
+from DPF.processors.text2image.raw_processor import RawProcessor
+from DPF.processors.text2image.shards_processor import ShardsProcessor
+from DPF.utils.utils import get_file_extension, read_dataframe
 
 
 class T2IFormatter:
-    
-    def _read_dataframe(self, filepath: str, filetype: str, **kwargs) -> pd.DataFrame:
-        if filetype == 'csv':
-            return pd.read_csv(filepath, **kwargs)
-        elif filetype == 'parquet':
-            return pd.read_parquet(filepath, **kwargs)
-        else:
-            raise NotImplementedError(f"Unknown file format: {filetype}")
-    
+
     def _postprocess_dataframe(self, df: pd.DataFrame):
         columns = ['image_name', 'image_path', 'table_path', 'archive_path', 'data_format', 'caption']
         columns = [i for i in columns if i in df.columns]
@@ -46,7 +40,7 @@ class T2IFormatter:
         dataframes = []
         df_needed_columns = None
         for datafile in tqdm(datafiles, disable=not progress_bar):
-            df = self._read_dataframe(datafile, datafiles_ext)
+            df = read_dataframe(datafile, datafiles_ext)
             
             if df_needed_columns is None:
                 df_needed_columns = set(df.columns)
@@ -70,7 +64,17 @@ class T2IFormatter:
         df = pd.concat(dataframes, ignore_index=True)
         df['data_format'] = 'shards'
         df = self._postprocess_dataframe(df)
-        return df
+        
+        processor = ShardsProcessor(
+            df,
+            dataset_path,
+            archive_ext=archive_ext,
+            datafiles_ext=datafiles_ext, 
+            imagename_column=imagename_column,
+            caption_column=caption_column,
+            image_ext=image_ext
+        )
+        return processor
     
     def from_raw(
         self,
@@ -93,7 +97,7 @@ class T2IFormatter:
         dataframes = []
         df_needed_columns = None
         for datafile in tqdm(datafiles, disable=not progress_bar):
-            df = self._read_dataframe(datafile, datafiles_ext)
+            df = read_dataframe(datafile, datafiles_ext)
             
             if df_needed_columns is None:
                 df_needed_columns = set(df.columns)
@@ -116,4 +120,13 @@ class T2IFormatter:
         df = pd.concat(dataframes, ignore_index=True)
         df['data_format'] = 'raw'
         df = self._postprocess_dataframe(df)
-        return df
+        
+        processor = RawProcessor(
+            df,
+            dataset_path,
+            datafiles_ext=datafiles_ext, 
+            imagename_column=imagename_column,
+            caption_column=caption_column,
+            image_ext=image_ext
+        )
+        return processor
