@@ -49,8 +49,8 @@ class RuCLIPFilter(T2IFilter):
         )
         
     def preprocess(self, img_bytes, data):
-        image_path = data[0]
-        text = data[1]
+        image_path = data['image_path']
+        text = data['caption']
         pil_img = read_image_rgb_from_bytes(img_bytes)
         img_tensor = self.ruclip_processor.image_transform(pil_img)
         return image_path, img_tensor, text

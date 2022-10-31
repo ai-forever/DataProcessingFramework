@@ -10,7 +10,7 @@ from .img_filter import ImageFilter
 
 
 def get_image_info(img_bytes, data):
-    path = data[0]
+    path = data['image_path']
     
     is_correct = True
     width, height, channels = None, None, None

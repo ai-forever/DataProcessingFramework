@@ -42,7 +42,7 @@ class HashFilter(ImageFilter):
         )
         
     def preprocess(self, img_bytes, data):
-        image_path = data[0]
+        image_path = data['image_path']
         img_md5 = get_md5_hash(img_bytes)
         img_simhash = get_sim_hash(read_image_rgb_from_bytes(img_bytes), size=self.sim_hash_size)
         return image_path, img_md5, img_simhash

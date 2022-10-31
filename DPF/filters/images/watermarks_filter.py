@@ -79,7 +79,7 @@ class WatermarksFilter(ImageFilter):
         )
         
     def preprocess(self, img_bytes, data):
-        image_path = data[0]
+        image_path = data['image_path']
         pil_img = read_image_rgb_from_bytes(img_bytes)
         img_tensor = self.resnet_transforms(pil_img)
         return image_path, img_tensor
