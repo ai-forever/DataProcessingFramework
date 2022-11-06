@@ -8,15 +8,20 @@ from tqdm import tqdm
 from tqdm.contrib.concurrent import process_map
 import functools
 
-from DPF.validators.t2i_validator import validate_caption
-from DPF.processors.utils.shards_generator import ShardsGenerator
-from DPF.utils.utils import save_dataframe, read_dataframe
+from DPF.filesystems.localfilesystem import LocalFileSystem
+from DPF.dataloaders.images import UniversalT2IDataloader
+from DPF.processors.writers.shardsfilewriter import ShardsFileWriter
+from DPF.utils.utils import get_file_extension
 
+def preprocessing_for_convert(img_bytes, data):
+    return img_bytes, data
 
 class T2IProcessor:
-    def __init__(self, df, dataset_path,
+    def __init__(self, filesystem, df, dataset_path,
                  datafiles_ext, imagename_column,
                  caption_column, image_ext):
+        self.filesystem = filesystem
+        
         self.df = df
         self.init_shape = df.shape
         self.dataset_path = dataset_path
@@ -43,4 +48,40 @@ class T2IProcessor:
         raise NotImplementedError()
         
     def apply_filter(self, filter_func):
-        self.df = filter_func(self.df)
+        self.df = filter_func(self.df, self.filesystem)
+        
+    def to_shards(
+            self, 
+            save_dir, 
+            target_filesystem=LocalFileSystem(), 
+            max_files_in_shard=1000,
+            columns_to_save=[],
+            processes=1,
+            pbar=True
+        ) -> None:
+        
+        dataloader = UniversalT2IDataloader(
+            self.filesystem, self.df, 
+            cols_to_return=columns_to_save,
+            preprocess_f=preprocessing_for_convert,
+            num_workers=processes, batch_size=1,
+            collate_fn=lambda x: x, drop_last=False
+        )
+        
+        fw = ShardsFileWriter(
+            target_filesystem, save_dir,
+            max_files_in_shard=max_files_in_shard,
+            image_ext=self.image_ext, 
+            datafiles_ext='csv', archive_ext='tar'
+        )
+        
+        with fw as filewriter:
+            for items in tqdm(dataloader, disable=not pbar):
+                img_bytes, data = items[0]
+
+                image_ext = None
+                if self.image_ext is None:
+                    image_ext = get_file_extension(data['image_path'])
+                data.pop('image_path')
+                
+                filewriter.save_file(img_bytes, image_ext=image_ext, file_data=data)

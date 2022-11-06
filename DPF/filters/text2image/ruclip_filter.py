@@ -11,7 +11,6 @@ import ruclip
 from .t2ifilter import T2IFilter
 from DPF.utils import read_image_rgb_from_bytes
 
-
 def get_similarity(predictor, inputs, text_latents):
     with torch.no_grad():
         logit_scale = predictor.clip_model.logit_scale.exp()

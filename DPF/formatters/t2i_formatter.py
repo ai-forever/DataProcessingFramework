@@ -1,14 +1,22 @@
 import pandas as pd
 import os
-import glob
 from tqdm import tqdm
 
 from DPF.processors.text2image.raw_processor import RawProcessor
 from DPF.processors.text2image.shards_processor import ShardsProcessor
-from DPF.utils.utils import get_file_extension, read_dataframe
+from DPF.filesystems.localfilesystem import LocalFileSystem
+from DPF.filesystems.s3filesystem import S3FileSystem
+from DPF.utils.utils import get_file_extension
 
 
 class T2IFormatter:
+    def __init__(self, filesystem='local', **filesystem_kwargs):
+        if filesystem == 'local':
+            self.filesystem = LocalFileSystem()
+        elif filesystem == 's3':
+            self.filesystem = S3FileSystem(**filesystem_kwargs)
+        else:
+            raise NotImplementedError(f"Unknown filesystem format: {filesystem}")
 
     def _postprocess_dataframe(self, df: pd.DataFrame):
         columns = ['image_name', 'image_path', 'table_path', 'archive_path', 'data_format', 'caption']
@@ -25,22 +33,19 @@ class T2IFormatter:
         imagename_column: str = 'image_name',
         caption_column: str = 'caption',
         image_ext: str = None,
-        use_abs_path: bool = False,
         progress_bar: bool = False
     ) -> pd.DataFrame:
         
         dataset_path = dataset_path.rstrip('/')
-        if use_abs_path:
-            dataset_path = os.path.abspath(dataset_path)
         datafiles_ext = datafiles_ext.lstrip('.')
         archive_ext = archive_ext.lstrip('.')
         
-        datafiles = glob.glob(f'{dataset_path}/*.{datafiles_ext}')
+        datafiles = self.filesystem.listdir_with_ext(dataset_path, ext=datafiles_ext)
         
         dataframes = []
         df_needed_columns = None
         for datafile in tqdm(datafiles, disable=not progress_bar):
-            df = read_dataframe(datafile, datafiles_ext)
+            df = self.filesystem.read_dataframe(datafile)
             
             if df_needed_columns is None:
                 df_needed_columns = set(df.columns)
@@ -66,6 +71,7 @@ class T2IFormatter:
         df = self._postprocess_dataframe(df)
         
         processor = ShardsProcessor(
+            self.filesystem,
             df,
             dataset_path,
             archive_ext=archive_ext,
@@ -83,21 +89,18 @@ class T2IFormatter:
         imagename_column: str = 'image_name',
         caption_column: str = 'caption',
         image_ext: str = None,
-        use_abs_path: bool = False,
         progress_bar: bool = False
     ) -> pd.DataFrame:
         
         dataset_path = dataset_path.rstrip('/')
-        if use_abs_path:
-            dataset_path = os.path.abspath(dataset_path)
         datafiles_ext = datafiles_ext.lstrip('.')
         
-        datafiles = glob.glob(f'{dataset_path}/*.{datafiles_ext}')
+        datafiles = self.filesystem.listdir_with_ext(dataset_path, ext=datafiles_ext)
         
         dataframes = []
         df_needed_columns = None
         for datafile in tqdm(datafiles, disable=not progress_bar):
-            df = read_dataframe(datafile, datafiles_ext)
+            df = self.filesystem.read_dataframe(datafile)
             
             if df_needed_columns is None:
                 df_needed_columns = set(df.columns)
@@ -122,6 +125,7 @@ class T2IFormatter:
         df = self._postprocess_dataframe(df)
         
         processor = RawProcessor(
+            self.filesystem,
             df,
             dataset_path,
             datafiles_ext=datafiles_ext, 

@@ -6,7 +6,7 @@ from tqdm import tqdm
 from DPF.dataloaders.images import UniversalT2IDataloader
 from DPF.filters.images.img_filter import ImageFilter
 from DPF.filters.text2image.t2ifilter import T2IFilter
-
+from DPF.filesystems.filesystem import FileSystem
 
 allowed_filter_types = (T2IFilter, ImageFilter)
 
@@ -61,8 +61,8 @@ class ComplexFilter(ImageFilter):
     def _generate_dict_from_schema(self):
         return {i: [] for i in self.labels_schema}
         
-    def run(self, df: pd.DataFrame) -> pd.DataFrame:
-        dataloader = UniversalT2IDataloader(df, **self.dataloader_kwargs)
+    def run(self, df: pd.DataFrame, filesystem: FileSystem) -> pd.DataFrame:
+        dataloader = UniversalT2IDataloader(filesystem, df, **self.dataloader_kwargs)
         
         df_labels = self._generate_dict_from_schema()
         
@@ -90,8 +90,8 @@ class ComplexFilter(ImageFilter):
         
         return df
     
-    def __call__(self, df: pd.DataFrame) -> pd.DataFrame:
-        return self.run(df)
+    def __call__(self, df: pd.DataFrame, filesystem: FileSystem) -> pd.DataFrame:
+        return self.run(df, filesystem)
 
     
 class FilterPipeline:

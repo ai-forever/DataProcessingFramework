@@ -8,11 +8,12 @@ import itertools
 from torch.utils.data import IterableDataset
 
 from .utils import default_preprocess
-
+from DPF.filesystems.filesystem import FileSystem
 
 class ShardsDataset(IterableDataset):
-    def __init__(self, df, cols_to_return=[], preprocess_f=default_preprocess):
+    def __init__(self, filesystem: FileSystem, df, cols_to_return=[], preprocess_f=default_preprocess):
         super(ShardsDataset).__init__()
+        self.filesystem = filesystem
         self.columns = ['image_path']+cols_to_return
         self.tar_to_data = df.groupby('archive_path').apply(
             lambda x: [tuple(v.values()) for v in x[self.columns].to_dict('records')]
@@ -30,7 +31,8 @@ class ShardsDataset(IterableDataset):
         
         for tar_path in itertools.islice(self.tar_to_data.keys(), worker_id, None, worker_total_num):
             data_all = self.tar_to_data[tar_path]
-            tar = tarfile.open(tar_path, mode='r')
+            tar_bytes = self.filesystem.read_file(tar_path, binary=True)
+            tar = tarfile.open(fileobj=tar_bytes, mode='r')
             for c, data in enumerate(data_all):
                 data = {self.columns[i]: item for i, item in enumerate(data)}
                 filename = os.path.basename(data['image_path'])

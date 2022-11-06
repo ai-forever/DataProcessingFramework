@@ -9,7 +9,7 @@ from tqdm import tqdm
 import torch
 
 from DPF.dataloaders.images import UniversalT2IDataloader
-
+from DPF.filesystems.filesystem import FileSystem
 
 class ImageFilter:
     
@@ -43,8 +43,8 @@ class ImageFilter:
     def _generate_dict_from_schema(self):
         return {i: [] for i in self.schema}
             
-    def run(self, df: pd.DataFrame) -> pd.DataFrame:
-        dataloader = UniversalT2IDataloader(df, **self.dataloader_kwargs)
+    def run(self, df: pd.DataFrame, filesystem: FileSystem) -> pd.DataFrame:
+        dataloader = UniversalT2IDataloader(filesystem, df, **self.dataloader_kwargs)
         
         df_labels = self._generate_dict_from_schema()
         
@@ -64,5 +64,5 @@ class ImageFilter:
         
         return df
         
-    def __call__(self, df: pd.DataFrame) -> pd.DataFrame:
-        return self.run(df)
+    def __call__(self, df: pd.DataFrame, filesystem: FileSystem) -> pd.DataFrame:
+        return self.run(df, filesystem)

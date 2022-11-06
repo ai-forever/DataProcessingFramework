@@ -1,18 +1,17 @@
 import pandas as pd
 import os
-import glob
 from tqdm import tqdm
 from tqdm.contrib.concurrent import process_map
 
 from DPF.processors.text2image.t2i_processor import T2IProcessor
-from DPF.validators.t2i_validator import validate_caption
-from DPF.utils.utils import save_dataframe, read_dataframe
 
 
 class ShardsProcessor(T2IProcessor):
-    def __init__(self, df, dataset_path, archive_ext,
+    def __init__(self, filesystem, df, dataset_path, archive_ext,
                  datafiles_ext, imagename_column,
                  caption_column, image_ext):
+        self.filesystem = filesystem
+        
         self.df = df
         self.init_shape = df.shape
         self.dataset_path = dataset_path.rstrip('/')
@@ -23,64 +22,13 @@ class ShardsProcessor(T2IProcessor):
         self.caption_column = caption_column
         self.image_ext = image_ext
         
-    def _validate_tar(image_names, tar_path):
-        image_names = set(image_names)
-        
-        tar = tarfile.open(tar_path, mode='r')
-        images_in_tar = set()
-        for c, member in enumerate(tar):
-            images_in_tar.add(member.name)
-        tar.close()
-
-        images_not_in_tar = image_names.difference(images_in_tar)
-        images_not_in_table = images_in_tar.difference(image_names)
-        
-        return [tar_path+'/'+i for i in images_not_in_tar], [tar_path+'/'+i for i in images_not_in_table]
-
-    def validate(self, processes=1, exactly_match=True, mark_duplicated_image_names=False, 
-                 mark_bad_caption=True) -> None:
-        assert (self.df['data_format']=='shards').all(), "All data should be in shards format"
-        
-        # check archives with images
-        archive_paths = self.df['archive_path'].unique().tolist()
-        archives_not_existing = []
-        for archive_path in archive_paths:
-            if not os.path.exists(archive_path):
-                archives_not_existing.append(archive_path)
-        assert len(archives_not_existing) == 0, f"Archives {archives_not_existing} are not existing! Check dataset format"
-        
-        self.df['validate_status'] = True
-        # check for duplicate path
-        self.df['duplicate_image_path'] = False
-        condition = self.df['image_path'].duplicated()
-        self.df.loc[condition, 'validate_status'] = False
-        self.df.loc[condition, 'duplicate_image_path'] = True
-        # check for duplicate image
-        if mark_duplicated_image_names:
-            self.df['duplicate_image_name'] = False
-            condition = self.df['image_path'].duplicated()
-            self.df.loc[condition, 'validate_status'] = False
-            self.df.loc[condition, 'duplicate_image_name'] = True
-        # check captions
-        if mark_bad_caption:
-            self.df = validate_caption(self.df)
-        # check image for existing
-        self.df['file_not_exists'] = False
-        
-        params = ()
-        res = process_map(self._validate_tar, iter(params_iter), 
-                    max_workers=processes, chunksize=1, total=len(table_to_new_data))
-        
-        self.df.loc[condition, 'validate_status'] = False
-        self.df.loc[condition, 'file_not_exists'] = True
-        
     def _merge_and_write_table(self, table_path, df_to_add, overwrite_columns=True):
         if self.image_ext:
             image_ext = self.image_ext.lstrip('.')
             df_to_add['image_name'] = df_to_add['image_name'].str.slice(0, -len(image_ext)-1)
         df_to_add.rename(columns={'image_name': self.imagename_column}, inplace=True)
         
-        df = read_dataframe(table_path, self.datafiles_ext)
+        df = self.filesystem.read_dataframe(table_path)
         columns = [i for i in df.columns if i != self.imagename_column]
         columns_to_add = [i for i in df_to_add.columns if i != self.imagename_column]
         columns_intersection = set(columns).intersection(set(columns_to_add))
@@ -91,7 +39,7 @@ class ShardsProcessor(T2IProcessor):
 
         if df_to_add.shape[1] > 1:
             df = pd.merge(df, df_to_add, on=self.imagename_column)
-            save_dataframe(df, table_path, self.datafiles_ext, index=False)
+            self.filesystem.save_dataframe(df, table_path, index=False)
             
     def _merge_and_write_table_mp(self, data):
         return self._merge_and_write_table(*data)
@@ -116,9 +64,4 @@ class ShardsProcessor(T2IProcessor):
     def rebuild(self, force=False):
         assert not force or len(self.df) == self.init_shape[0], \
             f"Dataframe length didn`t changed after initialisation. Set force=True to ignore this and force rebuild dataset."
-        raise NotImplementedError()
-    
-    def to_raw(self, save_path):
-        assert os.path.abspath(save_path) != os.path.abspath(self.dataset_path)
-        raise NotImplementedError()
-        
+        raise NotImplementedError()        

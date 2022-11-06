@@ -9,6 +9,8 @@ import itertools
 from torch.utils.data import Dataset, IterableDataset
 from torch.utils.data import BatchSampler, DataLoader
 
+from DPF.filesystems.filesystem import FileSystem
+
 from .utils import default_preprocess
 from .raw_dataset import RawDataset
 from .shards_dataset import ShardsDataset
@@ -21,11 +23,13 @@ FORMAT_TO_DATASET = {
 
 class UniversalT2IDataloader:
     def __init__(self, 
+                 filesystem: FileSystem,
                  df, 
                  cols_to_return=[], 
                  preprocess_f=default_preprocess,
-                 **dataloader_kwargs):
-        
+                 **dataloader_kwargs
+                ):
+        self.filesystem = filesystem
         self.df = df
         self.df_formats = df['data_format'].unique().tolist()
         assert all([f in FORMAT_TO_DATASET for f in self.df_formats]), "Unknown data format in dataloader"
@@ -37,7 +41,8 @@ class UniversalT2IDataloader:
     def test(self):
         for data_format in self.df_formats:
             DatasetClass = FORMAT_TO_DATASET[data_format]
-            dataset = DatasetClass(self.df[self.df['data_format'] == data_format], self.cols_to_return, self.preprocess_f)
+            dataset = DatasetClass(self.filesystem, self.df[self.df['data_format'] == data_format], 
+                                   self.cols_to_return, self.preprocess_f)
             print(f'"{data_format}" dataset created')
             dataloader = DataLoader(dataset, **self.dataloader_kwargs)
             print(f'"{data_format}" dataloader created')
@@ -60,7 +65,8 @@ class UniversalT2IDataloader:
     def __iter__(self):
         for data_format in self.df_formats:
             DatasetClass = FORMAT_TO_DATASET[data_format]
-            dataset = DatasetClass(self.df[self.df['data_format'] == data_format], self.cols_to_return, self.preprocess_f)
+            dataset = DatasetClass(self.filesystem, self.df[self.df['data_format'] == data_format], 
+                                   self.cols_to_return, self.preprocess_f)
             dataloader = DataLoader(dataset, **self.dataloader_kwargs)
             for item in dataloader:
                 yield item

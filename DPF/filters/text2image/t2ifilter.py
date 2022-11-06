@@ -9,11 +9,11 @@ from tqdm import tqdm
 import torch
 
 from DPF.dataloaders.images import UniversalT2IDataloader
-
+from DPF.filesystems.filesystem import FileSystem
 
 class T2IFilter:
     
-    def __init__(self, task_name: str, save_parquets: str, save_parquets_dir: str, pbar: bool):
+    def __init__(self, task_name: str, save_parquets: bool, save_parquets_dir: str, pbar: bool):
         self.save_parquets_dir = save_parquets_dir
         self.save_parquets = save_parquets
         self.task_name = task_name if task_name else ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
@@ -43,8 +43,8 @@ class T2IFilter:
     def _generate_dict_from_schema(self):
         return {i: [] for i in self.schema}
             
-    def run(self, df: pd.DataFrame) -> pd.DataFrame:
-        dataloader = UniversalT2IDataloader(df, **self.dataloader_kwargs)
+    def run(self, df: pd.DataFrame, filesystem: FileSystem) -> pd.DataFrame:
+        dataloader = UniversalT2IDataloader(filesystem, df, **self.dataloader_kwargs)
         
         df_labels = self._generate_dict_from_schema()
         
@@ -57,6 +57,7 @@ class T2IFilter:
         
         if self.save_parquets:
             parquet_path = f'{self.save_parquets_dir}/{self.task_name}.parquet'
+            # REWORK
             df.to_parquet(
                 parquet_path,
                 index=False
@@ -64,5 +65,5 @@ class T2IFilter:
         
         return df
         
-    def __call__(self, df: pd.DataFrame) -> pd.DataFrame:
-        return self.run(df)
+    def __call__(self, df: pd.DataFrame, filesystem: FileSystem) -> pd.DataFrame:
+        return self.run(df, filesystem)
