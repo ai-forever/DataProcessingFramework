@@ -1,6 +1,8 @@
 import pandas as pd
 import os
+from typing import List, Set
 from tqdm import tqdm
+from tqdm.contrib.concurrent import process_map
 
 from DPF.processors.text2image.raw_processor import RawProcessor
 from DPF.processors.text2image.shards_processor import ShardsProcessor
@@ -9,6 +11,54 @@ from DPF.filesystems.s3filesystem import S3FileSystem
 from DPF.utils.utils import get_file_extension
 
 
+class DataframeReader:
+    def __init__(self, filesystem, read_params: dict, df_needed_columns: Set[str]):
+        self.filesystem = filesystem
+        self.read_params = read_params
+        self.df_needed_columns = df_needed_columns
+        
+    def _add_base_columns(self, df, filepath, caption_column, imagename_column, image_ext):
+        assert set(df.columns) == self.df_needed_columns, \
+            f'Dataframe {filepath} have different columns. Expected {self.df_needed_columns}, got {set(df.columns)}'
+        assert imagename_column in df.columns, f'Dataframe {filepath} does not have "{imagename_column}" column'
+        assert caption_column in df.columns, f'Dataframe {filepath} does not have "{caption_column}" column'
+
+        df['table_path'] = filepath
+        df['caption'] = df[caption_column]
+        df['image_name'] = df[imagename_column]
+        if image_ext:
+            image_ext = image_ext.lstrip('.')
+            df['image_name'] += '.'+image_ext
+        
+    def load_shards_df(self, filepath):
+        datafiles_ext = self.read_params["datafiles_ext"]
+        archive_ext = self.read_params["archive_ext"]
+        image_ext = self.read_params["image_ext"]
+        caption_column = self.read_params["caption_column"]
+        imagename_column = self.read_params["imagename_column"]
+        
+        df = self.filesystem.read_dataframe(filepath)
+
+        self._add_base_columns(df, filepath, caption_column, imagename_column, image_ext)
+
+        df['archive_path'] = df['table_path'].str.rstrip(datafiles_ext)+archive_ext
+        df['image_path'] = df['archive_path']+'/'+df['image_name']
+        return df
+        
+    def load_raw_df(self, filepath):
+        datafiles_ext = self.read_params["datafiles_ext"]
+        image_ext = self.read_params["image_ext"]
+        caption_column = self.read_params["caption_column"]
+        imagename_column = self.read_params["imagename_column"]
+        
+        df = self.filesystem.read_dataframe(filepath)
+            
+        self._add_base_columns(df, filepath, caption_column, imagename_column, image_ext)
+
+        df['image_path'] = df['table_path'].str.slice(0,-(len(datafiles_ext)+1))+'/'+df['image_name']
+        return df
+    
+        
 class T2IFormatter:
     def __init__(self, filesystem='local', **filesystem_kwargs):
         if filesystem == 'local':
@@ -33,6 +83,7 @@ class T2IFormatter:
         imagename_column: str = 'image_name',
         caption_column: str = 'caption',
         image_ext: str = None,
+        processes: int = 1,
         progress_bar: bool = False
     ) -> pd.DataFrame:
         
@@ -43,28 +94,19 @@ class T2IFormatter:
         datafiles = self.filesystem.listdir_with_ext(dataset_path, ext=datafiles_ext)
         
         dataframes = []
-        df_needed_columns = None
-        for datafile in tqdm(datafiles, disable=not progress_bar):
-            df = self.filesystem.read_dataframe(datafile)
-            
-            if df_needed_columns is None:
-                df_needed_columns = set(df.columns)
-                
-            assert set(df.columns) == df_needed_columns, \
-                f'Dataframe {datafile} have different columns. Expected {df_needed_columns}, got {set(df.columns)}'
-            assert imagename_column in df.columns, f'Dataframe {datafile} does not have "{imagename_column}" column'
-            assert caption_column in df.columns, f'Dataframe {datafile} does not have "{caption_column}" column'
-
-            df['table_path'] = datafile
-            df['caption'] = df[caption_column]
-            df['image_name'] = df[imagename_column]
-            if image_ext:
-                image_ext = image_ext.lstrip('.')
-                df['image_name'] += '.'+image_ext
-
-            df['archive_path'] = df['table_path'].str.rstrip(datafiles_ext)+archive_ext
-            df['image_path'] = df['archive_path']+'/'+df['image_name']
-            dataframes.append(df)
+        if len(datafiles) > 0:
+            reader = DataframeReader(
+                self.filesystem,
+                {
+                    "datafiles_ext": datafiles_ext, "archive_ext": archive_ext, "image_ext": image_ext,
+                    "imagename_column": imagename_column, "caption_column": caption_column
+                },
+                df_needed_columns = set(self.filesystem.read_dataframe(datafiles[0]).columns)
+            )
+            dataframes = process_map(
+                reader.load_shards_df, datafiles, disable=not progress_bar, 
+                max_workers=processes, chunksize=1
+            )
         
         df = pd.concat(dataframes, ignore_index=True)
         df['data_format'] = 'shards'
@@ -89,7 +131,8 @@ class T2IFormatter:
         imagename_column: str = 'image_name',
         caption_column: str = 'caption',
         image_ext: str = None,
-        progress_bar: bool = False
+        processes: int = 1,
+        progress_bar: bool = False,
     ) -> pd.DataFrame:
         
         dataset_path = dataset_path.rstrip('/')
@@ -98,27 +141,19 @@ class T2IFormatter:
         datafiles = self.filesystem.listdir_with_ext(dataset_path, ext=datafiles_ext)
         
         dataframes = []
-        df_needed_columns = None
-        for datafile in tqdm(datafiles, disable=not progress_bar):
-            df = self.filesystem.read_dataframe(datafile)
-            
-            if df_needed_columns is None:
-                df_needed_columns = set(df.columns)
-                
-            assert set(df.columns) == df_needed_columns, \
-                f'Dataframe {datafile} have different columns. Expected {df_needed_columns}, got {set(df.columns)}'
-            assert imagename_column in df.columns, f'Dataframe {datafile} does not have "{imagename_column}" column'
-            assert caption_column in df.columns, f'Dataframe {datafile} does not have "{caption_column}" column'
-            
-            df['table_path'] = datafile
-            df['caption'] = df[caption_column]
-            df['image_name'] = df[imagename_column]
-            if image_ext:
-                image_ext = image_ext.lstrip('.')
-                df['image_name'] += '.'+image_ext
-
-            df['image_path'] = df['table_path'].str.slice(0,-(len(datafiles_ext)+1))+'/'+df['image_name']
-            dataframes.append(df)
+        if len(datafiles) > 0:
+            reader = DataframeReader(
+                self.filesystem,
+                {
+                    "datafiles_ext": datafiles_ext, "image_ext": image_ext,
+                    "imagename_column": imagename_column, "caption_column": caption_column
+                },
+                df_needed_columns = set(self.filesystem.read_dataframe(datafiles[0]).columns)
+            )
+            dataframes = process_map(
+                reader.load_raw_df, datafiles, disable=not progress_bar, 
+                max_workers=processes, chunksize=1
+            )
         
         df = pd.concat(dataframes, ignore_index=True)
         df['data_format'] = 'raw'
