@@ -34,6 +34,10 @@ class ImageFilter:
         raise NotImplementedError(
                 f'Implement process_batch in {self.__class__.__name__}'
         )
+
+    @staticmethod
+    def collate_fn(x):
+        return x
         
     @staticmethod
     def _add_values_from_batch(main_dict, batch_dict):

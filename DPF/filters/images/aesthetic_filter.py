@@ -58,10 +58,6 @@ class AestheticFilter(ImageFilter):
             drop_last=False
         )
 
-    @staticmethod
-    def collate_fn(x):
-        return x
-
     def preprocess(self, img_bytes, data):
         image_path = data['image_path']
         pil_img = read_image_rgb_from_bytes(img_bytes)

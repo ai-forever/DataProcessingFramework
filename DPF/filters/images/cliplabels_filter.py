@@ -31,10 +31,6 @@ class CLIPLabelsFilter(ImageFilter):
             drop_last=False
         )
 
-    @staticmethod
-    def collate_fn(x):
-        return x
-
     def get_text_features(self):
         text_features = []
         for template in self.templates:
