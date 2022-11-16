@@ -11,7 +11,7 @@ import torch
 
 class CLIPLabelsFilter(ImageFilter):
 
-    def __init__(self, clip_model, templates=['{}', 'pic of {}'], labels=None, task_name=None, save_parquets_dir=None,
+    def __init__(self, clip_model, labels, weights_folder, templates=['{}', 'photo of a {}'], task_name=None, save_parquets_dir=None,
                  save_parquets=False, pbar=True, workers=16, batch_size=64, device='cuda:0'):
         super(CLIPLabelsFilter, self).__init__(task_name, save_parquets, save_parquets_dir, pbar)
 
@@ -21,7 +21,8 @@ class CLIPLabelsFilter(ImageFilter):
 
         self.templates = templates
         self.labels = labels
-        self.clip_model, self.clip_processor = clip.load(clip_model, device=self.device)
+        self.weights_folder = weights_folder
+        self.clip_model, self.clip_processor = clip.load(clip_model, device=self.device, download_root=weights_folder)
         self.text_features = self.get_text_features()
 
         self.schema = ['image_path'] + self.labels

@@ -16,8 +16,13 @@ def get_aesthetic_model(clip_model, cache_folder):
     """load the aethetic model"""
     if clip_model == 'ViT-L/14':
         clip_model = 'vit_l_14'
+        m = nn.Linear(768, 1)
     elif clip_model == 'ViT-B/32':
         clip_model = 'vit_b_32'
+        m = nn.Linear(512, 1)
+    else:
+        raise ValueError("Unsupported clip model")
+        
     path_to_model = cache_folder + "/sa_0_4_"+clip_model+"_linear.pth"
     if not os.path.exists(path_to_model):
         os.makedirs(cache_folder, exist_ok=True)
@@ -25,12 +30,7 @@ def get_aesthetic_model(clip_model, cache_folder):
             "https://github.com/LAION-AI/aesthetic-predictor/blob/main/sa_0_4_"+clip_model+"_linear.pth?raw=true"
         )
         urlretrieve(url_model, path_to_model)
-    if clip_model == 'vit_l_14':
-        m = nn.Linear(768, 1)
-    elif clip_model == 'vit_b_32':
-        m = nn.Linear(512, 1)
-    else:
-        raise ValueError()
+
     s = torch.load(path_to_model)
     m.load_state_dict(s)
     m.eval()
@@ -47,7 +47,8 @@ class AestheticFilter(ImageFilter):
         self.batch_size = batch_size
         self.device = device
 
-        self.clip_model, self.clip_transforms = clip.load(clip_model, device=self.device)
+        self.weights_folder = weights_folder
+        self.clip_model, self.clip_transforms = clip.load(clip_model, device=self.device, download_root=weights_folder)
         self.aesthetic_model = get_aesthetic_model(clip_model, weights_folder)
         self.aesthetic_model.to(self.device)
 

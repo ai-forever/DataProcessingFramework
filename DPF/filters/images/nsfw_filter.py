@@ -2,6 +2,8 @@ import os
 import numpy as np
 from .img_filter import ImageFilter
 import clip
+from urllib.request import urlretrieve
+import zipfile
 from DPF.utils import read_image_rgb_from_bytes
 try:
     from torch.utils.data.dataloader import default_collate
@@ -10,6 +12,8 @@ except ImportError:
 import torch
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 import tensorflow as tf
+import autokeras as ak
+from tensorflow.keras.models import load_model
 
 
 def load_safety_model(clip_model, cache_folder, device):
@@ -24,33 +28,20 @@ def load_safety_model(clip_model, cache_folder, device):
         except:
             pass
 
-    import autokeras as ak  # pylint: disable=import-outside-toplevel
-    from tensorflow.keras.models import load_model  # pylint: disable=import-outside-toplevel
-
     if clip_model == "ViT-L/14":
         model_dir = cache_folder + "/clip_autokeras_binary_nsfw"
         dim = 768
+        url_model = "https://raw.githubusercontent.com/LAION-AI/CLIP-based-NSFW-Detector/main/clip_autokeras_binary_nsfw.zip"
     else:
-        raise ValueError("Unknown clip model")
+        raise ValueError("Unsupported clip model")
+        
     if not os.path.exists(model_dir):
         os.makedirs(cache_folder, exist_ok=True)
-
-        from urllib.request import urlretrieve  # pylint: disable=import-outside-toplevel
-
         path_to_zip_file = cache_folder + "/clip_autokeras_binary_nsfw.zip"
-        if clip_model == "ViT-L/14":
-            url_model = "https://raw.githubusercontent.com/LAION-AI/CLIP-based-NSFW-Detector/main/clip_autokeras_binary_nsfw.zip"
-        elif clip_model == "ViT-B/32":
-            url_model = (
-                "https://raw.githubusercontent.com/LAION-AI/CLIP-based-NSFW-Detector/main/clip_autokeras_nsfw_b32.zip"
-            )
-        else:
-            raise ValueError("Unknown model {}".format(clip_model))  # pylint: disable=consider-using-f-string
         urlretrieve(url_model, path_to_zip_file)
-        import zipfile  # pylint: disable=import-outside-toplevel
-
         with zipfile.ZipFile(path_to_zip_file, "r") as zip_ref:
             zip_ref.extractall(cache_folder)
+            
     with tf.device(device):
         loaded_model = load_model(model_dir, custom_objects=ak.CUSTOM_OBJECTS)
 
@@ -74,8 +65,9 @@ class NSFWFilter(ImageFilter):
         self.num_workers = workers
         self.batch_size = batch_size
         self.device = device
-
-        self.clip_model, self.clip_transforms = clip.load(clip_model, device=self.device)
+        
+        self.weights_folder = weights_folder
+        self.clip_model, self.clip_transforms = clip.load(clip_model, device=self.device, download_root=weights_folder)
         self.safety_model = load_safety_model(clip_model, weights_folder, device=self.device.lower().replace('cuda', 'gpu'))
 
         self.schema = ['image_path', 'nsfw']
