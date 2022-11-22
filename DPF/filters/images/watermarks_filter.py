@@ -71,7 +71,7 @@ class WatermarksFilter(ImageFilter):
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ])
             
-        self.schema = ['image_path', 'resnet_has_watermark']
+        self.schema = ['image_path', f'watermark_{self.watermarks_model}']
         self.dataloader_kwargs = dict(
             num_workers=self.num_workers, batch_size=self.batch_size,
             preprocess_f=self.preprocess, collate_fn=lambda x: x,
@@ -92,7 +92,7 @@ class WatermarksFilter(ImageFilter):
         
         with torch.no_grad():
             outputs = self.model(batch)
-            df_batch_labels['resnet_has_watermark'].extend(torch.max(outputs, 1)[1].cpu().reshape(-1).tolist())
+            df_batch_labels[f'watermark_{self.watermarks_model}'].extend(torch.max(outputs, 1)[1].cpu().reshape(-1).tolist())
         df_batch_labels['image_path'].extend(image_paths)
                 
         return df_batch_labels

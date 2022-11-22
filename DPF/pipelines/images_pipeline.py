@@ -13,11 +13,12 @@ allowed_filter_types = (T2IFilter, ImageFilter)
 
 class ComplexFilter(ImageFilter):
     def __init__(self, filter_list, task_name=None, save_parquets_dir=None,
-                 save_parquets=False, pbar=True, workers=16):
+                 save_parquets=False, pbar=True, workers=16, use_same_preprocess=False):
         super(ComplexFilter, self).__init__(task_name, save_parquets, save_parquets_dir, pbar)
         
         self.filter_list = filter_list
         self.num_workers = workers
+        self.use_same_preprocess = use_same_preprocess
         
         assert len(filter_list) > 0, "There should be at list one filter"
         assert all([isinstance(f, allowed_filter_types) for f in self.filter_list]), \
@@ -49,8 +50,13 @@ class ComplexFilter(ImageFilter):
         
     def preprocess(self, img_bytes, data):
         preprocessed_data = []
-        for imgfilter in self.filter_list:
-            preprocessed_data.append(imgfilter.preprocess(img_bytes, data))
+        
+        if self.use_same_preprocess:
+            preprocessed_data.append(self.filter_list[0].preprocess(img_bytes, data))
+        else:
+            for imgfilter in self.filter_list:
+                preprocessed_data.append(imgfilter.preprocess(img_bytes, data))
+                
         return preprocessed_data
         
     @staticmethod
@@ -69,7 +75,12 @@ class ComplexFilter(ImageFilter):
         for batch in tqdm(dataloader, disable=not self.pbar):
             for c, imgfilter in enumerate(self.filter_list):
                 filter_bs = imgfilter.dataloader_kwargs["batch_size"]
-                data_for_filter = [item[c] for item in batch]
+                
+                if self.use_same_preprocess:
+                    data_for_filter = [item[0] for item in batch]
+                else:
+                    data_for_filter = [item[c] for item in batch]
+                
                 for i in range(0, len(data_for_filter), filter_bs):
                     batch_for_filter = data_for_filter[i:i+filter_bs]
                     df_batch_labels = imgfilter.process_batch(batch_for_filter)
