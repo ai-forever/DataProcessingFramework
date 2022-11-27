@@ -1,15 +1,17 @@
+from typing import List, Optional
 import os
 import torch
 import torch.nn as nn
-from os.path import expanduser  # pylint: disable=import-outside-toplevel
-from urllib.request import urlretrieve  # pylint: disable=import-outside-toplevel
-from .img_filter import ImageFilter
-from DPF.utils import read_image_rgb_from_bytes
+from urllib.request import urlretrieve
 import clip
 try:
     from torch.utils.data.dataloader import default_collate
 except ImportError:
     from torch.utils.data import default_collate
+    
+from .img_filter import ImageFilter
+from DPF.utils import read_image_rgb_from_bytes
+from DPF.filters.utils import identical_collate_fn
 
 
 def get_aesthetic_model(clip_model, cache_folder):
@@ -29,6 +31,7 @@ def get_aesthetic_model(clip_model, cache_folder):
         url_model = (
             "https://github.com/LAION-AI/aesthetic-predictor/blob/main/sa_0_4_"+clip_model+"_linear.pth?raw=true"
         )
+        # TODO rework download
         urlretrieve(url_model, path_to_model)
 
     s = torch.load(path_to_model)
@@ -39,8 +42,14 @@ def get_aesthetic_model(clip_model, cache_folder):
 
 class AestheticFilter(ImageFilter):
 
-    def __init__(self, clip_model, weights_folder, task_name=None, save_parquets_dir=None,
-                 save_parquets=False, pbar=True, workers=16, batch_size=64, device='cuda:0'):
+    def __init__(
+            self, 
+            clip_model: str, 
+            weights_folder: str, 
+            device: str = 'cuda:0',
+            task_name: Optional[str] = None, save_parquets_dir: Optional[str] = None, 
+            save_parquets: bool = False, pbar: bool = True, workers: int = 16, batch_size: int = 64
+        ):
         super(AestheticFilter, self).__init__(task_name, save_parquets, save_parquets_dir, pbar)
 
         self.num_workers = workers
@@ -55,7 +64,7 @@ class AestheticFilter(ImageFilter):
         self.schema = ['image_path', 'aesthetic_score']
         self.dataloader_kwargs = dict(
             num_workers=self.num_workers, batch_size=self.batch_size,
-            preprocess_f=self.preprocess, collate_fn=self.collate_fn,
+            preprocess_f=self.preprocess, collate_fn=identical_collate_fn,
             drop_last=False
         )
 

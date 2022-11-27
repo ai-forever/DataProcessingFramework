@@ -1,3 +1,4 @@
+from typing import List, Optional
 import os
 import pandas as pd
 from PIL import Image
@@ -6,6 +7,7 @@ from io import BytesIO
 
 import torch
 
+from DPF.filters.utils import identical_collate_fn
 from .img_filter import ImageFilter
 
 
@@ -37,8 +39,11 @@ def get_image_info(img_bytes, data):
     
 class ImageInfoGatherer(ImageFilter):
     
-    def __init__(self, task_name=None, save_parquets_dir=None,
-                 save_parquets=False, pbar=True, workers=16):
+    def __init__(
+            self, 
+            task_name: Optional[str] = None, save_parquets_dir: Optional[str] = None, 
+            save_parquets: bool = False, pbar: bool = True, workers: int = 16
+        ):
         super(ImageInfoGatherer, self).__init__(task_name, save_parquets, save_parquets_dir, pbar)
         
         self.num_workers = workers
@@ -46,9 +51,12 @@ class ImageInfoGatherer(ImageFilter):
         self.schema = ['image_path', 'is_correct', 'width', 'height', 'channels', 'error']
         self.dataloader_kwargs = dict(
             num_workers=self.num_workers, batch_size=1,
-            preprocess_f=self.preprocess, collate_fn=lambda x: x,
+            preprocess_f=self.preprocess, collate_fn=identical_collate_fn,
             drop_last=False
         )
+        
+    def preprocess(self, img_bytes: bytes, data: dict):
+        return get_image_info(img_bytes, data)
         
     def process_batch(self, batch) -> dict:
         df_batch_labels = self._generate_dict_from_schema()
@@ -62,6 +70,3 @@ class ImageInfoGatherer(ImageFilter):
             df_batch_labels['channels'].append(channels)
             df_batch_labels['error'].append(error)
         return df_batch_labels
-        
-    def preprocess(self, img_bytes, data):
-        return get_image_info(img_bytes, data)

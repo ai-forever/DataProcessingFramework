@@ -11,6 +11,7 @@ import torch
 from DPF.dataloaders.images import UniversalT2IDataloader
 from DPF.filesystems.filesystem import FileSystem
 
+
 class ImageFilter:
     
     def __init__(self, task_name: str, save_parquets: str, save_parquets_dir: str, pbar: bool):
@@ -25,7 +26,7 @@ class ImageFilter:
             self.save_parquets_dir = save_parquets_dir.rstrip('/')
             os.makedirs(self.save_parquets_dir, exist_ok=True)
         
-    def preprocess(self, img_bytes, data):
+    def preprocess(self, img_bytes: bytes, data: dict):
         raise NotImplementedError(
                 f'Implement preprocess in {self.__class__.__name__}'
         )
@@ -34,13 +35,9 @@ class ImageFilter:
         raise NotImplementedError(
                 f'Implement process_batch in {self.__class__.__name__}'
         )
-
-    @staticmethod
-    def collate_fn(x):
-        return x
         
     @staticmethod
-    def _add_values_from_batch(main_dict, batch_dict):
+    def _add_values_from_batch(main_dict: dict, batch_dict: dict):
         for k, v in batch_dict.items():
             main_dict[k].extend(v)
        

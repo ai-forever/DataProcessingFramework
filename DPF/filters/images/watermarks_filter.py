@@ -1,3 +1,4 @@
+from typing import List, Optional
 import os
 import pandas as pd
 from PIL import Image
@@ -13,7 +14,7 @@ except ImportError:
 from torchvision import datasets, models, transforms
 from huggingface_hub import hf_hub_url, cached_download
 
-from DPF.filters.utils.fp16_module import FP16Module
+from DPF.filters.utils import FP16Module, identical_collate_fn
 from DPF.utils import read_image_rgb_from_bytes
 from .img_filter import ImageFilter
 
@@ -31,7 +32,12 @@ MODELS = {
     )
 }
 
-def get_watermarks_detection_model(name, device='cuda:0', fp16=True, cache_dir='/tmp/datasets_utils'):
+def get_watermarks_detection_model(
+        name: str, 
+        device: str = 'cuda:0', 
+        fp16: bool = True, 
+        cache_dir: str = '/tmp/datasets_utils'
+    ):
     assert name in MODELS
     config = MODELS[name]
     model_ft = config['resnet'](pretrained=False)
@@ -53,9 +59,44 @@ def get_watermarks_detection_model(name, device='cuda:0', fp16=True, cache_dir='
 
 
 class WatermarksFilter(ImageFilter):
+    """
+    Filter for detecting watermarks.
     
-    def __init__(self, watermarks_model, weights_folder, task_name=None, save_parquets_dir=None,
-                 save_parquets=False, pbar=True, workers=16, batch_size=64, device='cuda:0'):
+    Parameters
+    ----------
+    watermarks_model: str
+        Version of model to use. Available versions: "resnext50_32x4d-small", "resnext101_32x8d-large"
+    weights_folder: str
+        Path to folder with weights
+    device: str = 'cuda:0'
+        Torch device to use
+    pbar: bool = True
+        Flag for displaying progress bar
+    workers: int = 16
+        Number of processes for use in dataloader
+    batch_size: int = 64
+        Batch size for model
+    save_parquets_dir: Optional[str] = None
+        TODO
+    save_parquets: bool = False
+        TODO
+        
+    Attributes
+    ----------
+    schema: List[str]
+        List of columns to be added with this filter.
+    dataloader_kwargs: dict:
+        Parameters for dataloader (batch_size, num_workers, collate_fn, etc.)
+    """
+    
+    def __init__(
+            self, 
+            watermarks_model: str, 
+            weights_folder: str, 
+            device: str = 'cuda:0',
+            task_name: Optional[str] = None, save_parquets_dir: Optional[str] = None, 
+            save_parquets: bool = False, pbar: bool = True, workers: int = 16, batch_size: int = 64
+        ):
         super(WatermarksFilter, self).__init__(task_name, save_parquets, save_parquets_dir, pbar)
         
         self.num_workers = workers
@@ -74,11 +115,11 @@ class WatermarksFilter(ImageFilter):
         self.schema = ['image_path', f'watermark_{self.watermarks_model}']
         self.dataloader_kwargs = dict(
             num_workers=self.num_workers, batch_size=self.batch_size,
-            preprocess_f=self.preprocess, collate_fn=lambda x: x,
+            preprocess_f=self.preprocess, collate_fn=identical_collate_fn,
             drop_last=False
         )
         
-    def preprocess(self, img_bytes, data):
+    def preprocess(self, img_bytes: bytes, data: dict):
         image_path = data['image_path']
         pil_img = read_image_rgb_from_bytes(img_bytes)
         img_tensor = self.resnet_transforms(pil_img)

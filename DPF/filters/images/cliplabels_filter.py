@@ -1,22 +1,69 @@
-from .img_filter import ImageFilter
+from typing import List, Optional
 from PIL import Image
 import numpy as np
+import torch
 import clip
 import os
 from clip_onnx import clip_onnx, attention
-from DPF.utils import read_image_rgb_from_bytes
 
 try:
     from torch.utils.data.dataloader import default_collate
 except ImportError:
     from torch.utils.data import default_collate
-import torch
+
+from .img_filter import ImageFilter
+from DPF.utils import read_image_rgb_from_bytes
+from DPF.filters.utils import identical_collate_fn
 
 
 class CLIPLabelsFilter(ImageFilter):
+    """
+    Filter for perfoming zero-shot with CLIP model.
+    
+    Parameters
+    ----------
+    clip_model: str
+        Version of model to use. Check available version here: https://github.com/openai/CLIP"
+    labels: List[str]
+        List of classes for detecting
+    weights_folder: str
+        Path to folder with weights
+    templates: List[str] = ['{}', 'photo of a {}']
+        TODO
+    use_onnx: bool = False
+        TODO
+    device: str = 'cuda:0'
+        Torch device to use
+    pbar: bool = True
+        Flag for displaying progress bar
+    workers: int = 16
+        Number of processes for use in dataloader
+    batch_size: int = 64
+        Batch size for model
+    save_parquets_dir: Optional[str] = None
+        TODO
+    save_parquets: bool = False
+        TODO
+        
+    Attributes
+    ----------
+    schema: List[str]
+        List of columns to be added with this filter.
+    dataloader_kwargs: dict:
+        Parameters for dataloader (batch_size, num_workers, collate_fn, etc.)
+    """
 
-    def __init__(self, clip_model, labels, weights_folder, templates=['{}', 'photo of a {}'], task_name=None, save_parquets_dir=None,
-                 save_parquets=False, pbar=True, workers=16, batch_size=64, device='cuda:0', use_onnx=False):
+    def __init__(
+            self, 
+            clip_model: str, 
+            labels: List[str], 
+            weights_folder: str, 
+            device: str = 'cuda:0', 
+            use_onnx: bool = False,
+            templates: List[str] = ['{}', 'photo of a {}'], 
+            task_name: Optional[str] = None, save_parquets_dir: Optional[str] = None, 
+            save_parquets: bool = False, pbar: bool = True, workers: int = 16, batch_size: int = 64
+        ):
         super(CLIPLabelsFilter, self).__init__(task_name, save_parquets, save_parquets_dir, pbar)
 
         self.num_workers = workers
@@ -32,13 +79,15 @@ class CLIPLabelsFilter(ImageFilter):
             visual_path = os.path.join(self.weights_folder, f'{clip_model.replace("/", "_")}_visual.onnx')
             textual_path = os.path.join(self.weights_folder, f'{clip_model.replace("/", "_")}_textual.onnx')
             try:
-                _, self.clip_processor = clip.load(clip_model, device="cpu", jit=False, download_root=weights_folder)
+                ### where is clip_model?
+                _, self.clip_processor = clip.load(clip_model, device="cpu", jit=False, download_root=weights_folder) # why device="cpu"?
                 self.clip_model = clip_onnx(None)
                 self.clip_model.load_onnx(visual_path=visual_path,
                                           textual_path=textual_path,
-                                          logit_scale=100.0000)
+                                          logit_scale=100.0000) # why 100?
                 self.clip_model.start_sessions(providers=['CUDAExecutionProvider'])
-            except:
+            except Exception as err:
+                print(err)
                 self.clip_model, self.clip_processor = clip.load(clip_model, device="cpu", jit=False, download_root=weights_folder)
                 image = np.random.rand(100, 100, 3) * 255
                 image = self.clip_processor(Image.fromarray(image.astype('uint8')).convert('RGBA')).unsqueeze(0).cpu()
@@ -54,7 +103,7 @@ class CLIPLabelsFilter(ImageFilter):
         self.schema = ['image_path'] + self.labels
         self.dataloader_kwargs = dict(
             num_workers=self.num_workers, batch_size=self.batch_size,
-            preprocess_f=self.preprocess, collate_fn=self.collate_fn,
+            preprocess_f=self.preprocess, collate_fn=identical_collate_fn,
             drop_last=False
         )
 
@@ -63,7 +112,7 @@ class CLIPLabelsFilter(ImageFilter):
         if self.onnx:
             for template in self.templates:
                 texts = clip.tokenize([template.format(class_label.lower().strip()) for class_label in self.labels])
-                text_features.append(self.clip_model.encode_text(texts.detach().cpu().numpy().astype(np.int64)))
+                text_features.append(self.clip_model.encode_text(texts.detach().cpu().numpy().astype(np.int32)))
             text_features = np.stack(text_features).mean(0)
             text_features = text_features / np.linalg.norm(text_features, axis=-1, keepdims=True)
         else:
@@ -74,7 +123,7 @@ class CLIPLabelsFilter(ImageFilter):
             text_features = text_features / text_features.norm(dim=-1, keepdim=True)
         return text_features
 
-    def preprocess(self, img_bytes, data):
+    def preprocess(self, img_bytes: bytes, data: dict):
         image_path = data['image_path']
         pil_img = read_image_rgb_from_bytes(img_bytes)
         if self.onnx:

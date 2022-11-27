@@ -1,26 +1,66 @@
+from typing import List, Optional
 import os
 import pandas as pd
 from PIL import Image
 import numpy as np
-from clip_onnx import clip_onnx, attention
-import numpy as np
-    
 from torch import nn
-
 import torch
 from torch.nn.utils.rnn import pad_sequence
 
 import ruclip
+from clip_onnx import clip_onnx
 
-from .t2ifilter import T2IFilter
 from DPF.utils import read_image_rgb_from_bytes
+from DPF.filters.utils import identical_collate_fn
+from .t2ifilter import T2IFilter
 
 
 class RuCLIPFilter(T2IFilter):
+    """
+    Filter for calculating similarity score of images and captions with RuCLIP.
     
-    def __init__(self, ruclip_version, weights_folder, task_name=None, save_parquets_dir=None,
-                 save_parquets=False, pbar=True, device='cuda:0', workers=16, batch_size=64,
-                 templates=['{}', 'изображение с {}', 'фото с {}'], use_onnx=False, logit_scale=None):
+    Parameters
+    ----------
+    clip_model: str
+        Version of model to use. Check available version here: https://github.com/ai-forever/ru-clip"
+    weights_folder: str
+        Path to folder with weights
+    templates: List[str] = ['{}', 'изображение с {}', 'фото с {}']
+        TODO
+    use_onnx: bool = False
+        TODO
+    device: str = 'cuda:0'
+        Torch device to use
+    pbar: bool = True
+        Flag for displaying progress bar
+    workers: int = 16
+        Number of processes for use in dataloader
+    batch_size: int = 64
+        Batch size for model
+    save_parquets_dir: Optional[str] = None
+        TODO
+    save_parquets: bool = False
+        TODO
+        
+    Attributes
+    ----------
+    schema: List[str]
+        List of columns to be added with this filter.
+    dataloader_kwargs: dict:
+        Parameters for dataloader (batch_size, num_workers, collate_fn, etc.)
+    """
+    
+    def __init__(
+            self, 
+            ruclip_version: str, 
+            weights_folder: str, 
+            templates: List[str] = ['{}', 'изображение с {}', 'фото с {}'], 
+            device: str = 'cuda:0', 
+            use_onnx: bool = False, 
+            logit_scale: Optional[float] = None,
+            task_name: Optional[str] = None, save_parquets_dir: Optional[str] = None, 
+            save_parquets: bool = False, pbar: bool = True, workers: int = 16, batch_size: int = 64,
+        ):
         super(RuCLIPFilter, self).__init__(task_name, save_parquets, save_parquets_dir, pbar)
         
         self.num_workers = workers
@@ -33,7 +73,6 @@ class RuCLIPFilter(T2IFilter):
         self.weights_folder = weights_folder
         
         if self.onnx:
-            
             DEFAULT_EXPORT = dict(input_names=['input'], output_names=['output'],
                                   export_params=True, verbose=False, opset_version=15,
                                   do_constant_folding=True,
@@ -131,6 +170,7 @@ class RuCLIPFilter(T2IFilter):
 
         return np.diag(logits_per_text)
 
+    
 class Textual(nn.Module):
     def __init__(self, model):
         super().__init__()
