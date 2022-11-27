@@ -25,8 +25,11 @@ class S3FileSystem(FileSystem):
     def read_file(self, filepath: str, binary: bool) -> io.BytesIO:
         mode = 'rb' if binary else 'rt'
         with fsspec.open(f"simplecache::{filepath}", s3=self.storage_options, mode=mode) as f:
-            res = io.BytesIO(f.read())
-        res.seek(0)
+            if mode == 'rb':
+                res = io.BytesIO(f.read())
+                res.seek(0)
+            else:
+                res = f.read()
         return res
         
     def save_file(self, data: Union[str, bytes, io.BytesIO], filepath: str, binary: bool) -> None:

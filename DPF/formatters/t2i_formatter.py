@@ -1,13 +1,12 @@
 import pandas as pd
 import os
-from typing import List, Set
+from typing import List, Set, Optional
 from tqdm import tqdm
 from tqdm.contrib.concurrent import process_map
 
 from DPF.processors.text2image.raw_processor import RawProcessor
 from DPF.processors.text2image.shards_processor import ShardsProcessor
-from DPF.filesystems.localfilesystem import LocalFileSystem
-from DPF.filesystems.s3filesystem import S3FileSystem
+from DPF.filesystems import LocalFileSystem, S3FileSystem
 from DPF.utils.utils import get_file_extension
 
 
@@ -60,7 +59,12 @@ class DataframeReader:
     
         
 class T2IFormatter:
-    def __init__(self, filesystem='local', **filesystem_kwargs):
+
+    def __init__(
+            self, 
+            filesystem='local', 
+            **filesystem_kwargs
+        ):
         if filesystem == 'local':
             self.filesystem = LocalFileSystem()
         elif filesystem == 's3':
@@ -82,7 +86,7 @@ class T2IFormatter:
         datafiles_ext: str = 'csv', 
         imagename_column: str = 'image_name',
         caption_column: str = 'caption',
-        image_ext: str = None,
+        image_ext: Optional[str] = None,
         processes: int = 1,
         progress_bar: bool = False
     ) -> pd.DataFrame:
@@ -130,7 +134,7 @@ class T2IFormatter:
         datafiles_ext: str = 'csv', 
         imagename_column: str = 'image_name',
         caption_column: str = 'caption',
-        image_ext: str = None,
+        image_ext: Optional[str] = None,
         processes: int = 1,
         progress_bar: bool = False,
     ) -> pd.DataFrame:
