@@ -11,14 +11,23 @@ from DPF.utils.utils import get_file_extension
 
 
 class DataframeReader:
-    def __init__(self, filesystem, read_params: dict, df_needed_columns: Set[str]):
+    def __init__(
+            self, 
+            filesystem, 
+            read_params: dict, 
+            df_needed_columns: Set[str],
+            check_same_columns: bool = True,
+        ):
         self.filesystem = filesystem
         self.read_params = read_params
+        
+        self.check_same_columns = check_same_columns
         self.df_needed_columns = df_needed_columns
         
     def _add_base_columns(self, df, filepath, caption_column, imagename_column, image_ext):
-        assert set(df.columns) == self.df_needed_columns, \
-            f'Dataframe {filepath} have different columns. Expected {self.df_needed_columns}, got {set(df.columns)}'
+        if self.check_same_columns:
+            assert set(df.columns) == self.df_needed_columns, \
+                f'Dataframe {filepath} have different columns. Expected {self.df_needed_columns}, got {set(df.columns)}'
         assert imagename_column in df.columns, f'Dataframe {filepath} does not have "{imagename_column}" column'
         assert caption_column in df.columns, f'Dataframe {filepath} does not have "{caption_column}" column'
 
@@ -61,8 +70,8 @@ class DataframeReader:
 class T2IFormatter:
 
     def __init__(
-            self, 
-            filesystem='local', 
+            self,
+            filesystem: str = 'local',
             **filesystem_kwargs
         ):
         if filesystem == 'local':
@@ -86,6 +95,7 @@ class T2IFormatter:
         datafiles_ext: str = 'csv', 
         imagename_column: str = 'image_name',
         caption_column: str = 'caption',
+        check_same_columns: bool = True,
         image_ext: Optional[str] = None,
         processes: int = 1,
         progress_bar: bool = False
@@ -105,6 +115,7 @@ class T2IFormatter:
                     "datafiles_ext": datafiles_ext, "archive_ext": archive_ext, "image_ext": image_ext,
                     "imagename_column": imagename_column, "caption_column": caption_column
                 },
+                check_same_columns = check_same_columns,
                 df_needed_columns = set(self.filesystem.read_dataframe(datafiles[0]).columns)
             )
             dataframes = process_map(
@@ -134,6 +145,7 @@ class T2IFormatter:
         datafiles_ext: str = 'csv', 
         imagename_column: str = 'image_name',
         caption_column: str = 'caption',
+        check_same_columns: bool = True,
         image_ext: Optional[str] = None,
         processes: int = 1,
         progress_bar: bool = False,
@@ -152,6 +164,7 @@ class T2IFormatter:
                     "datafiles_ext": datafiles_ext, "image_ext": image_ext,
                     "imagename_column": imagename_column, "caption_column": caption_column
                 },
+                check_same_columns = check_same_columns,
                 df_needed_columns = set(self.filesystem.read_dataframe(datafiles[0]).columns)
             )
             dataframes = process_map(
