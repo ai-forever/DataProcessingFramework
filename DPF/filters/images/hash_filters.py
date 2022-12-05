@@ -5,7 +5,6 @@ from PIL import Image
 import io
 import hashlib
 import numpy as np
-from numba import jit
 from scipy.fftpack import dct
 
 from DPF.utils import read_image_rgb_from_bytes
