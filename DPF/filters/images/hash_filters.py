@@ -44,7 +44,7 @@ class PHashFilter(ImageFilter):
         self.num_workers = workers
         self.sim_hash_size = sim_hash_size
             
-        self.schema = ['image_path', f'image_simhash_{self.sim_hash_size}']
+        self.schema = ['image_path', f'image_phash_{self.sim_hash_size}']
         self.dataloader_kwargs = dict(
             num_workers=self.num_workers, batch_size=1,
             preprocess_f=self.preprocess, collate_fn=identical_collate_fn,
@@ -61,7 +61,7 @@ class PHashFilter(ImageFilter):
         
         image_paths, img_simhashes = list(zip(*batch))
         df_batch_labels['image_path'].extend(image_paths)
-        df_batch_labels[f'image_simhash_{self.sim_hash_size}'].extend(img_simhashes)
+        df_batch_labels[f'image_phash_{self.sim_hash_size}'].extend(img_simhashes)
                 
         return df_batch_labels
 
