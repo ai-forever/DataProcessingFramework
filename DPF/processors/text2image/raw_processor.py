@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from PIL import Image
 import os
 import csv
 import tarfile
@@ -30,6 +31,20 @@ class RawProcessor(T2IProcessor):
         assert not force or len(self.df) == self.init_shape[0], \
             f"Dataframe length didn`t changed after initialisation. Set force=True to ignore this and force rebuild dataset."
         raise NotImplementedError()
+        
+    def get_random_samples(self, df=None, n=1):
+        if df is None:
+            df = self.df
+            
+        df_samples = df.sample(n)
+        
+        samples = []
+        for item in df_samples.to_dict('records'):
+            filepath = item['image_path']
+            image_bytes = self.filesystem.read_file(filepath, binary=True)
+            img = Image.open(image_bytes)
+            samples.append((img, item))
+        return samples
         
     def to_shards(self, save_path, processes=8, images_per_tar=1000, force=False, rename_images=False,
                   imagename_column="image_name", caption_column="caption", columns_to_add=[]):

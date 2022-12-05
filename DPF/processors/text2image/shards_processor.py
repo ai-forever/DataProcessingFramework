@@ -1,5 +1,9 @@
 import pandas as pd
+from PIL import Image
 import os
+import random
+import tarfile
+import io
 from tqdm import tqdm
 from tqdm.contrib.concurrent import process_map
 
@@ -25,4 +29,25 @@ class ShardsProcessor(T2IProcessor):
     def rebuild(self, force=False):
         assert not force or len(self.df) == self.init_shape[0], \
             f"Dataframe length didn`t changed after initialisation. Set force=True to ignore this and force rebuild dataset."
-        raise NotImplementedError()        
+        raise NotImplementedError()      
+        
+    def get_random_samples(self, df=None, n=1, from_tars=1):
+        if df is None:
+            df = self.df
+            
+        archives = random.sample(df['archive_path'].unique().tolist(), from_tars)
+        df_samples = df[df['archive_path'].isin(archives)].sample(n)
+
+        archive_to_samples = df_samples.groupby('archive_path').apply(
+            lambda x: x.to_dict('records')
+        )
+        
+        samples = []
+        for archive_path, data in archive_to_samples.to_dict().items():
+            tar_bytes = self.filesystem.read_file(archive_path, binary=True)
+            with tarfile.open('r', fileobj=tar_bytes) as tar:
+                for item in data:
+                    filename = item[self.imagename_column]
+                    img = Image.open(io.BytesIO(tar.extractfile(filename).read()))
+                    samples.append((img, item))
+        return samples
