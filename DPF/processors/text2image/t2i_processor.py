@@ -94,6 +94,9 @@ class T2IProcessor:
             f"Dataframe length didn`t changed after initialisation. Set force=True to ignore this and force rebuild dataset."
         raise NotImplementedError()
         
+    def get_random_samples(self, df=None, n=1):
+        raise NotImplementedError()
+        
     def apply_filter(self, filter_func):
         self.df = filter_func(self.df, self.filesystem)
         
