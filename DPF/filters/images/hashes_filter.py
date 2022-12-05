@@ -1,3 +1,4 @@
+from typing import List, Optional
 import os
 import pandas as pd
 from PIL import Image
@@ -7,6 +8,7 @@ import numpy as np
 from scipy.fftpack import dct
 
 from DPF.utils import read_image_rgb_from_bytes
+from DPF.filters.utils import identical_collate_fn
 from .img_filter import ImageFilter
 
 
@@ -27,8 +29,12 @@ def get_sim_hash(pil_img, size=10):
 
 class HashFilter(ImageFilter):
     
-    def __init__(self, task_name=None, save_parquets_dir=None,
-                 save_parquets=False, pbar=True, workers=16, sim_hash_size=10):
+    def __init__(
+            self, 
+            sim_hash_size: int = 10,
+            task_name: Optional[str] = None, save_parquets_dir: Optional[str] = None, 
+            save_parquets: bool = False, pbar: bool = True, workers: int = 16
+        ):
         super(HashFilter, self).__init__(task_name, save_parquets, save_parquets_dir, pbar)
         
         self.num_workers = workers
@@ -37,11 +43,11 @@ class HashFilter(ImageFilter):
         self.schema = ['image_path', 'image_md5', f'image_simhash_{self.sim_hash_size}']
         self.dataloader_kwargs = dict(
             num_workers=self.num_workers, batch_size=1,
-            preprocess_f=self.preprocess, collate_fn=lambda x: x,
+            preprocess_f=self.preprocess, collate_fn=identical_collate_fn,
             drop_last=False
         )
         
-    def preprocess(self, img_bytes, data):
+    def preprocess(self, img_bytes: bytes, data: dict):
         image_path = data['image_path']
         img_md5 = get_md5_hash(img_bytes)
         img_simhash = get_sim_hash(read_image_rgb_from_bytes(img_bytes), size=self.sim_hash_size)

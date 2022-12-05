@@ -4,17 +4,62 @@ import io
 from typing import Union, List, Optional
 
 class FileSystem:
+    """
+    Abstract class for all filesystems
+    """
     
     def read_file(self, filepath: str, binary: bool) -> io.BytesIO:
+        """
+        Reads file content
+        
+        Parameters
+        ----------
+        filepath: str
+            Path to file
+        binary: bool
+            Read file in binary mode or in text mode
+
+        Returns
+        -------
+        io.BytesIO | str
+            io.BytesIO object if binary, string otherwise
+        """
         raise NotImplementedError()
         
     def save_file(self, data: Union[str, bytes, io.BytesIO], filepath: str, binary: bool) -> None:
+        """
+        Saves data to file
+        
+        Parameters
+        ----------
+        data: Union[str, bytes, io.BytesIO]
+            Data to save
+        filepath: str
+            Path to file
+        binary: bool
+            Write file in binary mode or in text mode
+        """
         raise NotImplementedError()
     
     def read_tar(self, filepath: str, **kwargs):
         raise NotImplementedError()
     
     def read_dataframe(self, filepath: str, **kwargs) -> pd.DataFrame:
+        """
+        Reads dataframe
+        
+        Parameters
+        ----------
+        filepath: str
+            Path to dataframe file (csv, parquet, etc.)
+        **kwargs
+            kwargs for pandas read function
+
+        Returns
+        -------
+        pd.DataFrame
+            Pandas dataframe
+        """
         filetype = os.path.splitext(filepath)[1] # get extinsion
         filetype = filetype.lstrip('.')
         data = self.read_file(filepath, binary=True)
@@ -26,6 +71,18 @@ class FileSystem:
             raise NotImplementedError(f"Unknown file format: {filetype}")
 
     def save_dataframe(self, df: pd.DataFrame, filepath: str, **kwargs) -> None:
+        """
+        Saves dataframe
+        
+        Parameters
+        ----------
+        df: pd.DataFrame
+            Pandas dataframe to save
+        filepath: str
+            Path to file
+        **kwargs
+            kwargs for pandas save function
+        """
         filetype = os.path.splitext(filepath)[1] # get extinsion
         filetype = filetype.lstrip('.')
         data = io.BytesIO()
@@ -37,12 +94,52 @@ class FileSystem:
             raise NotImplementedError(f"Unknown file format: {filetype}")
         self.save_file(data=data, filepath=filepath, binary=True)
         
-    def listdir(self, folder_path: str, filenames_only: Optional[bool] = False) -> List[str]:
+    def listdir(self, folder_path: str, filenames_only: bool = False) -> List[str]:
+        """
+        Returns the contents of folder
+        
+        Parameters
+        ----------
+        folder_path: str
+            Path to folder
+        filenames_only: bool = False
+            Returns only filenames if True
+
+        Returns
+        -------
+        List[str]
+            List of filepaths (filenames if filenames_only)
+        """
         raise NotImplementedError()
         
-    def listdir_with_ext(self, folder_path: str, ext: str, filenames_only: Optional[bool] = False) -> List[str]:
+    def listdir_with_ext(self, folder_path: str, ext: str, filenames_only: bool = False) -> List[str]:
+        """
+        Returns all files in folder with provided extinsion
+        
+        Parameters
+        ----------
+        folder_path: str
+            Path to folder
+        ext: str
+            extinsion of files
+        filenames_only: bool = False
+            Returns only filenames if True
+
+        Returns
+        -------
+        List[str]
+            List of filepaths (filenames if filenames_only)
+        """
         ext = '.'+ext.lstrip('.')
         return [f for f in self.listdir(folder_path, filenames_only=filenames_only) if f.endswith(ext)]
     
     def mkdir(self, folder_path: str) -> None:
+        """
+        Creates a directory
+        
+        Parameters
+        ----------
+        folder_path: str
+            Path to folder to create
+        """
         raise NotImplementedError()

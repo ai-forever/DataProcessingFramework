@@ -1,0 +1,5 @@
+torch
+torchvision
+autokeras
+git+https://github.com/openai/CLIP.git
+huggingface_hub

@@ -1,0 +1,5 @@
+pandas
+numpy
+tqdm
+fsspec==2022.8.2
+s3fs==0.4.2
