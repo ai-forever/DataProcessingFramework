@@ -1,3 +1,4 @@
+from typing import List, Optional
 import os
 import pandas as pd
 from PIL import Image
@@ -18,9 +19,17 @@ from DPF.utils import read_image_rgb_from_bytes
 
 class CLIPFilter(T2IFilter):
     
-    def __init__(self, clip_version, weights_folder, task_name=None, save_parquets_dir=None,
-                 save_parquets=False, pbar=True, device='cuda:0', workers=16, batch_size=64,
-                 templates=['{}', 'photo of a {}', 'picture of a {}'], use_onnx=False, logit_scale=None):
+    def __init__(
+            self, 
+            clip_version: str, 
+            weights_folder: str,
+            templates: List[str] = ['{}'], 
+            device: str = 'cuda:0', 
+            use_onnx: bool = False, 
+            logit_scale: Optional[float] = None,
+            task_name: Optional[str] = None, save_parquets_dir: Optional[str] = None, 
+            save_parquets: bool = False, pbar: bool = True, workers: int = 16, batch_size: int = 64
+        ):
         super(CLIPFilter, self).__init__(task_name, save_parquets, save_parquets_dir, pbar)
         
         self.num_workers = workers
@@ -33,6 +42,7 @@ class CLIPFilter(T2IFilter):
         self.weights_folder = weights_folder
         
         if self.onnx:
+            # TODO ONNX WEIGHTS LOAD FROM HF
             visual_path = os.path.join(self.weights_folder, f'{clip_version.replace("/", "_")}_visual.onnx')
             textual_path = os.path.join(self.weights_folder, f'{clip_version.replace("/", "_")}_textual.onnx')
             try:
@@ -55,7 +65,7 @@ class CLIPFilter(T2IFilter):
         else:
             self.clip_model, self.clip_processor = clip.load(clip_version, device=self.device, download_root=self.weights_folder)
         
-        self.schema = ['image_path', 'clip_similarity']
+        self.schema = ['image_path', f'clip_{self.clip_version}_similarity']
         self.dataloader_kwargs = dict(
             num_workers=self.num_workers, batch_size=self.batch_size,
             preprocess_f=self.preprocess, collate_fn=lambda x: x,
@@ -81,9 +91,8 @@ class CLIPFilter(T2IFilter):
                 inputs['pixel_values'] = pad_sequence(image_tensors, batch_first=True).detach().cpu().numpy().astype(np.float32)
                 text_latents = []
                 for template in self.templates:
-                    for template in self.templates:
-                        texts = clip.tokenize([template.format(class_label.lower().strip()) for class_label in batch_labels], truncate=True)
-                        text_latents.append(self.clip_model.encode_text(texts.detach().cpu().numpy().astype(np.int32)))
+                    texts = clip.tokenize([template.format(class_label) for class_label in batch_labels], truncate=True)
+                    text_latents.append(self.clip_model.encode_text(texts.detach().cpu().numpy().astype(np.int32)))
                 text_latents = np.stack(text_latents).mean(0)
                 text_latents = text_latents / np.linalg.norm(text_latents, axis=-1, keepdims=True)
                 batch_similarity = self.get_similarity(inputs, text_latents).tolist()          
@@ -93,14 +102,14 @@ class CLIPFilter(T2IFilter):
                 inputs['pixel_values'] = pad_sequence(image_tensors, batch_first=True)
                 text_latents = []
                 for template in self.templates:
-                    texts = clip.tokenize([template.format(class_label.lower().strip()) for class_label in batch_labels], truncate=True)
+                    texts = clip.tokenize([template.format(class_label) for class_label in batch_labels], truncate=True)
                     text_latents.append(self.clip_model.encode_text(texts.to(self.device)))
                 text_latents = torch.stack(text_latents).mean(0)
                 text_latents = text_latents / text_latents.norm(dim=-1, keepdim=True)
                 batch_similarity = self.get_similarity(inputs, text_latents).tolist()
                 
                 
-        df_batch_labels['clip_similarity'].extend(batch_similarity)
+        df_batch_labels[f'clip_{self.clip_version}_similarity'].extend(batch_similarity)
         df_batch_labels['image_path'].extend(image_paths)
                 
         return df_batch_labels
@@ -114,10 +123,9 @@ class CLIPFilter(T2IFilter):
             probs = logits_per_image.tolist()
         else:
             with torch.no_grad():
-                logit_scale = self.clip_model.logit_scale.exp()
                 image_latents = self.clip_model.encode_image(inputs['pixel_values'])
                 image_latents = image_latents / image_latents.norm(dim=-1, keepdim=True)
-                logits_per_image = torch.matmul(image_latents, text_latents.t()) * logit_scale
+                logits_per_image = torch.matmul(image_latents, text_latents.t())
                 probs = logits_per_image.cpu().numpy().tolist()
 
         return np.diag(probs)
