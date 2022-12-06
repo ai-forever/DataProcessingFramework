@@ -54,7 +54,7 @@ class RuCLIPFilter(T2IFilter):
             self, 
             ruclip_version: str, 
             weights_folder: str, 
-            templates: List[str] = ['{}', 'изображение с {}', 'фото с {}'], 
+            templates: List[str] = ['{}'], 
             device: str = 'cuda:0', 
             use_onnx: bool = False, 
             logit_scale: Optional[float] = None,
