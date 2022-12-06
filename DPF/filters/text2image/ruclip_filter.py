@@ -109,7 +109,7 @@ class RuCLIPFilter(T2IFilter):
             self.ruclip_predictor = ruclip.Predictor(self.ruclip_model, self.ruclip_processor, 
                                                      device, bs=self.batch_size, templates=self.templates)
         
-        self.schema = ['image_path', 'ruclip_similarity']
+        self.schema = ['image_path', f'{self.ruclip_version}_similarity']
         self.dataloader_kwargs = dict(
             num_workers=self.num_workers, batch_size=self.batch_size,
             preprocess_f=self.preprocess, collate_fn=lambda x: x,
@@ -149,7 +149,7 @@ class RuCLIPFilter(T2IFilter):
                 batch_similarity = self.get_similarity(inputs, text_latents).tolist()
                 
                 
-        df_batch_labels['ruclip_similarity'].extend(batch_similarity)
+        df_batch_labels[f'{self.ruclip_version}_similarity'].extend(batch_similarity)
         df_batch_labels['image_path'].extend(image_paths)
                 
         return df_batch_labels
