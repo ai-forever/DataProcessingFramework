@@ -40,8 +40,16 @@ class ProcessorHelper:
             df_to_add.drop(columns=list(columns_intersection), inplace=True)
 
         if df_to_add.shape[1] > 1:
+            image_names_orig = set(df[self.imagename_column])
+            shape_orig = len(df)
             df = pd.merge(df, df_to_add, on=self.imagename_column)
-            self.filesystem.save_dataframe(df, table_path, index=False)
+            
+            if len(df) != shape_orig:
+                print(f'[WARNING] Shape of dataframe {table_path} changed after merging. Skipping this dataframe. Check for errors')
+            elif set(df[self.imagename_column]) != image_names_orig:
+                print(f'[WARNING] Image names from dataframe {table_path} changed after merging. Skipping this dataframe. Check for errors')
+            else:
+                self.filesystem.save_dataframe(df, table_path, index=False)
             
     def _merge_and_write_table_mp(self, data):
         return self._merge_and_write_table(*data)
