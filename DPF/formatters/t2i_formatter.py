@@ -81,17 +81,18 @@ class T2IFormatter:
         else:
             raise NotImplementedError(f"Unknown filesystem format: {filesystem}")
 
-    def _postprocess_dataframe(self, df: pd.DataFrame, caption_column: str):
+    def _postprocess_dataframe(self, df: pd.DataFrame):
         columns = ['image_name', 'image_path', 'table_path', 'archive_path', 'data_format', 'caption']
         columns = [i for i in columns if i in df.columns]
         orig_columns = [i for i in df.columns if i not in columns]
         columns.extend(list(orig_columns))
-        df_has_null = df['caption'].isnull().values.any()
-        if df_has_null :
+        
+        df_has_null_caption = df['caption'].isnull().values.any()
+        if df_has_null_caption:
             print(f'[WARNING] Column with captions has NaN values.')
-            df = df.fillna(value={'caption': ''})
-            df['caption'] = df['caption'].astype("string")
-            df[caption_column] = df['caption']
+            df.fillna(value={'caption': ''}, inplace=True)
+            
+        df['caption'] = df['caption'].astype("string")
         
         return df[columns]
     
@@ -132,7 +133,7 @@ class T2IFormatter:
         
         df = pd.concat(dataframes, ignore_index=True)
         df['data_format'] = 'shards'
-        df = self._postprocess_dataframe(df, caption_column)
+        df = self._postprocess_dataframe(df)
         
         processor = ShardsProcessor(
             self.filesystem,
@@ -181,7 +182,7 @@ class T2IFormatter:
         
         df = pd.concat(dataframes, ignore_index=True)
         df['data_format'] = 'raw'
-        df = self._postprocess_dataframe(df, caption_column)
+        df = self._postprocess_dataframe(df)
         
         processor = RawProcessor(
             self.filesystem,
