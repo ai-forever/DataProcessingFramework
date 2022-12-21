@@ -86,6 +86,14 @@ class T2IFormatter:
         columns = [i for i in columns if i in df.columns]
         orig_columns = [i for i in df.columns if i not in columns]
         columns.extend(list(orig_columns))
+        
+        df_has_null_caption = df['caption'].isnull().values.any()
+        if df_has_null_caption:
+            print(f'[WARNING] Column with captions has NaN values.')
+            df.fillna(value={'caption': ''}, inplace=True)
+            
+        df['caption'] = df['caption'].astype("string")
+        
         return df[columns]
     
     def from_shards(
