@@ -95,7 +95,7 @@ def compile_regexs_ru():
     compiled_regexs.append((re.compile(r'(купите в )?интернет[-\s]+магазине[\w\W]*'), ''))
     compiled_regexs.append((re.compile(r'ярмарка мастеров'), ''))
     compiled_regexs.append((re.compile(r'youtube'), ''))
-    compiled_regexs.append((re.compile(r'карточка пользователя [\w\W]+'), ''))
+    # compiled_regexs.append((re.compile(r'карточка пользователя [\w\W]+'), ''))
     compiled_regexs.append((re.compile(r'вконтакте'), ''))
     compiled_regexs.append((re.compile(r'(риа новости).*$'), ''))
     compiled_regexs.append((re.compile(r'авито'), ''))
@@ -127,16 +127,16 @@ def compile_regexs_ru():
     compiled_regexs.append((re.compile(r'купить, цена в москве'), ''))
     compiled_regexs.append((re.compile(r'социальная сеть фотокто'), ''))
     compiled_regexs.append((re.compile(r'\- красивые картинки'), ''))
-    compiled_regexs.append((re.compile(r'\- купить в [\w\W]+'), ''))
-    compiled_regexs.append((re.compile(r'самые лучшие, фото [\w\W]+'), ''))
-    compiled_regexs.append((re.compile(r'рецепт с фото пошагово [\w\W]+'), ''))
-    compiled_regexs.append((re.compile(r'\: фото и описание [\w\W]+'), ''))
-    compiled_regexs.append((re.compile(r'обсуждение на liveinternet [\w\W]+'), ''))
-    compiled_regexs.append((re.compile(r'купить по лучшей цене [\w\W]+'), ''))
-    compiled_regexs.append((re.compile(r'купить в [\w\W]+'), ''))
-    compiled_regexs.append((re.compile(r'забронировать отель [\w\W]+'), ''))
-    compiled_regexs.append((re.compile(r'перейти на официальный сайт [\w\W]+'), ''))
-    compiled_regexs.append((re.compile(r'официальный сайт [\w\W]+'), ''))
+    # compiled_regexs.append((re.compile(r'\- купить в [\w\W]+'), ''))
+    # compiled_regexs.append((re.compile(r'самые лучшие, фото [\w\W]+'), ''))
+    # compiled_regexs.append((re.compile(r'рецепт с фото пошагово [\w\W]+'), ''))
+    # compiled_regexs.append((re.compile(r'\: фото и описание [\w\W]+'), ''))
+    # compiled_regexs.append((re.compile(r'обсуждение на liveinternet [\w\W]+'), ''))
+    # compiled_regexs.append((re.compile(r'купить по лучшей цене [\w\W]+'), ''))
+    # compiled_regexs.append((re.compile(r'купить в [\w\W]+'), ''))
+    # compiled_regexs.append((re.compile(r'забронировать отель [\w\W]+'), ''))
+    # compiled_regexs.append((re.compile(r'перейти на официальный сайт [\w\W]+'), ''))
+    # compiled_regexs.append((re.compile(r'официальный сайт [\w\W]+'), ''))
     compiled_regexs.append((re.compile(r'\b[\w]+\.ру'), ''))
     compiled_regexs.append((re.compile(r'вид \d+'), ''))
     compiled_regexs.append((re.compile(r'\b[\d\_\.\-]+[a-z]+[\d\_\.\-]+\b'), ''))
@@ -155,18 +155,14 @@ def compile_regexs_ru():
     compiled_regexs.append((re.compile(r'\- смотреть фильм онлайн без регистрации'), ''))
     compiled_regexs.append((re.compile(r'купить'), ''))
 
-    compiled_regexs.append((re.compile(r'\s+([,\./])+\s+'), r'\1 '))
     compiled_regexs.append((re.compile(r'[\(\)]'), ''))
     compiled_regexs.append((re.compile(r'\s+'), ' '))
     compiled_regexs.append((re.compile(r'[\"\']{2,}'), r''))
     
     ####
             
-    compiled_regexs_2.append((re.compile(r'\s+([,\./])+\s+'), r'\1 '))
     compiled_regexs_2.append((re.compile(r'[\(\)]'), ''))
     compiled_regexs_2.append((re.compile(r'\s+'), ' '))
-    compiled_regexs_2.append((re.compile(r'([,\./])+'), r'\1'))
-    compiled_regexs_2.append((re.compile(r'\b([,\./])\b'), r'\1 '))
     
     
 def compile_regexs_eng():
@@ -270,20 +266,17 @@ def compile_regexs_eng():
     compiled_regexs.append((re.compile(r'@[\S]+\b'), ''))
     compiled_regexs.append((re.compile(r'\/\d*,\d+\w*\b'), ' '))
 
-    compiled_regexs.append((re.compile(r'\s+([,\./])+\s+'), r'\1 '))
     compiled_regexs.append((re.compile(r'[\(\)]'), ' '))
     compiled_regexs.append((re.compile(r'\s+'), ' '))
     compiled_regexs.append((re.compile(r'[\"\']{2,}'), r''))
     
-    compiled_regexs_2.append((re.compile(r'\s+([,\./])+\s+'), r'\1 '))
     compiled_regexs_2.append((re.compile(r'[\(\)]'), ''))
     compiled_regexs_2.append((re.compile(r'\s+'), ' '))
-    compiled_regexs_2.append((re.compile(r'([,\./])+'), r'\1'))
     compiled_regexs_2.append((re.compile(r'\bby\s*$'), ''))
     
 
 ### additional regexs
-html_pattern = re.compile(r"<.*?>|&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-f]{1,6});")
+html_pattern = re.compile(r"<.*?>|&([a-zA-Z0-9]+|#[0-9]{1,6}|#x[0-9a-fA-F]{1,6});")
 def remove_html(text):
     """
         Remove the html in sample text
@@ -313,7 +306,13 @@ decontracted_patterns = [
     (re.compile(r"\'ve"), r" have"),
 ]
 def decontracted(phrase):
+    lower_phrase = str(phrase).lower().strip()
     for pattern, replacement in decontracted_patterns:
+        iterator = reversed(list(pattern.finditer(lower_phrase)))
+        for match in iterator:
+            pos = list(match.span())
+            phrase = phrase[:pos[0]] + replacement + phrase[pos[1]:]
+        lower_phrase = str(phrase).lower().strip()
         phrase = pattern.sub(replacement, phrase)
     return phrase
 
@@ -340,11 +339,16 @@ def additional_cleaning(text):
 
 ### main code
 def clean_caption(caption):
-    caption = str(caption).lower().strip()
-    
+    lower_caption = str(caption).lower().strip()
     for re_compiled, replacement in compiled_regexs:
-        caption = re_compiled.sub(replacement, caption)
+        iterator = reversed(list(re_compiled.finditer(lower_caption)))
+        for match in iterator:
+            pos = list(match.span())
+            caption = caption[:pos[0]] + replacement + caption[pos[1]:]
+        lower_caption = str(caption).lower().strip()
+
     caption = caption.strip()
+    lower_caption = str(caption).lower().strip()
     
     if caption and caption[0] in string.punctuation + '—)':
         caption = caption[1:].strip()
@@ -354,10 +358,16 @@ def clean_caption(caption):
         caption = caption[:-1].strip()
         if caption and caption[-1] in string.punctuation + '—(':
             caption = caption[:-1].strip()
-    
+            
+    lower_caption = str(caption).lower().strip()
     for re_compiled, replacement in compiled_regexs_2:
-        caption = re_compiled.sub(replacement, caption)
-    caption = caption.strip()
+        iterator = reversed(list(re_compiled.finditer(lower_caption)))
+        for match in iterator:
+            pos = list(match.span())
+            caption = caption[:pos[0]] + replacement + caption[pos[1]:]
+        lower_caption = str(caption).lower().strip()
+
+        caption = caption.strip()
     
     caption = additional_cleaning(caption)
 
