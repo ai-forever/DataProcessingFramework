@@ -8,7 +8,6 @@ import langid
 from DPF.filters.utils import identical_collate_fn
 from .text_filter import TextFilter
 
-
 try:
     import re2 as re
 except ModuleNotFoundError:
@@ -36,21 +35,19 @@ class RegexFilter(TextFilter):
         for regex, replacement in all_regexs:
             self.add_regex(regex, replacement)
         
-    def replace_match(self, caption, re_compiled, replacement):
+    def replaced_match(self, caption, re_compiled, replacement):
         iterator = reversed(list(re_compiled.finditer(str(caption).lower().strip())))
         for match in iterator:
             pos = list(match.span())
             caption = caption[:pos[0]] + replacement + caption[pos[1]:]
-            
         return caption
         
-    def clear_captions(self, caption):
+    def clean_caption(self, caption):
         for re_compiled, replacement in self.compiled_regexs:
-            caption = self.replace_match(caption, re_compiled, replacement)
-            
+            caption = self.replaced_match(caption, re_compiled, replacement)
         return caption
         
     def filter_text(self, row):
-        caption = self.clear_captions(row[self.caption_name])
+        caption = self.clean_caption(row[self.caption_name])
         return caption
         
