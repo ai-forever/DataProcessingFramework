@@ -24,7 +24,6 @@ class TextFilter:
     
     def run(self, df: pd.DataFrame, filesystem: FileSystem) -> pd.DataFrame:
         pandarallel.initialize(nb_workers=16)
-        # print(np.array(list(df.parallel_apply(self.filter_text, axis=1))))
         df[self.result_columns] = np.array(list(df.parallel_apply(self.filter_text, axis=1)))
         return df
         
