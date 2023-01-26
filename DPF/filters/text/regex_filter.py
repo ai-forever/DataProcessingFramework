@@ -35,7 +35,7 @@ class RegexFilter(TextFilter):
         for regex, replacement in all_regexs:
             self.add_regex(regex, replacement)
         
-    def replaced_match(self, caption, re_compiled, replacement):
+    def replaced_matches(self, caption, re_compiled, replacement):
         iterator = reversed(list(re_compiled.finditer(str(caption).lower().strip())))
         for match in iterator:
             pos = list(match.span())
@@ -44,7 +44,7 @@ class RegexFilter(TextFilter):
         
     def clean_caption(self, caption):
         for re_compiled, replacement in self.compiled_regexs:
-            caption = self.replaced_match(caption, re_compiled, replacement)
+            caption = self.replaced_matches(caption, re_compiled, replacement)
         return caption
         
     def filter_text(self, row):
