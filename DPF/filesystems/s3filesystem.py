@@ -24,7 +24,7 @@ class S3FileSystem(FileSystem):
     
     def read_file(self, filepath: str, binary: bool) -> io.BytesIO:
         mode = 'rb' if binary else 'rt'
-        with fsspec.open(f"simplecache::{filepath}", s3=self.storage_options, mode=mode) as f:
+        with fsspec.open(filepath, s3=self.storage_options, mode=mode, skip_instance_cache=True) as f:
             if mode == 'rb':
                 res = io.BytesIO(f.read())
                 res.seek(0)
