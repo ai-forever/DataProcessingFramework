@@ -1,6 +1,7 @@
 import pandas as pd
 import os
 import io
+import tarfile
 from typing import Union, List, Optional
 
 class FileSystem:
@@ -41,8 +42,17 @@ class FileSystem:
         """
         raise NotImplementedError()
     
-    def read_tar(self, filepath: str, **kwargs):
-        raise NotImplementedError()
+    def read_tar(self, filepath: str):
+        """
+        Reads a tar file like tarfile.open
+        
+        Parameters
+        ----------
+        filepath: str
+            Path to file
+        """
+        tar_bytes = self.read_file(filepath, binary=True)
+        return tarfile.open(fileobj=tar_bytes, mode='r')
     
     def read_dataframe(self, filepath: str, **kwargs) -> pd.DataFrame:
         """

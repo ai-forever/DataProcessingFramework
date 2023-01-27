@@ -69,6 +69,9 @@ class T2IProcessor:
         self.imagename_column = imagename_column
         self.caption_column = caption_column
         self.image_ext = image_ext
+        
+    def get_filesystem(self):
+        return self.filesystem
 
     def validate(self, check_folders=True, mark_duplicated_image_names=False, 
                  mark_bad_caption=True) -> None:
