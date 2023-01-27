@@ -1,3 +1,4 @@
+from typing import List
 import pandas as pd
 import numpy as np
 import os
@@ -13,6 +14,7 @@ from DPF.dataloaders.images import UniversalT2IDataloader
 from DPF.processors.writers.shardsfilewriter import ShardsFileWriter
 from DPF.utils.utils import get_file_extension
 
+
 def preprocessing_for_convert(img_bytes, data):
     return img_bytes, data
 
@@ -23,8 +25,44 @@ class ProcessorHelper:
         
         self.imagename_column = imagename_column
         self.image_ext = image_ext
+        
+    def _replace_and_write_table(self, table_path, col2newcol) -> List[str]:
+        df = self.filesystem.read_dataframe(table_path)
+        df.rename(columns=col2newcol, inplace=True)
+        
+        errors = []
+        errname = None
+        try:
+            self.filesystem.save_dataframe(df, table_path, index=False)
+        except Exception as err:
+            errname = f"error during saving: {err}"
+        if errname:
+            errors.append(errname)
+        
+        return errors
     
-    def _merge_and_write_table(self, table_path, df_to_add, overwrite_columns=True):
+    def _replace_and_write_table_mp(self, data):
+        return self._replace_and_write_table(*data)
+        
+    def _delete_and_write_table(self, table_path, columns_to_delete) -> List[str]:
+        df = self.filesystem.read_dataframe(table_path)
+        df.drop(columns=columns_to_delete, inplace=True)
+        
+        errors = []
+        errname = None
+        try:
+            self.filesystem.save_dataframe(df, table_path, index=False)
+        except Exception as err:
+            errname = f"error during saving: {err}"
+        if errname:
+            errors.append(errname)
+        
+        return errors
+    
+    def _delete_and_write_table_mp(self, data):
+        return self._delete_and_write_table(*data)
+    
+    def _merge_and_write_table(self, table_path, df_to_add, overwrite_columns=True) -> List[str]:
         if self.image_ext:
             image_ext = self.image_ext.lstrip('.')
             df_to_add['image_name'] = df_to_add['image_name'].str.slice(0, -len(image_ext)-1)
@@ -38,18 +76,29 @@ class ProcessorHelper:
             df.drop(columns=list(columns_intersection), inplace=True)
         else:
             df_to_add.drop(columns=list(columns_intersection), inplace=True)
-
+        
+        errors = []
         if df_to_add.shape[1] > 1:
             image_names_orig = set(df[self.imagename_column])
             shape_orig = len(df)
             df = pd.merge(df, df_to_add, on=self.imagename_column)
             
+            errname = None
             if len(df) != shape_orig:
-                print(f'[WARNING] Shape of dataframe {table_path} changed after merging. Skipping this dataframe. Check for errors')
+                errname = f'Shape of dataframe {table_path} changed after merging. Skipping this dataframe. Check for errors'
+                print('[WARNING]', errname)
             elif set(df[self.imagename_column]) != image_names_orig:
-                print(f'[WARNING] Image names from dataframe {table_path} changed after merging. Skipping this dataframe. Check for errors')
+                errname = f'Image names from dataframe {table_path} changed after merging. Skipping this dataframe. Check for errors'
+                print('[WARNING]', errname)
             else:
-                self.filesystem.save_dataframe(df, table_path, index=False)
+                try:
+                    self.filesystem.save_dataframe(df, table_path, index=False)
+                except Exception as err:
+                    errname = f"error during saving: {err}"
+            if errname:
+                errors.append(errname)
+                
+        return errors
             
     def _merge_and_write_table_mp(self, data):
         return self._merge_and_write_table(*data)
@@ -77,6 +126,64 @@ class T2IProcessor:
                  mark_bad_caption=True) -> None:
         raise NotImplementedError()
         
+    def rename_columns(self, col2newcol, processes=1, force=False):
+        assert force or len(self.df) == self.init_shape[0], \
+            f"Dataframe length changed after initialisation. Was {self.init_shape[0]}, now {len(self.df)}. Set force=True to ignore this."
+        assert set(col2newcol.keys()).difference(self.df.columns) == set(), \
+            f"Some provided columns not presented in dataset: {set(col2newcol.keys()).difference(self.df.columns)}"
+        
+        table_paths = self.df['table_path'].unique()
+        
+        def gen():
+            for table_path in table_paths:
+                yield (table_path, col2newcol)
+                
+        params_iter = gen()
+        helper = ProcessorHelper(
+            filesystem=self.filesystem, 
+            imagename_column=self.imagename_column, 
+            image_ext=self.image_ext
+        )
+        
+        errors = process_map(helper._replace_and_write_table_mp, iter(params_iter), 
+                             max_workers=processes, chunksize=1, total=len(table_paths))
+        errors_flatten = [item for sublist in errors for item in sublist]
+        if len(errors_flatten) == 0:
+            self.df.rename(columns=col2newcol, inplace=True)
+        else:
+            print("[WARNING] Errors occured, please create new processor")
+        return errors_flatten
+        
+    def delete_columns(self, columns_to_delete, processes=1, force=False):
+        assert force or len(self.df) == self.init_shape[0], \
+            f"Dataframe length changed after initialisation. Was {self.init_shape[0]}, now {len(self.df)}. Set force=True to ignore this."
+        assert set(columns_to_delete).difference(self.df.columns) == set(), \
+            f"Some provided columns not presented in dataset: {set(columns_to_delete).difference(self.df.columns)}"
+        assert self.imagename_column not in columns_to_delete, f"Can`t delete image name column: {self.imagename_column}"
+        assert self.caption_column not in columns_to_delete, f"Can`t delete caption column: {self.caption_column}"
+        
+        table_paths = self.df['table_path'].unique()
+        
+        def gen():
+            for table_path in table_paths:
+                yield (table_path, columns_to_delete)
+                
+        params_iter = gen()
+        helper = ProcessorHelper(
+            filesystem=self.filesystem, 
+            imagename_column=self.imagename_column, 
+            image_ext=self.image_ext
+        )
+        
+        errors = process_map(helper._delete_and_write_table_mp, iter(params_iter), 
+                             max_workers=processes, chunksize=1, total=len(table_paths))
+        errors_flatten = [item for sublist in errors for item in sublist]
+        if len(errors_flatten) == 0:
+            self.df.drop(columns=columns_to_delete, inplace=True)
+        else:
+            print("[WARNING] Errors occured, please create new processor")
+        return errors_flatten
+        
     def update_data(self, columns_to_add, processes=1, force=False, overwrite_columns=True):
         assert force or len(self.df) == self.init_shape[0], \
             f"Dataframe length changed after initialisation. Was {self.init_shape[0]}, now {len(self.df)}. Set force=True to ignore this."
@@ -97,8 +204,10 @@ class T2IProcessor:
             image_ext=self.image_ext
         )
         
-        process_map(helper._merge_and_write_table_mp, iter(params_iter), 
-                    max_workers=processes, chunksize=1, total=len(table_to_new_data))
+        errors = process_map(helper._merge_and_write_table_mp, iter(params_iter), 
+                             max_workers=processes, chunksize=1, total=len(table_to_new_data))
+        errors_flatten = [item for sublist in errors for item in sublist]
+        return errors_flatten
     
     def rebuild(self, force=False):
         assert not force or len(self.df) == self.init_shape[0], \
