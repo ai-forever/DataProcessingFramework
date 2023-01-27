@@ -1,6 +1,7 @@
 #
 data/
 tests/
+pipelines/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
