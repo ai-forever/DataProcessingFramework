@@ -10,6 +10,7 @@ class LocalFileSystem(FileSystem):
     """
     Class that wrappers interaction with local filesystem.
     """
+    
     def __init__(self):
         super(LocalFileSystem).__init__()
     

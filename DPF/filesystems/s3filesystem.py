@@ -8,6 +8,10 @@ from typing import Union, List, Optional
 from .filesystem import FileSystem
 
 class S3FileSystem(FileSystem):
+    """
+    Class that wrappers interaction with S3.
+    """
+    
     def __init__(self, key: str, secret: str, endpoint_url: str):
         super(S3FileSystem).__init__()
         self.endpoint_url = endpoint_url

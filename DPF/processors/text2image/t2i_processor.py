@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict, Optional, Callable, Tuple
 import pandas as pd
 import numpy as np
 import os
@@ -9,7 +9,7 @@ from tqdm import tqdm
 from tqdm.contrib.concurrent import process_map
 import functools
 
-from DPF.filesystems.localfilesystem import LocalFileSystem
+from DPF.filesystems import LocalFileSystem, FileSystem
 from DPF.dataloaders.images import UniversalT2IDataloader
 from DPF.processors.writers.shardsfilewriter import ShardsFileWriter
 from DPF.utils.utils import get_file_extension
@@ -26,7 +26,7 @@ class ProcessorHelper:
         self.imagename_column = imagename_column
         self.image_ext = image_ext
         
-    def _replace_and_write_table(self, table_path, col2newcol) -> List[str]:
+    def _rename_and_write_table(self, table_path, col2newcol) -> List[str]:
         df = self.filesystem.read_dataframe(table_path)
         df.rename(columns=col2newcol, inplace=True)
         
@@ -35,13 +35,13 @@ class ProcessorHelper:
         try:
             self.filesystem.save_dataframe(df, table_path, index=False)
         except Exception as err:
-            errname = f"error during saving: {err}"
+            errname = f"error during saving file {table_path}: {err}"
         if errname:
             errors.append(errname)
         
         return errors
     
-    def _replace_and_write_table_mp(self, data):
+    def _rename_and_write_table_mp(self, data):
         return self._replace_and_write_table(*data)
         
     def _delete_and_write_table(self, table_path, columns_to_delete) -> List[str]:
@@ -53,7 +53,7 @@ class ProcessorHelper:
         try:
             self.filesystem.save_dataframe(df, table_path, index=False)
         except Exception as err:
-            errname = f"error during saving: {err}"
+            errname = f"error during saving file {table_path}: {err}"
         if errname:
             errors.append(errname)
         
@@ -94,7 +94,7 @@ class ProcessorHelper:
                 try:
                     self.filesystem.save_dataframe(df, table_path, index=False)
                 except Exception as err:
-                    errname = f"error during saving: {err}"
+                    errname = f"error during saving file {table_path}: {err}"
             if errname:
                 errors.append(errname)
                 
@@ -105,28 +105,67 @@ class ProcessorHelper:
 
     
 class T2IProcessor:
-    def __init__(self, filesystem, df, dataset_path,
-                 datafiles_ext, imagename_column,
-                 caption_column, image_ext):
+    """
+    Class that describes all interactions with text2image dataset.
+    It is recommended to use T2IFormatter to create Processor instead of directly initialiasing a Processor class.
+    """
+    
+    def __init__(
+            self, 
+            filesystem: FileSystem, 
+            df: pd.DataFrame, 
+            dataset_path: str,
+            datafiles_ext: str, 
+            imagename_column: str,
+            caption_column: str, 
+            image_ext: str
+        ):
         self.filesystem = filesystem
         
         self.df = df
         self.init_shape = df.shape
-        self.dataset_path = dataset_path
+        self.dataset_path = dataset_path.rstrip('/')
         
-        self.datafiles_ext = datafiles_ext
+        self.datafiles_ext = datafiles_ext.lstrip('.')
         self.imagename_column = imagename_column
         self.caption_column = caption_column
         self.image_ext = image_ext
         
     def get_filesystem(self):
-        return self.filesystem
-
-    def validate(self, check_folders=True, mark_duplicated_image_names=False, 
-                 mark_bad_caption=True) -> None:
-        raise NotImplementedError()
+        """
+        Get a FileSystem object
         
-    def rename_columns(self, col2newcol, processes=1, force=False):
+        Returns
+        -------
+        DPF.filesystems.FileSystem
+            FileSystem of that dataset
+        """
+        return self.filesystem
+        
+    def rename_columns(
+            self, 
+            col2newcol: Dict[str, str], 
+            processes: int = 1, 
+            force: bool = False
+        ) -> List[str]:
+        """
+        Renames columns in dataframes in text2image dataset.
+        
+        Parameters
+        ----------
+        col2newcol: dict[str, str]
+            Dictionary mapping old names to new ones
+        processes: int = 1
+            Number of parallel processes to read and update dataframes
+        force: bool = False
+            Force update if dataframe shape was changed
+            
+        Returns
+        -------
+        list[str]
+            List of occured errors 
+        """
+        
         assert force or len(self.df) == self.init_shape[0], \
             f"Dataframe length changed after initialisation. Was {self.init_shape[0]}, now {len(self.df)}. Set force=True to ignore this."
         assert set(col2newcol.keys()).difference(self.df.columns) == set(), \
@@ -145,7 +184,7 @@ class T2IProcessor:
             image_ext=self.image_ext
         )
         
-        errors = process_map(helper._replace_and_write_table_mp, iter(params_iter), 
+        errors = process_map(helper._rename_and_write_table_mp, iter(params_iter), 
                              max_workers=processes, chunksize=1, total=len(table_paths))
         errors_flatten = [item for sublist in errors for item in sublist]
         if len(errors_flatten) == 0:
@@ -154,7 +193,30 @@ class T2IProcessor:
             print("[WARNING] Errors occured, please create new processor")
         return errors_flatten
         
-    def delete_columns(self, columns_to_delete, processes=1, force=False):
+    def delete_columns(
+            self, 
+            columns_to_delete: List[str], 
+            processes: int = 1, 
+            force: bool = False
+        ) -> List[str]:
+        """
+        Deletes columns in dataframes in text2image dataset.
+        
+        Parameters
+        ----------
+        columns_to_delete: list[str]
+            List of column names to delete
+        processes: int = 1
+            Number of parallel processes to read and update dataframes
+        force: bool = False
+            Force update if dataframe shape was changed
+            
+        Returns
+        -------
+        list[str]
+            List of occured errors 
+        """
+        
         assert force or len(self.df) == self.init_shape[0], \
             f"Dataframe length changed after initialisation. Was {self.init_shape[0]}, now {len(self.df)}. Set force=True to ignore this."
         assert set(columns_to_delete).difference(self.df.columns) == set(), \
@@ -184,7 +246,33 @@ class T2IProcessor:
             print("[WARNING] Errors occured, please create new processor")
         return errors_flatten
         
-    def update_data(self, columns_to_add, processes=1, force=False, overwrite_columns=True):
+    def update_data(
+            self, 
+            columns_to_add: List[str], 
+            overwrite_columns: bool = True,
+            processes: int = 1, 
+            force: bool = False,
+        ) -> List[str]:
+        """
+        Updates existing columns and adds new columns in dataframes of a dataset
+        
+        Parameters
+        ----------
+        columns_to_add: list[str]
+            List of column names to update or add
+        overwrite_columns: bool = True
+            Change (overwrite) or not existing columns
+        processes: int = 1
+            Number of parallel processes to read and update dataframes
+        force: bool = False
+            Force update if dataframe shape was changed
+            
+        Returns
+        -------
+        list[str]
+            List of occured errors 
+        """
+        
         assert force or len(self.df) == self.init_shape[0], \
             f"Dataframe length changed after initialisation. Was {self.init_shape[0]}, now {len(self.df)}. Set force=True to ignore this."
         assert set(columns_to_add).issubset(set(self.df.columns))
@@ -207,6 +295,8 @@ class T2IProcessor:
         errors = process_map(helper._merge_and_write_table_mp, iter(params_iter), 
                              max_workers=processes, chunksize=1, total=len(table_to_new_data))
         errors_flatten = [item for sublist in errors for item in sublist]
+        if len(errors_flatten) != 0:
+            print("[WARNING] Errors occured, please create new processor")
         return errors_flatten
     
     def rebuild(self, force=False):
@@ -214,10 +304,33 @@ class T2IProcessor:
             f"Dataframe length didn`t changed after initialisation. Set force=True to ignore this and force rebuild dataset."
         raise NotImplementedError()
         
-    def get_random_samples(self, df=None, n=1):
+    def get_random_samples(
+            self, 
+            df: Optional[pd.DataFrame] = None, 
+            n: int = 1
+        ) -> list:
+        """
+        Get N random samples from dataset
+        
+        Parameters
+        ----------
+        df: pd.DataFrame | None
+            DataFrame to sample from. If none, processor.df is used
+        n: int = 1
+            Number of samples to return
+            
+        Returns
+        -------
+        list
+            List of tuples with PIL images and dataframe data
+        """
+        
         raise NotImplementedError()
         
-    def apply_filter(self, filter_func):
+    def apply_filter(
+            self, 
+            filter_func: Callable[[pd.DataFrame, FileSystem], pd.DataFrame]
+        ):
         self.df = filter_func(self.df, self.filesystem)
         
     def to_shards(

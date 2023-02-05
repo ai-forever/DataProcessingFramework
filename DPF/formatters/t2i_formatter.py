@@ -6,14 +6,20 @@ from tqdm.contrib.concurrent import process_map
 
 from DPF.processors.text2image.raw_processor import RawProcessor
 from DPF.processors.text2image.shards_processor import ShardsProcessor
-from DPF.filesystems import LocalFileSystem, S3FileSystem
+from DPF.processors.text2image.t2i_processor import T2IProcessor
+from DPF.filesystems import LocalFileSystem, S3FileSystem, FileSystem
 from DPF.utils.utils import get_file_extension
+from .formatter import Formatter
 
 
 class DataframeReader:
+    """
+    DataframeReader is used to read and preprocess dataframes
+    """
+    
     def __init__(
             self, 
-            filesystem, 
+            filesystem: FileSystem, 
             read_params: dict, 
             df_needed_columns: Set[str],
             check_same_columns: bool = True,
@@ -24,7 +30,14 @@ class DataframeReader:
         self.check_same_columns = check_same_columns
         self.df_needed_columns = df_needed_columns
         
-    def _add_base_columns(self, df, filepath, caption_column, imagename_column, image_ext):
+    def _add_base_columns(
+            self, 
+            df: pd.DataFrame, 
+            filepath: str, 
+            caption_column: str, 
+            imagename_column: str, 
+            image_ext: str
+        ):
         if self.check_same_columns:
             assert set(df.columns) == self.df_needed_columns, \
                 f'Dataframe {filepath} have different columns. Expected {self.df_needed_columns}, got {set(df.columns)}'
@@ -38,7 +51,7 @@ class DataframeReader:
             image_ext = image_ext.lstrip('.')
             df['image_name'] += '.'+image_ext
         
-    def load_shards_df(self, filepath):
+    def load_shards_df(self, filepath: str) -> pd.DataFrame:
         datafiles_ext = self.read_params["datafiles_ext"]
         archive_ext = self.read_params["archive_ext"]
         image_ext = self.read_params["image_ext"]
@@ -53,7 +66,7 @@ class DataframeReader:
         df['image_path'] = df['archive_path']+'/'+df['image_name']
         return df
         
-    def load_raw_df(self, filepath):
+    def load_raw_df(self, filepath: str) -> pd.DataFrame:
         datafiles_ext = self.read_params["datafiles_ext"]
         image_ext = self.read_params["image_ext"]
         caption_column = self.read_params["caption_column"]
@@ -67,19 +80,18 @@ class DataframeReader:
         return df
     
         
-class T2IFormatter:
+class T2IFormatter(Formatter):
+    """
+    Formatter for text-to-image datasets. 
+    Formatter is used to read and create a Processor class for a dataset.
+    """
 
     def __init__(
             self,
             filesystem: str = 'local',
             **filesystem_kwargs
         ):
-        if filesystem == 'local':
-            self.filesystem = LocalFileSystem()
-        elif filesystem == 's3':
-            self.filesystem = S3FileSystem(**filesystem_kwargs)
-        else:
-            raise NotImplementedError(f"Unknown filesystem format: {filesystem}")
+        super().__init__(filesystem, **filesystem_kwargs)
 
     def _postprocess_dataframe(self, df: pd.DataFrame):
         columns = ['image_name', 'image_path', 'table_path', 'archive_path', 'data_format', 'caption']
@@ -107,7 +119,36 @@ class T2IFormatter:
         image_ext: Optional[str] = None,
         processes: int = 1,
         progress_bar: bool = False
-    ) -> pd.DataFrame:
+    ) -> ShardsProcessor:
+        """
+        Reads a dataset in shards (images in archives and dataframes) and creates a ShardsProcessor for dataset.
+        
+        Parameters
+        ----------
+        dataset_path: str
+            Path to shards
+        archive_ext: str = 'tar'
+            Extension of archives
+        datafiles_ext: str = 'csv'
+            Extension of tables with data
+        imagename_column: str = 'image_name'
+            Name of column with image names
+        caption_column: str = 'caption'
+            Name of column with captions
+        check_same_columns: bool = True
+            Check that the columns in all tables are the same
+        image_ext: Optional[str] = None
+            Extension of images in tars if there is no extensions in imagename_column
+        processes: int = 1
+            Number of parallel processes to read a dataset data
+        progress_bar: bool = False
+            Progress bar to track dataset reading process
+            
+        Returns
+        -------
+        ShardsProcessor
+            ShardsProcessor object for given dataset
+        """
         
         dataset_path = dataset_path.rstrip('/')
         datafiles_ext = datafiles_ext.lstrip('.')
@@ -157,7 +198,34 @@ class T2IFormatter:
         image_ext: Optional[str] = None,
         processes: int = 1,
         progress_bar: bool = False,
-    ) -> pd.DataFrame:
+    ) -> RawProcessor:
+        """
+        Reads a dataset in raw format (images in folders and dataframes) and creates a RawProcessor for dataset.
+        
+        Parameters
+        ----------
+        dataset_path: str
+            Path to dataset
+        datafiles_ext: str = 'csv'
+            Extension of tables with data
+        imagename_column: str = 'image_name'
+            Name of column with image names
+        caption_column: str = 'caption'
+            Name of column with captions
+        check_same_columns: bool = True
+            Check that the columns in all tables are the same
+        image_ext: Optional[str] = None
+            Extension of images in folders if there is no extensions in imagename_column
+        processes: int = 1
+            Number of parallel processes to read a dataset data
+        progress_bar: bool = False
+            Progress bar to track dataset reading process
+            
+        Returns
+        -------
+        RawProcessor
+            RawProcessor object for given dataset
+        """
         
         dataset_path = dataset_path.rstrip('/')
         datafiles_ext = datafiles_ext.lstrip('.')

@@ -1,3 +1,4 @@
+from typing import List, Dict, Optional
 import pandas as pd
 from PIL import Image
 import os
@@ -7,31 +8,59 @@ import io
 from tqdm import tqdm
 from tqdm.contrib.concurrent import process_map
 
+from DPF.filesystems import FileSystem
 from DPF.processors.text2image.t2i_processor import T2IProcessor
     
     
 class ShardsProcessor(T2IProcessor):
-    def __init__(self, filesystem, df, dataset_path, archive_ext,
-                 datafiles_ext, imagename_column,
-                 caption_column, image_ext):
-        self.filesystem = filesystem
-        
-        self.df = df
-        self.init_shape = df.shape
-        self.dataset_path = dataset_path.rstrip('/')
+    """
+    Class that describes all interactions with text2image dataset in shards format (archives with images and dataframes).
+    It is recommended to use T2IFormatter to create ShardsProcessor instead of directly initialiasing a ShardsProcessor class.
+    """
+    
+    def __init__(
+            self, 
+            filesystem: FileSystem, 
+            df: pd.DataFrame, 
+            dataset_path: str,
+            archive_ext: str,
+            datafiles_ext: str, 
+            imagename_column: str,
+            caption_column: str, 
+            image_ext: str
+        ):
+        super().__init__(
+            filesystem, df, dataset_path, 
+            datafiles_ext, imagename_column, 
+            caption_column, image_ext
+        )
         
         self.archive_ext = archive_ext.lstrip('.')
-        self.datafiles_ext = datafiles_ext.lstrip('.')
-        self.imagename_column = imagename_column
-        self.caption_column = caption_column
-        self.image_ext = image_ext
-    
-    def rebuild(self, force=False):
-        assert not force or len(self.df) == self.init_shape[0], \
-            f"Dataframe length didn`t changed after initialisation. Set force=True to ignore this and force rebuild dataset."
-        raise NotImplementedError()      
         
-    def get_random_samples(self, df=None, n=1, from_tars=1):
+    def get_random_samples(
+            self, 
+            df: Optional[pd.DataFrame] = None, 
+            n: int = 1,
+            from_tars: int = 1
+        ) -> list:
+        """
+        Get N random samples from dataset
+        
+        Parameters
+        ----------
+        df: pd.DataFrame | None
+            DataFrame to sample from. If none, processor.df is used
+        n: int = 1
+            Number of samples to return
+        from_tars: int = 1
+            Number of archives to sample from
+            
+        Returns
+        -------
+        list
+            List of tuples with PIL images and dataframe data
+        """
+        
         if df is None:
             df = self.df
             
