@@ -11,7 +11,7 @@ import random
 import tarfile
 
 from .t2i_validator import T2IValidator
-from .utils import get_duplicated_elements, add_error_count
+from DPF.validators.utils import get_duplicated_elements, add_error_count
 from DPF.filesystems.filesystem import FileSystem
 
     
@@ -89,24 +89,20 @@ class ShardsValidator(T2IValidator):
             errors[errname] = list(duplicated_images_in_tar)
             error2count[errname] = len(errors[errname])
             errors['ok'] = False
-            
-        return errors, error2count
         
-    def validate_shard(self, csv_path: str):
-        errors = {"ok": True}
-        error2count = {}
-        df = self.filesystem.read_dataframe(csv_path)
-        
+    def validate_df(
+            self, 
+            df: pd.DataFrame,
+            errors: dict, 
+            error2count: Dict[str, int]
+        ):
         missed_columns = self.csv_columns_set.difference(set(df.columns))
         if len(missed_columns) > 0: 
             errname = 'missed columns'
             errors[errname] = list(missed_columns)
             error2count[errname] = 1
             errors['ok'] = False
-        
-        if self.validate_tars:
-            errors, error2count = self._validate_tar(csv_path, df, errors, error2count)
-        
+            
         image_names_in_csv = df[self.image_name_col]
         duplicated_images_in_csv = np.unique(get_duplicated_elements(image_names_in_csv))
         if len(duplicated_images_in_csv) > 0:
@@ -119,10 +115,23 @@ class ShardsValidator(T2IValidator):
             errors_caption, error2count_caption = self.validate_caption_df(df)
             errors.update(errors_caption)
             error2count.update(error2count_caption)
+            
+        return errors, error2count
+        
+        
+    def validate_shard(self, csv_path: str):
+        errors = {"ok": True}
+        error2count = {}
+        df = self.filesystem.read_dataframe(csv_path)
+        
+        errors, error2count = self.validate_df(df, errors, error2count)
+        
+        if self.validate_tars:
+            self._validate_tar(csv_path, df, errors, error2count)
 
         return {csv_path.replace('.csv', ''): errors}, error2count
 
-    def check_shards(
+    def validate(
             self,
             shards_dir: str, 
             processes: int = 1

@@ -9,7 +9,7 @@ from PIL import Image
 import random
 import tarfile
 
-from .utils import get_duplicated_elements, add_error_count
+from DPF.validators.utils import get_duplicated_elements, add_error_count
         
     
 class RawValidator(T2IValidator):

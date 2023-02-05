@@ -331,6 +331,15 @@ class T2IProcessor:
             self, 
             filter_func: Callable[[pd.DataFrame, FileSystem], pd.DataFrame]
         ):
+        """
+        Applies a function to processor.df and stores result to processor.df:
+        self.df = filter_func(self.df, self.filesystem)
+        
+        Parameters
+        ----------
+        filter_func: Callable[[pd.DataFrame, FileSystem], pd.DataFrame]
+            Function to apply
+        """
         self.df = filter_func(self.df, self.filesystem)
         
     def to_shards(
