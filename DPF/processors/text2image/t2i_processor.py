@@ -42,7 +42,7 @@ class ProcessorHelper:
         return errors
     
     def _rename_and_write_table_mp(self, data):
-        return self._replace_and_write_table(*data)
+        return self._rename_and_write_table(*data)
         
     def _delete_and_write_table(self, table_path, columns_to_delete) -> List[str]:
         df = self.filesystem.read_dataframe(table_path)

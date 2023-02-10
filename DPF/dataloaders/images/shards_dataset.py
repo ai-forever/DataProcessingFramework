@@ -1,4 +1,6 @@
+from typing import List
 import numpy as np
+import pandas as pd
 import os
 from PIL import Image
 from io import BytesIO
@@ -10,8 +12,16 @@ from torch.utils.data import IterableDataset
 from .utils import default_preprocess
 from DPF.filesystems.filesystem import FileSystem
 
+
 class ShardsDataset(IterableDataset):
-    def __init__(self, filesystem: FileSystem, df, cols_to_return=[], preprocess_f=default_preprocess):
+    
+    def __init__(
+            self, 
+            filesystem: FileSystem, 
+            df: pd.DataFrame, 
+            cols_to_return: List[str] = [], 
+            preprocess_f = default_preprocess
+        ):
         super(ShardsDataset).__init__()
         self.filesystem = filesystem
         self.columns = ['image_path']+cols_to_return

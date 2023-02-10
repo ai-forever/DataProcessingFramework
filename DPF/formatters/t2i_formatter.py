@@ -94,6 +94,7 @@ class T2IFormatter(Formatter):
         super().__init__(filesystem, **filesystem_kwargs)
 
     def _postprocess_dataframe(self, df: pd.DataFrame):
+        # TODO: do not create a copy of df, use inplace operations
         columns = ['image_name', 'image_path', 'table_path', 'archive_path', 'data_format', 'caption']
         columns = [i for i in columns if i in df.columns]
         orig_columns = [i for i in df.columns if i not in columns]

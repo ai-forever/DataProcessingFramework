@@ -16,21 +16,37 @@ from DPF.filesystems.filesystem import FileSystem
 
     
 class ShardsValidator(T2IValidator):
+    
     def __init__(
-        self, 
-        filesystem: FileSystem,
-        csv_columns: list, 
-        image_name_col: str = "image_name",
-        validate_captions: bool = True,
-        caption_column: str = "caption",
-        validate_tars: bool = True,
-    ):
-        super().__init__(filesystem, caption_column)
-        self.csv_columns = csv_columns
-        self.csv_columns_set = set(self.csv_columns)
-        self.image_name_col = image_name_col
-        
-        self.validate_captions = validate_captions
+            self, 
+            filesystem: FileSystem,
+            csv_columns: List[str], 
+            image_name_col: str = "image_name",
+            caption_column: str = "caption",
+            validate_captions: bool = True,
+            validate_tars: bool = True,
+        ):
+        """
+        Parameters
+        ----------
+        filesystem: DPF.filesystems.FileSystem
+            Filesystem object
+        csv_columns: List[str]
+            List of required columns in dataset`s dataframes. Each missing column will be counted as an error.
+        imagename_column: str = 'image_name'
+            Name of column with image names
+        caption_column: str = 'caption'
+            Name of column with captions
+        validate_captions: bool = True
+            Whether to check captions
+        validate_tars: bool = True
+            Whether to archives and images
+        """
+        super().__init__(
+            filesystem, caption_column, image_name_col, 
+            validate_captions, caption_column
+        )
+
         self.validate_tars = validate_tars
         
     def _validate_tar(
@@ -90,41 +106,15 @@ class ShardsValidator(T2IValidator):
             error2count[errname] = len(errors[errname])
             errors['ok'] = False
         
-    def validate_df(
-            self, 
-            df: pd.DataFrame,
-            errors: dict, 
-            error2count: Dict[str, int]
-        ):
-        missed_columns = self.csv_columns_set.difference(set(df.columns))
-        if len(missed_columns) > 0: 
-            errname = 'missed columns'
-            errors[errname] = list(missed_columns)
-            error2count[errname] = 1
-            errors['ok'] = False
-            
-        image_names_in_csv = df[self.image_name_col]
-        duplicated_images_in_csv = np.unique(get_duplicated_elements(image_names_in_csv))
-        if len(duplicated_images_in_csv) > 0:
-            errname = 'duplicated images in csv'
-            errors[errname] = list(duplicated_images_in_csv)
-            error2count[errname] = len(errors[errname])
-            errors['ok'] = False
-            
-        if self.validate_captions:
-            errors_caption, error2count_caption = self.validate_caption_df(df)
-            errors.update(errors_caption)
-            error2count.update(error2count_caption)
-            
-        return errors, error2count
-        
         
     def validate_shard(self, csv_path: str):
         errors = {"ok": True}
         error2count = {}
         df = self.filesystem.read_dataframe(csv_path)
         
-        errors, error2count = self.validate_df(df, errors, error2count)
+        errors_df, error2count_df = self.validate_df(df)
+        errors.update(errors_df)
+        error2count_df.update(error2count_df)
         
         if self.validate_tars:
             self._validate_tar(csv_path, df, errors, error2count)
@@ -133,13 +123,31 @@ class ShardsValidator(T2IValidator):
 
     def validate(
             self,
-            shards_dir: str, 
+            dataset_dir: str, 
             processes: int = 1
-        ) -> (dict, dict, bool):
+        ) -> (dict, Dict[str, int], bool):
+        """
+        Validates a dataset
+        
+        Parameters
+        ----------
+        dataset_dir: str
+            Path to dir with shards
+        processes: int = 1
+            Number of parallel processes to use during validation
 
-        shards_dir = shards_dir.rstrip('/')
-        files_tar = self.filesystem.listdir_with_ext(shards_dir, '.tar')
-        files_csv = self.filesystem.listdir_with_ext(shards_dir, '.csv')
+        Returns
+        -------
+        (dict, Dict[str, int], bool)
+            Returns csv2errors, error2count, all_ok: 
+            1) mapping dataframe to errors in this shard
+            2) mapping error name to number of its occures
+            3) status code (True if there was no errors)
+        """
+        
+        dataset_dir = dataset_dir.rstrip('/')
+        files_tar = self.filesystem.listdir_with_ext(dataset_dir, '.tar')
+        files_csv = self.filesystem.listdir_with_ext(dataset_dir, '.csv')
         files_csv_renamed = [i.replace('.tar', '.csv') for i in files_tar]
 
         assert len(files_csv) != 0, "Not found any .csv files"
