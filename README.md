@@ -46,6 +46,8 @@ pip install -r requirements.txt
 
 # Basic usage
 
+Примеры работы с фреймворком представлены в папке `examples/`
+
 ## Text to image
 
 ### Считывание датасета
