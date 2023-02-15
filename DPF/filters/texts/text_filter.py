@@ -15,15 +15,23 @@ from DPF.filesystems.filesystem import FileSystem
 
 class TextFilter:
     
-    def __init__(self, caption_name:str='caption'):
-        self.caption_name = caption_name
+    def __init__(
+            self, 
+            text_column_name: str = 'caption',
+            workers: int = 16
+        ):
+        self.text_column_name = text_column_name
+        self.workers = workers
+        
+        self.result_columns = []
            
-    def filter_text(self, row):
-        pass
+    def process(self, row):
+        raise NotImplementedError()
         
     def run(self, df: pd.DataFrame, filesystem: FileSystem) -> pd.DataFrame:
-        pandarallel.initialize(nb_workers=16)
-        df[self.result_columns] = np.array(list(df.parallel_apply(self.filter_text, axis=1)))
+        pandarallel.initialize(nb_workers=self.workers)
+        res = np.array(list(df.parallel_apply(self.process, axis=1)))
+        df[self.result_columns] = res
         return df
         
     def __call__(self, df: pd.DataFrame, filesystem: FileSystem) -> pd.DataFrame:
