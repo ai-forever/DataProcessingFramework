@@ -23,6 +23,9 @@ class ImageFilter(Filter):
         
         self.pbar = pbar
         
+        self.schema = [] # fill with your columns
+        self.dataloader_kwargs = {} # Insert your params
+        
     def preprocess(self, img_bytes: bytes, data: dict):
         raise NotImplementedError(
                 f'Implement preprocess in {self.__class__.__name__}'
@@ -54,6 +57,3 @@ class ImageFilter(Filter):
         df = pd.merge(df, df_result, on='image_path')
         
         return df
-        
-    def __call__(self, df: pd.DataFrame, filesystem: FileSystem) -> pd.DataFrame:
-        return self.run(df, filesystem)

@@ -12,7 +12,7 @@ from clip_onnx import clip_onnx
 
 from DPF.utils import read_image_rgb_from_bytes
 from DPF.filters.utils import identical_collate_fn
-from .t2ifilter import T2IFilter
+from .t2i_filter import T2IFilter
 
 
 class RuCLIPFilter(T2IFilter):

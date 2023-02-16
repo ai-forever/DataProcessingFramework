@@ -13,7 +13,7 @@ from torch.nn.utils.rnn import pad_sequence
 
 import clip
 
-from .t2ifilter import T2IFilter
+from .t2i_filter import T2IFilter
 from DPF.utils import read_image_rgb_from_bytes
 
 

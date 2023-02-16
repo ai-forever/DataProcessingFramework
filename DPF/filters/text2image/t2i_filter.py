@@ -57,6 +57,3 @@ class T2IFilter(Filter):
         df = pd.merge(df, df_result, on='image_path')
         
         return df
-        
-    def __call__(self, df: pd.DataFrame, filesystem: FileSystem) -> pd.DataFrame:
-        return self.run(df, filesystem)

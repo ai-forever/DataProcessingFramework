@@ -6,20 +6,22 @@ from tqdm import tqdm
 
 from DPF.dataloaders.images import UniversalT2IDataloader
 from DPF.filters.images.img_filter import ImageFilter
-from DPF.filters.text2image.t2ifilter import T2IFilter
+from DPF.filters.text2image.t2i_filter import T2IFilter
+from DPF.filters import Filter
 from DPF.filesystems.filesystem import FileSystem
 
 
 allowed_filter_types = (T2IFilter, ImageFilter)
 
 
-class ComplexFilter(ImageFilter):
+class ComplexFilter(Filter):
     
     def __init__(
             self, 
             filter_list: List[Union[ImageFilter, T2IFilter]], 
             use_same_preprocess: bool = False,
-            workers: int = 16, pbar: bool = True
+            workers: int = 16, 
+            pbar: bool = True
         ):
         super(ComplexFilter, self).__init__(pbar)
         
@@ -29,7 +31,7 @@ class ComplexFilter(ImageFilter):
         
         assert len(filter_list) > 0, "There should be at list one filter"
         assert all([isinstance(f, allowed_filter_types) for f in self.filter_list]), \
-            f"All filters should be instances of classes: {allowed_filter_types}"
+            f"All filters should be an instance of these classes: {allowed_filter_types}"
         
         self.batch_size = max([f.dataloader_kwargs["batch_size"] for f in self.filter_list])
         
@@ -70,6 +72,9 @@ class ComplexFilter(ImageFilter):
     def _add_values_from_batch(main_dict: dict, batch_dict: dict):
         for k, v in batch_dict.items():
             main_dict[k].extend(v)
+       
+    def _generate_dict_from_schema(self):
+        return {i: [] for i in self.schema}
         
     def run(self, df: pd.DataFrame, filesystem: FileSystem) -> pd.DataFrame:
         dataloader = UniversalT2IDataloader(filesystem, df, **self.dataloader_kwargs)
@@ -96,14 +101,4 @@ class ComplexFilter(ImageFilter):
         df_result = pd.DataFrame(df_labels)
         df = pd.merge(df, df_result, on='image_path')
         
-        if self.save_parquets:
-            parquet_path = f'{self.save_parquets_dir}/{self.task_name}.parquet'
-            df.to_parquet(
-                parquet_path,
-                index=False
-            )
-        
         return df
-    
-    def __call__(self, df: pd.DataFrame, filesystem: FileSystem) -> pd.DataFrame:
-        return self.run(df, filesystem)

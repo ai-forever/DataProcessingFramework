@@ -26,7 +26,7 @@ class TextFilter(Filter):
         self.text_column_name = text_column_name
         self.workers = workers
         
-        self.result_columns = []
+        self.schema = []
            
     def process(self, row):
         raise NotImplementedError()
@@ -34,8 +34,5 @@ class TextFilter(Filter):
     def run(self, df: pd.DataFrame, filesystem: FileSystem) -> pd.DataFrame:
         pandarallel.initialize(nb_workers=self.workers)
         res = np.array(list(df.parallel_apply(self.process, axis=1)))
-        df[self.result_columns] = res
+        df[self.schema] = res
         return df
-        
-    def __call__(self, df: pd.DataFrame, filesystem: FileSystem) -> pd.DataFrame:
-        return self.run(df, filesystem)
