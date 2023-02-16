@@ -115,7 +115,7 @@ processor.update_data(['aspect_ratio'], processes=8)
 - `DPF/filters/images`
 - `DPF/filters/texts`
 
-Для применения фильтра необходимо сначала создать объект класса `Processor`, а затем вызвать метод `Processor.apply_filter`, передав ему соответсвующий фильтр. В результате работы фильтра, в датафрейме `processor.df` добавятся новые колонки. Например, применить фильтр водяных знаков можно так:
+Для применения фильтра необходимо сначала создать объект класса `Processor`, а затем вызвать метод `Processor.apply_filter`, передав ему соответсвующий фильтр. В результате работы фильтра в датафрейме `processor.df` добавятся новые колонки. Например, применение фильтра водяных знаков будет выглядить так:
 ```python
 from DPF.filters.images.watermarks_filter import WatermarksFilter
 
@@ -127,6 +127,35 @@ watermarks_filter = WatermarksFilter(
 )
 
 processor.apply_filter(watermarks_filter)
-
 processor.df.head()
 ```
+
+Фильтр, определяющий язык текста:
+```python
+from DPF.filters.texts.lang_filter import LangFilter
+
+langfilter = LangFilter(
+    text_column_name='caption'
+)
+
+processor.apply_filter(lfilter)
+processor.df.head()
+```
+
+Больше про фильтры смотрите [здесь](), а также в [этом ноутбуке]().
+
+### Валидация
+
+TO-DO
+
+## Images
+
+TO-DO
+
+## Texts
+
+TO-DO
+
+# Filters
+
+TO-DO
