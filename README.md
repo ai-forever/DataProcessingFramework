@@ -107,3 +107,26 @@ processor.update_data(['aspect_ratio'], processes=8)
 Все перечисленные выше методы изменяют именно файлы датасета, то есть сохраняют изменения в хранилище.
 - `processor.get_random_samples` - просмотр случайных примеров из датасета
 - `processor.apply_filter` - применение фильтра к датасету
+
+### Фильтрация
+
+Для датасетов модальности *text2image* можно применять также фильтры модальностей *images* и *texts*. Фильтры соответствующих модальностей расположены в папке `DPF/filters/` следующим образом:
+- `DPF/filters/text2image`
+- `DPF/filters/images`
+- `DPF/filters/texts`
+
+Для применения фильтра необходимо сначала создать объект класса `Processor`, а затем вызвать метод `Processor.apply_filter`, передав ему соответсвующий фильтр. В результате работы фильтра, в датафрейме `processor.df` добавятся новые колонки. Например, применить фильтр водяных знаков можно так:
+```python
+from DPF.filters.images.watermarks_filter import WatermarksFilter
+
+# see more: help(WatermarksFilter)
+watermarks_filter = WatermarksFilter(
+    'resnext50_32x4d-small',
+    weights_folder='your_weights_folder',
+    workers=8, batch_size=128
+)
+
+processor.apply_filter(watermarks_filter)
+
+processor.df.head()
+```
