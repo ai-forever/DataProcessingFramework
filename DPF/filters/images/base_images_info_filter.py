@@ -41,10 +41,10 @@ class ImageInfoGatherer(ImageFilter):
     
     def __init__(
             self, 
-            task_name: Optional[str] = None, save_parquets_dir: Optional[str] = None, 
-            save_parquets: bool = False, pbar: bool = True, workers: int = 16
+            workers: int = 16, 
+            pbar: bool = True
         ):
-        super(ImageInfoGatherer, self).__init__(task_name, save_parquets, save_parquets_dir, pbar)
+        super(ImageInfoGatherer, self).__init__(pbar)
         
         self.num_workers = workers
         

@@ -12,15 +12,16 @@ from DPF.filesystems.filesystem import FileSystem
 
 allowed_filter_types = (T2IFilter, ImageFilter)
 
+
 class ComplexFilter(ImageFilter):
+    
     def __init__(
             self, 
             filter_list: List[Union[ImageFilter, T2IFilter]], 
             use_same_preprocess: bool = False,
-            task_name: Optional[str] = None, save_parquets_dir: Optional[str] = None, 
-            save_parquets: bool = False, pbar: bool = True, workers: int = 16
+            workers: int = 16, pbar: bool = True
         ):
-        super(ComplexFilter, self).__init__(task_name, save_parquets, save_parquets_dir, pbar)
+        super(ComplexFilter, self).__init__(pbar)
         
         self.filter_list = filter_list
         self.num_workers = workers

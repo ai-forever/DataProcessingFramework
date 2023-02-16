@@ -27,10 +27,11 @@ class CLIPFilter(T2IFilter):
             device: str = 'cuda:0', 
             use_onnx: bool = False, 
             logit_scale: Optional[float] = None,
-            task_name: Optional[str] = None, save_parquets_dir: Optional[str] = None, 
-            save_parquets: bool = False, pbar: bool = True, workers: int = 16, batch_size: int = 64
+            workers: int = 16, 
+            batch_size: int = 64, 
+            pbar: bool = True
         ):
-        super(CLIPFilter, self).__init__(task_name, save_parquets, save_parquets_dir, pbar)
+        super(CLIPFilter, self).__init__(pbar)
         
         self.num_workers = workers
         self.batch_size = batch_size

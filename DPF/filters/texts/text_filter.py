@@ -11,15 +11,18 @@ import torch
 
 from DPF.dataloaders.images import UniversalT2IDataloader
 from DPF.filesystems.filesystem import FileSystem
+from DPF.filters import Filter
 
 
-class TextFilter:
+class TextFilter(Filter):
     
     def __init__(
             self, 
             text_column_name: str = 'caption',
             workers: int = 16
         ):
+        super(TextFilter, self).__init__()
+        
         self.text_column_name = text_column_name
         self.workers = workers
         

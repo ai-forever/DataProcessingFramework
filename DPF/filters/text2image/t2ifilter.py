@@ -10,20 +10,21 @@ import torch
 
 from DPF.dataloaders.images import UniversalT2IDataloader
 from DPF.filesystems.filesystem import FileSystem
+from DPF.filters import Filter
 
-class T2IFilter:
+
+class T2IFilter(Filter):
     
-    def __init__(self, task_name: str, save_parquets: bool, save_parquets_dir: str, pbar: bool):
-        self.save_parquets_dir = save_parquets_dir
-        self.save_parquets = save_parquets
-        self.task_name = task_name if task_name else ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
-        self.pbar = pbar
+    def __init__(
+            self, 
+            task_name: str, 
+            save_parquets: bool, 
+            save_parquets_dir: str, 
+            pbar: bool
+        ):
+        super(T2IFilter, self).__init__()
         
-        if self.save_parquets:
-            assert save_parquets_dir is not None and type(save_parquets_dir) == str, \
-                f"save_parquets_dir parameters should be correct path"
-            self.save_parquets_dir = save_parquets_dir.rstrip('/')
-            os.makedirs(self.save_parquets_dir, exist_ok=True)
+        self.pbar = pbar
         
     def preprocess(self, img_bytes, data):
         raise NotImplementedError(
@@ -54,14 +55,6 @@ class T2IFilter:
         
         df_result = pd.DataFrame(df_labels)
         df = pd.merge(df, df_result, on='image_path')
-        
-        if self.save_parquets:
-            parquet_path = f'{self.save_parquets_dir}/{self.task_name}.parquet'
-            # REWORK
-            df.to_parquet(
-                parquet_path,
-                index=False
-            )
         
         return df
         

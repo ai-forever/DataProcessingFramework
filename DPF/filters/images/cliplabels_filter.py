@@ -34,16 +34,12 @@ class CLIPLabelsFilter(ImageFilter):
         TODO
     device: str = 'cuda:0'
         Torch device to use
-    pbar: bool = True
-        Flag for displaying progress bar
     workers: int = 16
         Number of processes for use in dataloader
     batch_size: int = 64
         Batch size for model
-    save_parquets_dir: Optional[str] = None
-        TODO
-    save_parquets: bool = False
-        TODO
+    pbar: bool = True
+        Flag for displaying progress bar
         
     Attributes
     ----------
@@ -61,10 +57,11 @@ class CLIPLabelsFilter(ImageFilter):
             device: str = 'cuda:0', 
             use_onnx: bool = False,
             templates: List[str] = ['{}', 'photo of a {}'], 
-            task_name: Optional[str] = None, save_parquets_dir: Optional[str] = None, 
-            save_parquets: bool = False, pbar: bool = True, workers: int = 16, batch_size: int = 64
+            workers: int = 16, 
+            batch_size: int = 64, 
+            pbar: bool = True
         ):
-        super(CLIPLabelsFilter, self).__init__(task_name, save_parquets, save_parquets_dir, pbar)
+        super(CLIPLabelsFilter, self).__init__(pbar)
 
         self.num_workers = workers
         self.batch_size = batch_size
