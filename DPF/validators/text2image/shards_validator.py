@@ -40,7 +40,7 @@ class ShardsValidator(T2IValidator):
         validate_captions: bool = True
             Whether to check captions
         validate_tars: bool = True
-            Whether to archives and images
+            Whether to validate archives and images
         """
         super().__init__(
             filesystem, caption_column, image_name_col, 

@@ -4,7 +4,6 @@ import numpy as np
 import os
 from glob import glob
 from tqdm import tqdm
-from pandarallel import pandarallel
 
 from DPF.filesystems.filesystem import FileSystem
 from DPF.validators.utils import get_duplicated_elements, add_error_count
