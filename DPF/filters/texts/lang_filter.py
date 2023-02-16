@@ -19,7 +19,7 @@ class LangFilter(TextFilter):
         self.lang_identifier = LanguageIdentifier.from_pickled_model(MODEL_FILE, norm_probs=True)
         
         self.text_column_name = text_column_name
-        self.result_columns = ['lang', 'lang_score']
+        self.schema = ['lang', 'lang_score']
           
     def process(self, row):
         lg, score = self.lang_identifier.classify(row[self.text_column_name])

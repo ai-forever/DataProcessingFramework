@@ -1,3 +1,7 @@
+import pandas as pd
+from DPF.filesystems import FileSystem
+
+
 class Filter:
     """
     Abstract class for all filters

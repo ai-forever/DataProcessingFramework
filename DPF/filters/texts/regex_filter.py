@@ -34,7 +34,7 @@ class RegexFilter(TextFilter):
         self.compile_regexs(regex_replacement_list)
         
         self.text_column_name = text_column_name
-        self.result_columns = 'clean_caption'
+        self.schema = 'clean_caption'
 
     def add_regex(self, regex, replacement):
         self.compiled_regexs.append((re.compile(regex), replacement))

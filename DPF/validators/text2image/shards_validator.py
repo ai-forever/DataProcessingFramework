@@ -43,8 +43,8 @@ class ShardsValidator(T2IValidator):
             Whether to validate archives and images
         """
         super().__init__(
-            filesystem, caption_column, image_name_col, 
-            validate_captions, caption_column
+            filesystem=filesystem, csv_columns=csv_columns, image_name_col=image_name_col, 
+            caption_column=caption_column, validate_captions=validate_captions
         )
 
         self.validate_tars = validate_tars
@@ -114,7 +114,7 @@ class ShardsValidator(T2IValidator):
         
         errors_df, error2count_df = self.validate_df(df)
         errors.update(errors_df)
-        error2count_df.update(error2count_df)
+        error2count.update(error2count_df)
         
         if self.validate_tars:
             self._validate_tar(csv_path, df, errors, error2count)
