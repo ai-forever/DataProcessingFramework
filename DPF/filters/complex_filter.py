@@ -27,6 +27,7 @@ class ComplexFilter(Filter):
         
         self.filter_list = filter_list
         self.num_workers = workers
+        self.pbar = pbar
         self.use_same_preprocess = use_same_preprocess
         
         assert len(filter_list) > 0, "There should be at list one filter"
