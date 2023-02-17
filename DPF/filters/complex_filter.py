@@ -23,7 +23,7 @@ class ComplexFilter(Filter):
             workers: int = 16, 
             pbar: bool = True
         ):
-        super(ComplexFilter, self).__init__(pbar)
+        super(ComplexFilter, self).__init__()
         
         self.filter_list = filter_list
         self.num_workers = workers

@@ -25,22 +25,20 @@ class RuCLIPFilter(T2IFilter):
         Version of model to use. Check available version here: https://github.com/ai-forever/ru-clip"
     weights_folder: str
         Path to folder with weights
-    templates: List[str] = ['{}', 'изображение с {}', 'фото с {}']
-        TODO
+    templates: List[str] = ['{}']
+        List of strings to be used as templates for texts. Text embedding will be calculated as a mean value of that templates embeddings
     use_onnx: bool = False
-        TODO
+        Use ONNX model
     device: str = 'cuda:0'
         Torch device to use
-    pbar: bool = True
-        Flag for displaying progress bar
+    logit_scale: Optional[float] = None
+        Logit scale for model (None is equal to default value)
     workers: int = 16
         Number of processes for use in dataloader
     batch_size: int = 64
         Batch size for model
-    save_parquets_dir: Optional[str] = None
-        TODO
-    save_parquets: bool = False
-        TODO
+    pbar: bool = True
+        Flag for displaying progress bar
         
     Attributes
     ----------

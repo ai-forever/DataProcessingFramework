@@ -17,9 +17,6 @@ class T2IFilter(Filter):
     
     def __init__(
             self, 
-            task_name: str, 
-            save_parquets: bool, 
-            save_parquets_dir: str, 
             pbar: bool
         ):
         super(T2IFilter, self).__init__()

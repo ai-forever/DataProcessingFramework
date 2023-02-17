@@ -18,6 +18,37 @@ from DPF.utils import read_image_rgb_from_bytes
 
 
 class CLIPFilter(T2IFilter):
+    """
+    Filter for calculating similarity score of images and captions with RuCLIP.
+    
+    Parameters
+    ----------
+    clip_version: str
+        Version of model to use. Check available version here: https://github.com/openai/CLIP"
+    weights_folder: str
+        Path to folder with weights
+    templates: List[str] = ['{}']
+        List of strings to be used as templates for texts. Text embedding will be calculated as a mean value of that templates embeddings
+    device: str = 'cuda:0'
+        Torch device to use
+    use_onnx: bool = False
+        Use ONNX model
+    logit_scale: Optional[float] = None
+        Logit scale for model (None is equal to default value)
+    workers: int = 16
+        Number of processes for use in dataloader
+    batch_size: int = 64
+        Batch size for model
+    pbar: bool = True
+        Flag for displaying progress bar
+        
+    Attributes
+    ----------
+    schema: List[str]
+        List of columns to be added with this filter.
+    dataloader_kwargs: dict:
+        Parameters for dataloader (batch_size, num_workers, collate_fn, etc.)
+    """
     
     def __init__(
             self, 
