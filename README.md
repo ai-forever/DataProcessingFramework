@@ -1,12 +1,6 @@
 # DataProcessingFramework
 
 Фреймворк для работы с датасетами
-
-Поддерживаемые форматы:
-- Images
-- Text-to-image
-  - shards
-  - raw
   
 ## Contents
 
@@ -28,6 +22,7 @@ pip install -r requirements.txt
 - Считывать и просматривать датасеты как локально, так и на удаленном хранилище (например, S3)
 - Применять различные фильтры для текстов и картинок в датасете
 - Сохранять и изменять датасет, добавлять в него новую информацию 
+- Валидировать датасет, то есть проверять его на соответствие определенному формату хранения
 
 Во фреймворке используется несколько основных и вспомогательных классов, выполняющие определенные задачи.
 
@@ -43,6 +38,14 @@ pip install -r requirements.txt
 - **FileSystem** (`DPF.filesystems`) - Абстракция файловой системы (local/S3)
 - **Dataloader** (`DPF.dataloaders`) - Подгрузчики данных для каждого формата хранения
 - **Writer** (`DPF.processors.writers`) - Класс, реализующий сохранение данных для конкретного формата хранения
+
+### Поддерживаемые форматы
+
+Поддерживаются следующие модальности и форматы хранения:
+- *Images* (просто картинки)
+- *Text-to-image* (пары картинка-текст)
+  - *shards* (tar-архивы с картинками и csv с текстами и дополнительными данными)
+  - *raw* (папки с картинками и csv с текстами и дополнительными данными)
 
 # Basic usage
 
@@ -146,7 +149,36 @@ processor.df.head()
 
 ### Валидация
 
-TO-DO
+Валидация позволяет проверить соответствует ли датасет формату хранения, также проверить его на битые файлы, значения NaN и прочее. Для этого используется класс `T2IValidator`. Валидатор принимает путь к датасету и возвращает: 
+1) список ошибок для каждого шарда
+2) для каждой ошибки - сколько раз она возникла
+3) статус (`False`, если возникла хотя бы одна ошибка, `True` иначе)
+
+Пример валидации датасета в формате *shards*:
+```python
+from DPF.formatters.t2i_formatter import T2IFormatter
+from DPF.validators.text2image.shards_validator import ShardsValidator
+
+path = 'path_to_your_shards'
+
+formatter = T2IFormatter()
+processor = formatter.from_shards(
+    path, 
+    imagename_column='image_name',
+    caption_column='caption',
+    progress_bar=True,
+    processes=16
+)
+
+validator = ShardsValidator(
+    filesystem=processor.get_filesystem(),
+    csv_columns=['image_name', 'caption'], # список колонок, наличие которых необходимо проверить в датасете
+    caption_column='caption',
+    validate_tars=True
+)
+
+results, err2count, all_ok = validator.validate(path, processes=16)
+```
 
 ## Images
 
