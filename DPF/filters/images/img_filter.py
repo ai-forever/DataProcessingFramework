@@ -1,3 +1,4 @@
+import abc
 import os
 import pandas as pd
 from PIL import Image
@@ -26,15 +27,13 @@ class ImageFilter(Filter):
         self.schema = [] # fill with your columns
         self.dataloader_kwargs = {} # Insert your params
         
+    @abc.abstractmethod
     def preprocess(self, img_bytes: bytes, data: dict):
-        raise NotImplementedError(
-                f'Implement preprocess in {self.__class__.__name__}'
-        )
+        pass
         
+    @abc.abstractmethod
     def process_batch(self, batch) -> dict:
-        raise NotImplementedError(
-                f'Implement process_batch in {self.__class__.__name__}'
-        )
+        pass
         
     @staticmethod
     def _add_values_from_batch(main_dict: dict, batch_dict: dict):

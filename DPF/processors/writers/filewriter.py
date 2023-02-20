@@ -4,6 +4,7 @@ import traceback
 from typing import Optional, Dict
 
 class FileWriter:
+    
     @abc.abstractmethod
     def save_file(
         self, 

@@ -1,3 +1,4 @@
+import abc
 import os
 import pandas as pd
 from PIL import Image
@@ -23,15 +24,13 @@ class T2IFilter(Filter):
         
         self.pbar = pbar
         
+    @abc.abstractmethod
     def preprocess(self, img_bytes, data):
-        raise NotImplementedError(
-                f'Implement preprocess in {self.__class__.__name__}'
-        )
+        pass
         
+    @abc.abstractmethod
     def process_batch(self, batch) -> dict:
-        raise NotImplementedError(
-                f'Implement process_batch in {self.__class__.__name__}'
-        )
+        pass
         
     @staticmethod
     def _add_values_from_batch(main_dict, batch_dict):

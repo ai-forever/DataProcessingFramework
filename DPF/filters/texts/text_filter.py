@@ -1,3 +1,4 @@
+import abc
 import os
 import pandas as pd
 from PIL import Image
@@ -28,8 +29,9 @@ class TextFilter(Filter):
         
         self.schema = []
            
+    @abc.abstractmethod
     def process(self, row):
-        raise NotImplementedError()
+        pass
         
     def run(self, df: pd.DataFrame, filesystem: FileSystem) -> pd.DataFrame:
         pandarallel.initialize(nb_workers=self.workers)

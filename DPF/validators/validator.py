@@ -1,9 +1,11 @@
+import abc
 from typing import Dict, List
 import pandas as pd
 
 
 class Validator:
     
+    @abc.abstractmethod
     def validate_df(
             self, 
             df: pd.DataFrame
@@ -13,9 +15,8 @@ class Validator:
         # dictionary with errors description and dictionary with number of occured errors
         errors = {"ok": True}
         error2count = {}
-        
-        raise NotImplementedError()
     
+    @abc.abstractmethod
     def validate(
             self,
             dataset_dir: str, 
@@ -28,5 +29,3 @@ class Validator:
         errors = {"ok": True}
         error2count = {}
         all_ok = True
-        
-        raise NotImplementedError()
