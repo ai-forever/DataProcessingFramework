@@ -13,11 +13,42 @@ from torch.nn.utils.rnn import pad_sequence
 
 import clip
 
-from .t2ifilter import T2IFilter
+from .t2i_filter import T2IFilter
 from DPF.utils import read_image_rgb_from_bytes
 
 
 class CLIPFilter(T2IFilter):
+    """
+    Filter for calculating similarity score of images and captions with RuCLIP.
+    
+    Parameters
+    ----------
+    clip_version: str
+        Version of model to use. Check available version here: https://github.com/openai/CLIP"
+    weights_folder: str
+        Path to folder with weights
+    templates: List[str] = ['{}']
+        List of strings to be used as templates for texts. Text embedding will be calculated as a mean value of that templates embeddings
+    device: str = 'cuda:0'
+        Torch device to use
+    use_onnx: bool = False
+        Use ONNX model
+    logit_scale: Optional[float] = None
+        Logit scale for model (None is equal to default value)
+    workers: int = 16
+        Number of processes for use in dataloader
+    batch_size: int = 64
+        Batch size for model
+    pbar: bool = True
+        Flag for displaying progress bar
+        
+    Attributes
+    ----------
+    schema: List[str]
+        List of columns to be added with this filter.
+    dataloader_kwargs: dict:
+        Parameters for dataloader (batch_size, num_workers, collate_fn, etc.)
+    """
     
     def __init__(
             self, 
@@ -27,10 +58,11 @@ class CLIPFilter(T2IFilter):
             device: str = 'cuda:0', 
             use_onnx: bool = False, 
             logit_scale: Optional[float] = None,
-            task_name: Optional[str] = None, save_parquets_dir: Optional[str] = None, 
-            save_parquets: bool = False, pbar: bool = True, workers: int = 16, batch_size: int = 64
+            workers: int = 16, 
+            batch_size: int = 64, 
+            pbar: bool = True
         ):
-        super(CLIPFilter, self).__init__(task_name, save_parquets, save_parquets_dir, pbar)
+        super(CLIPFilter, self).__init__(pbar)
         
         self.num_workers = workers
         self.batch_size = batch_size

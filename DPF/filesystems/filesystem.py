@@ -1,3 +1,4 @@
+import abc
 import pandas as pd
 import os
 import io
@@ -9,6 +10,7 @@ class FileSystem:
     Abstract class for all filesystems
     """
     
+    @abc.abstractmethod
     def read_file(self, filepath: str, binary: bool) -> io.BytesIO:
         """
         Reads file content
@@ -25,8 +27,9 @@ class FileSystem:
         io.BytesIO | str
             io.BytesIO object if binary, string otherwise
         """
-        raise NotImplementedError()
+        pass
         
+    @abc.abstractmethod
     def save_file(self, data: Union[str, bytes, io.BytesIO], filepath: str, binary: bool) -> None:
         """
         Saves data to file
@@ -40,7 +43,7 @@ class FileSystem:
         binary: bool
             Write file in binary mode or in text mode
         """
-        raise NotImplementedError()
+        pass
     
     def read_tar(self, filepath: str):
         """
@@ -104,6 +107,7 @@ class FileSystem:
             raise NotImplementedError(f"Unknown file format: {filetype}")
         self.save_file(data=data, filepath=filepath, binary=True)
         
+    @abc.abstractmethod
     def listdir(self, folder_path: str, filenames_only: bool = False) -> List[str]:
         """
         Returns the contents of folder
@@ -120,7 +124,7 @@ class FileSystem:
         List[str]
             List of filepaths (filenames if filenames_only)
         """
-        raise NotImplementedError()
+        pass
         
     def listdir_with_ext(self, folder_path: str, ext: str, filenames_only: bool = False) -> List[str]:
         """
@@ -143,6 +147,7 @@ class FileSystem:
         ext = '.'+ext.lstrip('.')
         return [f for f in self.listdir(folder_path, filenames_only=filenames_only) if f.endswith(ext)]
     
+    @abc.abstractmethod
     def mkdir(self, folder_path: str) -> None:
         """
         Creates a directory
@@ -152,4 +157,4 @@ class FileSystem:
         folder_path: str
             Path to folder to create
         """
-        raise NotImplementedError()
+        pass

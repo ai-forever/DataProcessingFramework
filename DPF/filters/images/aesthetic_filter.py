@@ -47,10 +47,11 @@ class AestheticFilter(ImageFilter):
             clip_model: str, 
             weights_folder: str, 
             device: str = 'cuda:0',
-            task_name: Optional[str] = None, save_parquets_dir: Optional[str] = None, 
-            save_parquets: bool = False, pbar: bool = True, workers: int = 16, batch_size: int = 64
+            workers: int = 16, 
+            batch_size: int = 64,
+            pbar: bool = True
         ):
-        super(AestheticFilter, self).__init__(task_name, save_parquets, save_parquets_dir, pbar)
+        super(AestheticFilter, self).__init__(pbar)
 
         self.num_workers = workers
         self.batch_size = batch_size

@@ -58,9 +58,16 @@ def normalized(a, axis=-1, order=2):
 
 class NSFWFilter(ImageFilter):
 
-    def __init__(self, clip_model, weights_folder, task_name=None, save_parquets_dir=None,
-                 save_parquets=False, pbar=True, workers=16, batch_size=64, device='cuda:0'):
-        super(NSFWFilter, self).__init__(task_name, save_parquets, save_parquets_dir, pbar)
+    def __init__(
+            self, 
+            clip_model: str, 
+            weights_folder: str, 
+            workers: int = 16, 
+            batch_size: int = 64, 
+            device: str = 'cuda:0', 
+            pbar: bool = True
+        ):
+        super(NSFWFilter, self).__init__(pbar)
 
         self.num_workers = workers
         self.batch_size = batch_size

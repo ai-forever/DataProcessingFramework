@@ -36,10 +36,10 @@ class PHashFilter(ImageFilter):
     def __init__(
             self, 
             sim_hash_size: int = 8,
-            task_name: Optional[str] = None, save_parquets_dir: Optional[str] = None, 
-            save_parquets: bool = False, pbar: bool = True, workers: int = 16
+            workers: int = 16, 
+            pbar: bool = True
         ):
-        super(PHashFilter, self).__init__(task_name, save_parquets, save_parquets_dir, pbar)
+        super(PHashFilter, self).__init__(pbar)
         
         self.num_workers = workers
         self.sim_hash_size = sim_hash_size

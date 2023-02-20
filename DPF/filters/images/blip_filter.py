@@ -18,9 +18,14 @@ except ImportError:
 
 class BLIPFilter(ImageFilter):
 
-    def __init__(self, task_name=None, save_parquets_dir=None,
-                 save_parquets=False, pbar=True, workers=16, batch_size=64, device='cuda:0'):
-        super(BLIPFilter, self).__init__(task_name, save_parquets, save_parquets_dir, pbar)
+    def __init__(
+            self, 
+            workers=16, 
+            batch_size=64, 
+            device='cuda:0', 
+            pbar=True
+        ):
+        super(BLIPFilter, self).__init__(pbar)
 
         self.num_workers = workers
         self.batch_size = batch_size

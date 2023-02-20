@@ -14,21 +14,18 @@ from DPF.filesystems.filesystem import FileSystem
 from DPF.filters import Filter
 
 
-class ImageFilter(Filter):
+class T2IFilter(Filter):
     
     def __init__(
             self, 
             pbar: bool
         ):
-        super(ImageFilter, self).__init__()
+        super(T2IFilter, self).__init__()
         
         self.pbar = pbar
         
-        self.schema = [] # fill with your columns
-        self.dataloader_kwargs = {} # Insert your params
-        
     @abc.abstractmethod
-    def preprocess(self, img_bytes: bytes, data: dict):
+    def preprocess(self, img_bytes, data):
         pass
         
     @abc.abstractmethod
@@ -36,7 +33,7 @@ class ImageFilter(Filter):
         pass
         
     @staticmethod
-    def _add_values_from_batch(main_dict: dict, batch_dict: dict):
+    def _add_values_from_batch(main_dict, batch_dict):
         for k, v in batch_dict.items():
             main_dict[k].extend(v)
        
