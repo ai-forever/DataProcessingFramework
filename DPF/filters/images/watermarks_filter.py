@@ -76,10 +76,6 @@ class WatermarksFilter(ImageFilter):
         Number of processes for use in dataloader
     batch_size: int = 64
         Batch size for model
-    save_parquets_dir: Optional[str] = None
-        TODO
-    save_parquets: bool = False
-        TODO
         
     Attributes
     ----------
