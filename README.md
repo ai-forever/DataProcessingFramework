@@ -94,7 +94,7 @@ processor = formatter.from_shards(
 
 Основная информация о датасете хранится в атрибуте `processor.df`. 
 
-Больше подробностей можно найти в [ноутбуке с примером]()
+Больше подробностей можно найти в [ноутбуке с примером](https://github.com/ai-forever/DataProcessingFramework/blob/main/examples/explore_text2image_dataset.ipynb)
 
 ### Изменение и добавление данных
 
@@ -145,7 +145,7 @@ processor.apply_filter(lfilter)
 processor.df.head()
 ```
 
-Больше про фильтры смотрите [здесь](), а также в [этом ноутбуке]().
+Больше про фильтры смотрите [здесь](#filters), а также в [этом ноутбуке](https://github.com/ai-forever/DataProcessingFramework/blob/main/examples/filter_text2image_dataset.ipynb).
 
 ### Валидация
 
