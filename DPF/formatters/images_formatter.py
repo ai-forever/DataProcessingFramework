@@ -1,69 +1,130 @@
+from typing import Dict, Optional
 import pandas as pd
 import os
 import glob
 from tqdm import tqdm
 
-from DPF.utils.utils import get_file_extension
+from DPF.filesystems import FileSystem
+from DPF.utils import get_file_extension
+from DPF.utils.constants import ALLOWED_IMAGES_FORMATS
+from DPF.helpers.dataframe_reader import DataframeReader
+
+from DPF.processors.images import ImagesProcessor
+
+from .formatter import Formatter
 
 
-class ImagesFormatter:
+class ImagesFormatter(Formatter):
+    """
+    Formatter for image datasets. 
+    Formatter is used to read and create a Processor class for a dataset.
+    """
     
-    def _read_dataframe(self, filepath: str, filetype: str, **kwargs) -> pd.DataFrame:
-        if filetype == 'csv':
-            return pd.read_csv(filepath, **kwargs)
-        elif filetype == 'parquet':
-            return pd.read_parquet(filepath, **kwargs)
-        else:
-            raise NotImplementedError(f"Unknown file format: {filetype}")
+    def __init__(
+            self,
+            filesystem: str = 'local',
+            **filesystem_kwargs
+        ):
+        super().__init__(filesystem, **filesystem_kwargs)
     
     def _postprocess_dataframe(self, df: pd.DataFrame):
-        columns = ['image_name', 'image_path', 'table_path', 'archive_path', 'data_format']
+        # TODO: do not create a copy of df, use inplace operations
+        columns = ['image_name', 'image_path', 'data_format', 'label']
         columns = [i for i in columns if i in df.columns]
-        orig_columns = [i for i in df.columns if i not in columns]
-        columns.extend(list(orig_columns))
         return df[columns]
-    
-    def from_images_in_folder(
+
+    def from_folder(
         self,
-        dirpath: str,
+        directory: str,
+        progress_bar: bool = True,
         allowed_image_formats: set = ALLOWED_IMAGES_FORMATS,
-        use_abs_path: bool = False,
-        progress_bar: bool = False
-    ) -> pd.DataFrame:
+    ) -> ImagesProcessor:
         
-        dirpath = dirpath.rstrip('/')
-        if use_abs_path:
-            dirpath = os.path.abspath(dirpath)
+        allowed_image_formats = set(allowed_image_formats)
+        
+        directory = directory.rstrip('/')
         
         image_paths = []
-        image_names = []
         pbar = tqdm(disable=not progress_bar)
-        for root, dirs, files in os.walk(dirpath):
+        for root, dirs, files in os.walk(directory):
             for filename in files:
                 pbar.update(1)
                 file_ext = get_file_extension(filename)[1:]
                 if file_ext in allowed_image_formats:
                     path = os.path.join(root, filename)
                     image_paths.append(path)
-                    image_names.append(filename)
                     
-        df = pd.DataFrame({'image_path': image_paths, 'image_name': image_names})
-        df['data_format'] = 'image_only'
-        return df
+        return self.from_paths(
+            image_paths=image_paths,
+            check_image_extenstions=False,
+            allowed_image_formats=allowed_image_formats
+        )
     
-    def from_image_paths(
+    
+    def from_labeled_folder(
+        self,
+        directory: str,
+        progress_bar: bool = True,
+        allowed_image_formats: set = ALLOWED_IMAGES_FORMATS,
+    ) -> ImagesProcessor:
+        
+        allowed_image_formats = set(allowed_image_formats)
+        
+        directory = directory.rstrip('/')
+        
+        image_paths = []
+        labels = []
+        pbar = tqdm(disable=not progress_bar)
+        for root, dirs, files in os.walk(directory):
+            for filename in files:
+                pbar.update(1)
+                file_ext = get_file_extension(filename)[1:]
+                if file_ext in allowed_image_formats:
+                    path = os.path.join(root, filename)
+                    image_paths.append(path)
+                    label = root.lstrip(directory+'/').split('/')[0]
+                    labels.append(label)
+                    
+        return self.from_paths(
+            image_paths=image_paths,
+            check_image_extenstions=False,
+            additional_columns={'label': labels},
+            allowed_image_formats=allowed_image_formats
+        )
+    
+    
+    def from_paths(
         self,
         image_paths: list,
+        check_image_extenstions: bool = True,
+        additional_columns: Optional[Dict[str, list]] = None,
         allowed_image_formats: set = ALLOWED_IMAGES_FORMATS,
-        use_abs_path: bool = False,
-    ) -> pd.DataFrame:
-        ### TODO
-        raise NotImplementedError()
+    ) -> ImagesProcessor:
+        
+        allowed_image_formats = set(allowed_image_formats)
         
         image_paths_filtered = []
+        image_names = []
         for path in image_paths:
-            pass
+            filename = os.path.basename(path)
+            if check_image_extenstions:
+                file_ext = get_file_extension(filename)[1:]
+                if file_ext not in allowed_image_formats:
+                    continue
                     
-        df = pd.DataFrame({'image_path': image_paths, 'image_name': image_names})
-        df['data_format'] = 'image_only'
-        return df
+            image_paths_filtered.append(path)
+            image_names.append(filename)
+        
+        if additional_columns is None:
+            additional_columns = {}
+            
+        df = pd.DataFrame(
+            {'image_path': image_paths_filtered, 'image_name': image_names, **additional_columns}
+        )
+        df['data_format'] = 'images_raw'
+        df = self._postprocess_dataframe(df)
+        
+        return ImagesProcessor(
+            filesystem=self.filesystem,
+            df=df
+        )
