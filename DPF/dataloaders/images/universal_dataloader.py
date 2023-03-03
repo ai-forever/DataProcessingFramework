@@ -15,20 +15,24 @@ from .utils import default_preprocess
 from .raw_dataset import RawDataset
 from .shards_dataset import ShardsDataset
 
+
 FORMAT_TO_DATASET = {
+    'images_raw': RawDataset,
     'raw': RawDataset,
     'shards': ShardsDataset
 }
 
 
 class UniversalT2IDataloader:
-    def __init__(self, 
-                 filesystem: FileSystem,
-                 df, 
-                 cols_to_return=[], 
-                 preprocess_f=default_preprocess,
-                 **dataloader_kwargs
-                ):
+    
+    def __init__(
+            self, 
+            filesystem: FileSystem,
+            df, 
+            cols_to_return=[], 
+            preprocess_f=default_preprocess,
+            **dataloader_kwargs
+        ):
         self.filesystem = filesystem
         self.df = df
         self.df_formats = df['data_format'].unique().tolist()
