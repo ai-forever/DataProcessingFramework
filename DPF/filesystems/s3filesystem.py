@@ -3,9 +3,10 @@ import pandas as pd
 import io
 from tqdm import tqdm
 import fsspec
-from typing import Union, List, Optional
+from typing import Union, List, Optional, Tuple, Iterable
 
 from .filesystem import FileSystem
+
 
 class S3FileSystem(FileSystem):
     """
@@ -64,3 +65,10 @@ class S3FileSystem(FileSystem):
         # for some reason doesn't create directory
         # but it's ok because directories being created automatically when upload files
         s3.makedirs(folder_path, exist_ok=True)
+        
+    def walk(self, folder_path: str) -> Iterable[Tuple[str, List[str], List[str]]]:
+        fs = fsspec.filesystem(
+            's3', **self.storage_options
+        )
+        
+        yield from fs.walk(folder_path)

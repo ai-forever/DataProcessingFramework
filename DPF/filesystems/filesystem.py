@@ -3,7 +3,7 @@ import pandas as pd
 import os
 import io
 import tarfile
-from typing import Union, List, Optional
+from typing import Union, List, Optional, Tuple, Iterable
 
 class FileSystem:
     """
@@ -156,5 +156,22 @@ class FileSystem:
         ----------
         folder_path: str
             Path to folder to create
+        """
+        pass
+    
+    @abc.abstractmethod
+    def walk(self, folder_path: str) -> Iterable[Tuple[str, List[str], List[str]]]:
+        """
+        Recursively get contents of folder in os.walk style
+        
+        Parameters
+        ----------
+        folder_path: str
+            Path to folder
+
+        Returns
+        -------
+        Iterable[Tuple[str, List[str], List[str]]]
+            Iterable of tuples with 3 elements: root, dirs, files
         """
         pass

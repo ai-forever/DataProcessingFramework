@@ -2,9 +2,10 @@ import os
 import pandas as pd
 import io
 from tqdm import tqdm
-from typing import Union, List, Optional
+from typing import Union, List, Optional, Tuple, Iterable
 
 from .filesystem import FileSystem
+
 
 class LocalFileSystem(FileSystem):
     """
@@ -44,3 +45,6 @@ class LocalFileSystem(FileSystem):
     def mkdir(self, folder_path: str) -> None:
         folder_path = folder_path.rstrip('/')+'/'
         os.makedirs(folder_path, exist_ok=True)
+        
+    def walk(self, folder_path: str) -> Iterable[Tuple[str, List[str], List[str]]]:
+        yield from os.walk(folder_path)

@@ -46,7 +46,7 @@ class ImagesFormatter(Formatter):
         
         image_paths = []
         pbar = tqdm(disable=not progress_bar)
-        for root, dirs, files in os.walk(directory):
+        for root, dirs, files in self.filesystem.walk(directory):
             for filename in files:
                 pbar.update(1)
                 file_ext = get_file_extension(filename)[1:]
@@ -75,7 +75,7 @@ class ImagesFormatter(Formatter):
         image_paths = []
         labels = []
         pbar = tqdm(disable=not progress_bar)
-        for root, dirs, files in os.walk(directory):
+        for root, dirs, files in self.filesystem.walk(directory):
             for filename in files:
                 pbar.update(1)
                 file_ext = get_file_extension(filename)[1:]
