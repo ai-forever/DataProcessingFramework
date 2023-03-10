@@ -1,18 +1,15 @@
 from typing import List, Optional
-from PIL import Image
-import numpy as np
 import torch
 import clip
-import os
 
 try:
     from torch.utils.data.dataloader import default_collate
 except ImportError:
     from torch.utils.data import default_collate
 
-from .img_filter import ImageFilter
 from DPF.utils import read_image_rgb_from_bytes
 from DPF.filters.utils import identical_collate_fn
+from .img_filter import ImageFilter
 
 
 class CLIPLabelsFilter(ImageFilter):
@@ -28,7 +25,8 @@ class CLIPLabelsFilter(ImageFilter):
     weights_folder: str
         Path to folder with weights
     templates: List[str] = ['{}', 'photo of a {}']
-        List of strings to be used as templates for texts. Text embedding will be calculated as a mean value of that templates embeddings
+        List of strings to be used as templates for texts. Text embedding will be
+        calculated as a mean value of that templates embeddings
     device: str = 'cuda:0'
         Torch device to use
     workers: int = 16
@@ -47,45 +45,50 @@ class CLIPLabelsFilter(ImageFilter):
     """
 
     def __init__(
-            self, 
-            clip_model: str, 
-            labels: List[str], 
-            weights_folder: str, 
-            device: str = 'cuda:0', 
-            templates: List[str] = ['{}', 'photo of a {}'], 
-            workers: int = 16, 
-            batch_size: int = 64, 
+            self,
+            clip_model: str,
+            labels: List[str],
+            weights_folder: str,
+            device: str = 'cuda:0',
+            templates: Optional[List[str]] = None,
+            workers: int = 16,
+            batch_size: int = 64,
             pbar: bool = True
         ):
-        super(CLIPLabelsFilter, self).__init__(pbar)
+        super().__init__(pbar)
 
+        if templates is None:
+            templates = ['{}', 'photo of a {}']
         self.num_workers = workers
         self.batch_size = batch_size
         self.device = device
-        
+
         self.clip_version = clip_model
         self.templates = templates
         self.labels = labels
         self.weights_folder = weights_folder
-        
-        self.clip_model, self.clip_processor = clip.load(clip_model, device=self.device, download_root=weights_folder)
+
+        self.clip_model, self.clip_processor = clip.load(clip_model,
+                                                         device=self.device,
+                                                         download_root=weights_folder)
         #
         self.text_features = self.get_text_features()
         #
         self.label2column = {l: f'{self.clip_version} clip score "{l}"' for l in self.labels}
         self.schema = ['image_path'] + [self.label2column[l] for l in self.labels]
         #
-        self.dataloader_kwargs = dict(
-            num_workers=self.num_workers, batch_size=self.batch_size,
-            preprocess_f=self.preprocess, collate_fn=identical_collate_fn,
-            drop_last=False
-        )
+        self.dataloader_kwargs = {
+            'num_workers': self.num_workers, 'batch_size': self.batch_size,
+            'preprocess_f': self.preprocess, 'collate_fn': identical_collate_fn,
+            'drop_last': False
+        }
 
     def get_text_features(self):
         text_features = []
 
         for template in self.templates:
-            texts = clip.tokenize([template.format(class_label.strip()) for class_label in self.labels])
+            texts = clip.tokenize([template.format(class_label.strip())
+                                   for class_label in self.labels])
             text_features.append(self.clip_model.encode_text(texts.to(self.device)))
         text_features = torch.stack(text_features).mean(0)
         text_features = text_features / text_features.norm(dim=-1, keepdim=True)

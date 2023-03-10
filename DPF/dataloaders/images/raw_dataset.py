@@ -1,31 +1,27 @@
-from typing import List
-import numpy as np
+from typing import List, Optional
 import pandas as pd
-import os
-from PIL import Image
-from io import BytesIO
-import torch
 from torch.utils.data import Dataset
-
-from .utils import default_preprocess
 from DPF.filesystems.filesystem import FileSystem
+from .utils import default_preprocess
 
 
 class RawDataset(Dataset):
-    
+
     def __init__(
-            self, 
-            filesystem: FileSystem, 
-            df: pd.DataFrame, 
-            cols_to_return: List[str] = [], 
+            self,
+            filesystem: FileSystem,
+            df: pd.DataFrame,
+            cols_to_return: Optional[List[str]] = None,
             preprocess_f = default_preprocess
         ):
         super(RawDataset).__init__()
+        if cols_to_return is None:
+            cols_to_return = []
         self.filesystem = filesystem
-        self.columns = ['image_path']+cols_to_return
+        self.columns = ['image_path'] + cols_to_return
         self.data_to_iterate = df[self.columns].values
         self.preprocess_f = preprocess_f
-        
+
     def __len__(self):
         return len(self.data_to_iterate)
 

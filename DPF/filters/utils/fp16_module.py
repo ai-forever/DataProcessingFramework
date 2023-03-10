@@ -43,7 +43,7 @@ def fp16_to_fp32(val):
 
 class FP16Module(nn.Module):
     def __init__(self, module):
-        super(FP16Module, self).__init__()
+        super().__init__()
         self.add_module('module', module.half())
 
     def forward(self, *inputs, **kwargs):

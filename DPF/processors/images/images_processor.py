@@ -1,38 +1,31 @@
-from abc import abstractmethod
-from typing import List, Dict, Optional, Callable, Tuple
+from typing import Optional, Callable
 import pandas as pd
-import numpy as np
 from PIL import Image
-import os
-import glob
-import csv
-from tqdm import tqdm
-from tqdm.contrib.concurrent import process_map
 
-from DPF.filesystems import LocalFileSystem, FileSystem
-from DPF.utils import get_file_extension
+from DPF.filesystems import FileSystem
 
 
 def preprocessing_for_convert(img_bytes, data):
     return img_bytes, data
 
-    
+
 class ImagesProcessor:
     """
     Class that describes all interactions with image datasets.
-    It is recommended to use ImagesFormatter to create Processor instead of directly initialiasing a Processor class.
+    It is recommended to use ImagesFormatter to create Processor
+    instead of directly initialiasing a Processor class.
     """
-    
+
     def __init__(
-            self, 
-            filesystem: FileSystem, 
-            df: pd.DataFrame, 
+            self,
+            filesystem: FileSystem,
+            df: pd.DataFrame,
         ):
         self.filesystem = filesystem
-        
+
         self.df = df
         self.init_shape = df.shape
-        
+
     def get_filesystem(self):
         """
         Get a FileSystem object
@@ -43,10 +36,10 @@ class ImagesProcessor:
             FileSystem of that dataset
         """
         return self.filesystem
-        
+
     def get_random_samples(
-            self, 
-            df: Optional[pd.DataFrame] = None, 
+            self,
+            df: Optional[pd.DataFrame] = None,
             n: int = 1
         ) -> list:
         """
@@ -67,9 +60,9 @@ class ImagesProcessor:
 
         if df is None:
             df = self.df
-            
+
         df_samples = df.sample(n)
-        
+
         samples = []
         for item in df_samples.to_dict('records'):
             filepath = item['image_path']
@@ -77,9 +70,9 @@ class ImagesProcessor:
             img = Image.open(image_bytes)
             samples.append((img, item))
         return samples
-        
+
     def apply_filter(
-            self, 
+            self,
             filter_func: Callable[[pd.DataFrame, FileSystem], pd.DataFrame]
         ):
         """

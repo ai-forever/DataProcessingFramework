@@ -36,15 +36,15 @@ LOGGERS_CONFIG = {
 
 def init_logger(filename, logger_name='filter_logger', logging_dir='./logs/'):
     os.makedirs(logging_dir, exist_ok=True)
-    
+
     LOGGERS_CONFIG['handlers']['file']['filename'] = os.path.join(logging_dir, filename)
     LOGGERS_CONFIG['loggers'][logger_name] = {
         'handlers': ['console', 'file'],
         'level': logging.DEBUG
     }
-    
+
     logging.config.dictConfig(LOGGERS_CONFIG)
     logger = logging.getLogger(logger_name)
-    logger.info(f'Logger initialized')
-    
+    logger.info('Logger initialized')
+
     return logger

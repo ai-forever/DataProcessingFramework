@@ -1,13 +1,11 @@
-import logging
 import os
-import io
-import traceback
 from typing import Optional, Dict
+import traceback
 
 import pandas as pd
 
-from .filewriter import FileWriter
 from DPF.filesystems.filesystem import FileSystem
+from .filewriter import FileWriter
 
 
 class RawFileWriter(FileWriter):
@@ -31,7 +29,7 @@ class RawFileWriter(FileWriter):
         self.last_path_to_dir = None
 
     def save_file(
-        self, 
+        self,
         file_bytes: bytes,
         image_ext: Optional[str] = None,
         file_data: Optional[Dict[str, str]] = None
@@ -41,7 +39,7 @@ class RawFileWriter(FileWriter):
         if (self.last_path_to_dir is None) or (self.last_path_to_dir != path_to_dir):
             self.last_path_to_dir = path_to_dir
             self.filesystem.mkdir(path_to_dir)
-        
+
         # writing to file
         filename = self._calculate_current_filename(image_ext=image_ext)
         path_to_file = os.path.join(path_to_dir, filename)
@@ -52,7 +50,7 @@ class RawFileWriter(FileWriter):
         }
         if file_data is not None:
             save_data.update(file_data)
-            
+
         self.df_raw.append(save_data)
         self._try_close_batch()
 
@@ -60,7 +58,9 @@ class RawFileWriter(FileWriter):
         return self
 
     def __exit__(
-        self, exception_type: Optional[type], exception_value: Optional[Exception], exception_traceback: traceback
+        self, exception_type: Optional[type],
+        exception_value: Optional[Exception],
+        exception_traceback: traceback
     ) -> None:
         if len(self.df_raw) != 0:
             self._flush(self._calculate_current_dirname())
@@ -69,7 +69,7 @@ class RawFileWriter(FileWriter):
     def _init_writer_from_last_uploaded_file(self) -> int:
         self.filesystem.mkdir(self.destination_dir)
         list_dirs = [
-            int(os.path.basename(filename[:-len(self.datafiles_ext)])) 
+            int(os.path.basename(filename[:-len(self.datafiles_ext)]))
             for filename in self.filesystem.listdir(self.destination_dir)
             if filename.endswith('.csv')
         ]

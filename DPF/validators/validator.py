@@ -1,13 +1,13 @@
 import abc
-from typing import Dict, List
+from typing import Dict
 import pandas as pd
 
 
 class Validator:
-    
+
     @abc.abstractmethod
     def validate_df(
-            self, 
+            self,
             df: pd.DataFrame
         ) -> (dict, Dict[str, int]):
         # validates only dataframe
@@ -15,16 +15,16 @@ class Validator:
         # dictionary with errors description and dictionary with number of occured errors
         errors = {"ok": True}
         error2count = {}
-    
+
     @abc.abstractmethod
     def validate(
             self,
-            dataset_dir: str, 
+            dataset_dir: str,
             processes: int = 1
         ) -> (dict, Dict[str, int], bool):
         # validates a dataset
         # should return (dict, Dict[str, int], bool)
-        # dictionary with errors description, dictionary with number of occured errors 
+        # dictionary with errors description, dictionary with number of occured errors
         # and status code (True if there was no errors)
         errors = {"ok": True}
         error2count = {}

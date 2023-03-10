@@ -1,45 +1,44 @@
-from typing import List, Dict, Optional
-import pandas as pd
-from PIL import Image
-import os
+from typing import Optional
 import random
 import tarfile
 import io
-from tqdm import tqdm
-from tqdm.contrib.concurrent import process_map
+import pandas as pd
+from PIL import Image
 
 from DPF.filesystems import FileSystem
 from DPF.processors.text2image.t2i_processor import T2IProcessor
-    
-    
+
+
 class ShardsProcessor(T2IProcessor):
     """
-    Class that describes all interactions with text2image dataset in shards format (archives with images and dataframes).
-    It is recommended to use T2IFormatter to create ShardsProcessor instead of directly initialiasing a ShardsProcessor class.
+    Class that describes all interactions with text2image dataset
+    in shards format (archives with images and dataframes).
+    It is recommended to use T2IFormatter to create ShardsProcessor
+    instead of directly initialiasing a ShardsProcessor class.
     """
-    
+
     def __init__(
-            self, 
-            filesystem: FileSystem, 
-            df: pd.DataFrame, 
+            self,
+            filesystem: FileSystem,
+            df: pd.DataFrame,
             dataset_path: str,
             archive_ext: str,
-            datafiles_ext: str, 
+            datafiles_ext: str,
             imagename_column: str,
-            caption_column: str, 
+            caption_column: str,
             image_ext: str
         ):
         super().__init__(
-            filesystem, df, dataset_path, 
-            datafiles_ext, imagename_column, 
+            filesystem, df, dataset_path,
+            datafiles_ext, imagename_column,
             caption_column, image_ext
         )
-        
+
         self.archive_ext = archive_ext.lstrip('.')
-        
+
     def get_random_samples(
-            self, 
-            df: Optional[pd.DataFrame] = None, 
+            self,
+            df: Optional[pd.DataFrame] = None,
             n: int = 1,
             from_tars: int = 1
         ) -> list:
@@ -60,17 +59,17 @@ class ShardsProcessor(T2IProcessor):
         list
             List of tuples with PIL images and dataframe data
         """
-        
+
         if df is None:
             df = self.df
-            
+
         archives = random.sample(df['archive_path'].unique().tolist(), from_tars)
         df_samples = df[df['archive_path'].isin(archives)].sample(n)
 
         archive_to_samples = df_samples.groupby('archive_path').apply(
             lambda x: x.to_dict('records')
         )
-        
+
         samples = []
         for archive_path, data in archive_to_samples.to_dict().items():
             tar_bytes = self.filesystem.read_file(archive_path, binary=True)

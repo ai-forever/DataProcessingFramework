@@ -1,46 +1,43 @@
-from .img_filter import ImageFilter
-from PIL import Image
 import torch
-import urllib
-import os
-import sys
 from lavis.models import load_model_and_preprocess
-from DPF.utils import read_image_rgb_from_bytes
-from DPF.filters.utils import FP16Module, identical_collate_fn
-from torchvision import transforms
-from torchvision.transforms.functional import InterpolationMode
 
 try:
     from torch.utils.data.dataloader import default_collate
 except ImportError:
     from torch.utils.data import default_collate
 
+from DPF.utils import read_image_rgb_from_bytes
+from DPF.filters.utils import identical_collate_fn
+from .img_filter import ImageFilter
+
 
 class BLIPFilter(ImageFilter):
 
     def __init__(
-            self, 
-            workers=16, 
-            batch_size=64, 
-            device='cuda:0', 
+            self,
+            workers=16,
+            batch_size=64,
+            device='cuda:0',
             pbar=True
         ):
-        super(BLIPFilter, self).__init__(pbar)
+        super().__init__(pbar)
 
         self.num_workers = workers
         self.batch_size = batch_size
         self.device = device
-        
-        self.blip_model, self.blip_processor, _ = load_model_and_preprocess(name="blip_caption", model_type="base_coco",
-                                                                             is_eval=True, device=self.device)
+
+        self.blip_model, self.blip_processor, _ = load_model_and_preprocess(name="blip_caption",
+                                                                            model_type="base_coco",
+                                                                            is_eval=True,
+                                                                            device=self.device)
         self.blip_processor = self.blip_processor["eval"]
 
         self.schema = ['image_path', 'blip_caption']
-        self.dataloader_kwargs = dict(
-            num_workers=self.num_workers, batch_size=self.batch_size,
-            preprocess_f=self.preprocess, collate_fn=identical_collate_fn,
-            drop_last=False
-        )
+        self.dataloader_kwargs = {
+            'num_workers': self.num_workers, 'batch_size': self.batch_size,
+            'preprocess_f': self.preprocess, 'collate_fn': identical_collate_fn,
+            'drop_last': False
+        }
 
     def preprocess(self, img_bytes, data):
         image_path = data['image_path']

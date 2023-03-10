@@ -1,15 +1,15 @@
 import abc
-import pandas as pd
 import os
 import io
 import tarfile
-from typing import Union, List, Optional, Tuple, Iterable
+from typing import Union, List, Tuple, Iterable
+import pandas as pd
 
 class FileSystem:
     """
     Abstract class for all filesystems
     """
-    
+
     @abc.abstractmethod
     def read_file(self, filepath: str, binary: bool) -> io.BytesIO:
         """
@@ -28,7 +28,7 @@ class FileSystem:
             io.BytesIO object if binary, string otherwise
         """
         pass
-        
+
     @abc.abstractmethod
     def save_file(self, data: Union[str, bytes, io.BytesIO], filepath: str, binary: bool) -> None:
         """
@@ -44,7 +44,7 @@ class FileSystem:
             Write file in binary mode or in text mode
         """
         pass
-    
+
     def read_tar(self, filepath: str):
         """
         Reads a tar file like tarfile.open
@@ -56,7 +56,7 @@ class FileSystem:
         """
         tar_bytes = self.read_file(filepath, binary=True)
         return tarfile.open(fileobj=tar_bytes, mode='r')
-    
+
     def read_dataframe(self, filepath: str, **kwargs) -> pd.DataFrame:
         """
         Reads dataframe
@@ -106,7 +106,7 @@ class FileSystem:
         else:
             raise NotImplementedError(f"Unknown file format: {filetype}")
         self.save_file(data=data, filepath=filepath, binary=True)
-        
+
     @abc.abstractmethod
     def listdir(self, folder_path: str, filenames_only: bool = False) -> List[str]:
         """
@@ -125,8 +125,9 @@ class FileSystem:
             List of filepaths (filenames if filenames_only)
         """
         pass
-        
-    def listdir_with_ext(self, folder_path: str, ext: str, filenames_only: bool = False) -> List[str]:
+
+    def listdir_with_ext(self, folder_path: str, ext: str,
+                         filenames_only: bool = False) -> List[str]:
         """
         Returns all files in folder with provided extinsion
         
@@ -145,8 +146,9 @@ class FileSystem:
             List of filepaths (filenames if filenames_only)
         """
         ext = '.'+ext.lstrip('.')
-        return [f for f in self.listdir(folder_path, filenames_only=filenames_only) if f.endswith(ext)]
-    
+        return [f for f in self.listdir(folder_path, filenames_only=filenames_only)
+                if f.endswith(ext)]
+
     @abc.abstractmethod
     def mkdir(self, folder_path: str) -> None:
         """
@@ -158,7 +160,7 @@ class FileSystem:
             Path to folder to create
         """
         pass
-    
+
     @abc.abstractmethod
     def walk(self, folder_path: str) -> Iterable[Tuple[str, List[str], List[str]]]:
         """

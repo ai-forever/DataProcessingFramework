@@ -1,14 +1,12 @@
-import logging
+from typing import Optional, Dict, Tuple
 import os
 import io
 import tarfile
 import traceback
-from typing import Optional, Dict, Tuple
-
 import pandas as pd
 
-from .filewriter import FileWriter
 from DPF.filesystems.filesystem import FileSystem
+from .filewriter import FileWriter
 
 class ShardsFileWriter(FileWriter):
 
@@ -32,9 +30,9 @@ class ShardsFileWriter(FileWriter):
         self.tar_bytes = io.BytesIO()
         self.tar = None
         self.last_file_index = self._init_writer_from_last_uploaded_file()
-        
+
     def save_file(
-        self, 
+        self,
         file_bytes: bytes,
         image_ext: Optional[str] = None,
         file_data: Optional[Dict[str, str]] = None
@@ -57,14 +55,15 @@ class ShardsFileWriter(FileWriter):
 
         self.df_raw.append(save_data)
         self._try_close_batch()
-        
+
     @staticmethod
-    def _prepare_image_for_tar_format(file_bytes: bytes, filename: str) -> Tuple[tarfile.TarInfo, io.BytesIO]:
+    def _prepare_image_for_tar_format(file_bytes: bytes,
+                                      filename: str) -> Tuple[tarfile.TarInfo, io.BytesIO]:
         fp = io.BytesIO(file_bytes)
         img_tar_info = tarfile.TarInfo(name=filename)
         img_tar_info.size = len(fp.getvalue())
         return img_tar_info, fp
-        
+
     def __enter__(self) -> "FileWriter":
         return self
 
@@ -74,18 +73,19 @@ class ShardsFileWriter(FileWriter):
         if len(self.df_raw) != 0:
             self._flush(self._calculate_current_tarname())
         self.last_file_index = 0
-        
+
     def _download_to_fileobj(self, s3_path: str) -> io.BytesIO:
         # todo move method to CloudS3
         data = io.BytesIO()
-        self.connector.client.download_fileobj(Bucket=self.connector.bucket, Key=s3_path, Fileobj=data)
+        self.connector.client.download_fileobj(Bucket=self.connector.bucket,
+                                               Key=s3_path, Fileobj=data)
         data.seek(0)
         return data
 
     def _init_writer_from_last_uploaded_file(self) -> int:
         self.filesystem.mkdir(self.destination_dir)
         list_csv = [
-            int(os.path.basename(filename[:-len(self.datafiles_ext)])) 
+            int(os.path.basename(filename[:-len(self.datafiles_ext)]))
             for filename in self.filesystem.listdir(self.destination_dir)
             if filename.endswith('.csv')
         ]
@@ -97,7 +97,9 @@ class ShardsFileWriter(FileWriter):
             os.path.join(self.destination_dir, last_csv + self.datafiles_ext)
         ).to_dict("records")
         #
-        self.tar_bytes = self.filesystem.read_file(os.path.join(self.destination_dir, last_csv + self.archive_ext), binary=True)
+        self.tar_bytes = self.filesystem.read_file(os.path.join(self.destination_dir,
+                                                                last_csv + self.archive_ext),
+                                                   binary=True)
         self.tar = tarfile.open(mode='a', fileobj=self.tar_bytes)
         #
         list_files = [
@@ -107,7 +109,7 @@ class ShardsFileWriter(FileWriter):
         last_file = sorted(list_files)[-1]
 
         return last_file + 1
-    
+
     def _calculate_current_tarname(self) -> str:
         return str(self.last_file_index // self.max_files_in_shard)+self.archive_ext
 
@@ -124,17 +126,18 @@ class ShardsFileWriter(FileWriter):
         new_tarname = self._calculate_current_tarname()
         if old_tarname != new_tarname:
             self._flush(old_tarname)
-    
+
     def _flush_and_upload_datafile(self, filename: str) -> None:
         df_to_save = pd.DataFrame(self.df_raw)
         path_to_csv_file = os.path.join(self.destination_dir, filename)
         self.filesystem.save_dataframe(df_to_save, path_to_csv_file, index=False)
         self.df_raw = []
-        
+
     def _flush_and_upload_tar(self, filename: str) -> None:
         self.tar.close()
         self.tar_bytes.seek(0)
-        self.filesystem.save_file(self.tar_bytes, os.path.join(self.destination_dir, filename), binary=True)
+        self.filesystem.save_file(self.tar_bytes, os.path.join(self.destination_dir, filename),
+                                  binary=True)
         self.tar = None
         self.tar_bytes = io.BytesIO()
 

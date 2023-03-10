@@ -1,13 +1,12 @@
 import abc
-import logging
 import traceback
 from typing import Optional, Dict
 
 class FileWriter:
-    
+
     @abc.abstractmethod
     def save_file(
-        self, 
+        self,
         file_bytes: bytes,
         image_ext: Optional[str] = None,
         file_data: Optional[Dict[str, str]] = None
