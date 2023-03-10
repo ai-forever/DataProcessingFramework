@@ -5,9 +5,7 @@ from tqdm import tqdm
 
 from DPF.utils import get_file_extension
 from DPF.utils.constants import ALLOWED_IMAGES_FORMATS
-
 from DPF.processors.images import ImagesProcessor
-
 from .formatter import Formatter
 
 
@@ -21,7 +19,7 @@ class ImagesFormatter(Formatter):
             self,
             filesystem: str = 'local',
             **filesystem_kwargs
-        ):
+    ):
         super().__init__(filesystem, **filesystem_kwargs)
 
     def _postprocess_dataframe(self, df: pd.DataFrame):
@@ -59,7 +57,6 @@ class ImagesFormatter(Formatter):
             allowed_image_formats=allowed_image_formats
         )
 
-
     def from_labeled_folder(
         self,
         directory: str,
@@ -92,7 +89,6 @@ class ImagesFormatter(Formatter):
             additional_columns={'label': labels},
             allowed_image_formats=allowed_image_formats
         )
-
 
     def from_paths(
         self,

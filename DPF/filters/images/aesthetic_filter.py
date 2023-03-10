@@ -14,7 +14,10 @@ from .img_filter import ImageFilter
 
 
 def get_aesthetic_model(clip_model, cache_folder):
-    """load the aethetic model"""
+    """
+    Load the aethetic model
+    """
+
     if clip_model == 'ViT-L/14':
         clip_model = 'vit_l_14'
         m = nn.Linear(768, 1)
@@ -28,7 +31,7 @@ def get_aesthetic_model(clip_model, cache_folder):
     if not os.path.exists(path_to_model):
         os.makedirs(cache_folder, exist_ok=True)
         url_model = (
-            "https://github.com/LAION-AI/aesthetic-predictor/blob/main/sa_0_4_" \
+            "https://github.com/LAION-AI/aesthetic-predictor/blob/main/sa_0_4_"
             + clip_model + "_linear.pth?raw=true"
         )
         # TODO rework download
@@ -41,6 +44,9 @@ def get_aesthetic_model(clip_model, cache_folder):
 
 
 class AestheticFilter(ImageFilter):
+    """
+    AestheticFilter class
+    """
 
     def __init__(
             self,
@@ -50,7 +56,7 @@ class AestheticFilter(ImageFilter):
             workers: int = 16,
             batch_size: int = 64,
             pbar: bool = True
-        ):
+    ):
         super().__init__(pbar)
 
         self.num_workers = workers

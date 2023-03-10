@@ -1,6 +1,6 @@
 from torch.utils.data import DataLoader
-from DPF.filesystems.filesystem import FileSystem
 
+from DPF.filesystems.filesystem import FileSystem
 from .utils import default_preprocess
 from .raw_dataset import RawDataset
 from .shards_dataset import ShardsDataset
@@ -14,15 +14,18 @@ FORMAT_TO_DATASET = {
 
 
 class UniversalT2IDataloader:
+    """
+    Universal text2image dataset class
+    """
 
     def __init__(
             self,
             filesystem: FileSystem,
             df,
-            cols_to_return = None,
+            cols_to_return=None,
             preprocess_f=default_preprocess,
             **dataloader_kwargs
-        ):
+    ):
         if cols_to_return is None:
             cols_to_return = []
         self.filesystem = filesystem

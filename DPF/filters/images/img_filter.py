@@ -1,6 +1,5 @@
-import abc
+from abc import ABC, abstractmethod
 import pandas as pd
-
 from tqdm import tqdm
 
 from DPF.dataloaders.images import UniversalT2IDataloader
@@ -8,24 +7,27 @@ from DPF.filesystems.filesystem import FileSystem
 from DPF.filters import Filter
 
 
-class ImageFilter(Filter):
+class ImageFilter(ABC, Filter):
+    """
+    Abstract class for all image filters.
+    """
 
     def __init__(
             self,
             pbar: bool
-        ):
+    ):
         super().__init__()
 
         self.pbar = pbar
 
-        self.schema = [] # fill with your columns
-        self.dataloader_kwargs = {} # Insert your params
+        self.schema = []  # fill with your columns
+        self.dataloader_kwargs = {}  # Insert your params
 
-    @abc.abstractmethod
+    @abstractmethod
     def preprocess(self, img_bytes: bytes, data: dict):
         pass
 
-    @abc.abstractmethod
+    @abstractmethod
     def process_batch(self, batch) -> dict:
         pass
 

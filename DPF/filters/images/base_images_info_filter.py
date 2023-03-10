@@ -7,6 +7,9 @@ from .img_filter import ImageFilter
 
 
 def get_image_info(img_bytes, data):
+    """
+    Get image path, read status, width, height, num channels, read error
+    """
     path = data['image_path']
 
     is_correct = True
@@ -33,12 +36,15 @@ def get_image_info(img_bytes, data):
 
 
 class ImageInfoGatherer(ImageFilter):
+    """
+    ImageInfoGatherer class
+    """
 
     def __init__(
             self,
             workers: int = 16,
             pbar: bool = True
-        ):
+    ):
         super().__init__(pbar)
 
         self.num_workers = workers

@@ -19,12 +19,13 @@ class MultiGPUFilter(Filter):
     """
     Class for multi-gpu inference
     """
+
     def __init__(
             self,
             devices: List[torch.device],
             filter_class,
             **filter_kwargs
-        ):
+    ):
         super().__init__()
         self.filter_class = filter_class
         self.filter_kwargs = filter_kwargs

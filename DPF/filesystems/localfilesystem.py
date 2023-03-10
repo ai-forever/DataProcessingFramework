@@ -7,7 +7,7 @@ from .filesystem import FileSystem
 
 class LocalFileSystem(FileSystem):
     """
-    Class that wrappers interaction with local filesystem.
+    Class that wraps interaction with local filesystem.
     """
 
     def __init__(self):

@@ -19,7 +19,7 @@ class T2IValidator(Validator):
             image_name_col: str = "image_name",
             caption_column: str = "caption",
             validate_captions: bool = True,
-        ):
+    ):
         self.filesystem = filesystem
         self.caption_column = caption_column
 

@@ -1,11 +1,14 @@
-import abc
+from abc import ABC, abstractmethod
 from typing import Dict
 import pandas as pd
 
 
-class Validator:
+class Validator(ABC):
+    """
+    Abstract class for all validators.
+    """
 
-    @abc.abstractmethod
+    @abstractmethod
     def validate_df(
             self,
             df: pd.DataFrame
@@ -16,7 +19,7 @@ class Validator:
         errors = {"ok": True}
         error2count = {}
 
-    @abc.abstractmethod
+    @abstractmethod
     def validate(
             self,
             dataset_dir: str,

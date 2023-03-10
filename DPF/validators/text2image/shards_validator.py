@@ -11,6 +11,9 @@ from .t2i_validator import T2IValidator
 
 
 class ShardsValidator(T2IValidator):
+    """
+    ShardsValidator
+    """
 
     def __init__(
             self,

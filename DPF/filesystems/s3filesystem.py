@@ -8,7 +8,7 @@ from .filesystem import FileSystem
 
 class S3FileSystem(FileSystem):
     """
-    Class that wrappers interaction with S3.
+    Class that wraps interaction with S3.
     """
 
     def __init__(self, key: str, secret: str, endpoint_url: str):

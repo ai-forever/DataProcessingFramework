@@ -1,6 +1,7 @@
 from io import BytesIO
 from PIL import Image
 
+
 def read_image_rgb(path, force_rgb=True):
     pil_img = Image.open(path)
     pil_img.load()

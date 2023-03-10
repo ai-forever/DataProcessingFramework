@@ -12,6 +12,7 @@ from .img_filter import ImageFilter
 def get_md5_hash(img_byte_arr):
     return hashlib.md5(img_byte_arr).hexdigest()
 
+
 def get_phash(pil_img, hash_size=8, highfreq_factor=4):
     img_size = hash_size * highfreq_factor
     image_array = np.array(pil_img.resize((img_size, img_size), Image.ANTIALIAS))
@@ -27,15 +28,17 @@ def get_phash(pil_img, hash_size=8, highfreq_factor=4):
     return ''.join(sub_strings)
 
 
-
 class PHashFilter(ImageFilter):
+    """
+    PHashFilter class
+    """
 
     def __init__(
             self,
             sim_hash_size: int = 8,
             workers: int = 16,
             pbar: bool = True
-        ):
+    ):
         super().__init__(pbar)
 
         self.num_workers = workers
@@ -64,12 +67,15 @@ class PHashFilter(ImageFilter):
 
 
 class MD5Filter(ImageFilter):
+    """
+    MD5Filter class
+    """
 
     def __init__(
             self,
             task_name: Optional[str] = None, save_parquets_dir: Optional[str] = None,
             save_parquets: bool = False, pbar: bool = True, workers: int = 16
-        ):
+    ):
         super().__init__(task_name, save_parquets, save_parquets_dir, pbar)
 
         self.num_workers = workers

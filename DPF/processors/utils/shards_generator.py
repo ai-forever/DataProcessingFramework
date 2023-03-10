@@ -13,6 +13,10 @@ def is_list_has_no_duplicates(array):
 
 
 class ShardsGenerator:
+    """
+    ShardsGenerator
+    """
+
     def __init__(self, df, save_path, processes=8,
                  images_per_tar=1000, force=False, rename_images=False,
                  save_csv=True, imagename_column="image_name", columns_to_add=None):

@@ -26,12 +26,13 @@ MODELS = {
     }
 }
 
+
 def get_watermarks_detection_model(
         name: str,
         device: str = 'cuda:0',
         fp16: bool = True,
         cache_dir: str = '/tmp/datasets_utils'
-    ):
+):
     assert name in MODELS
     config = MODELS[name]
     model_ft = config['resnet'](pretrained=False)

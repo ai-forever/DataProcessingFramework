@@ -12,6 +12,9 @@ from .img_filter import ImageFilter
 
 
 class BLIPFilter(ImageFilter):
+    """
+    BLIPFilter class
+    """
 
     def __init__(
             self,

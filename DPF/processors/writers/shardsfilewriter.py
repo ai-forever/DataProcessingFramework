@@ -8,7 +8,11 @@ import pandas as pd
 from DPF.filesystems.filesystem import FileSystem
 from .filewriter import FileWriter
 
+
 class ShardsFileWriter(FileWriter):
+    """
+    ShardsFileWriter
+    """
 
     def __init__(
         self,

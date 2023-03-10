@@ -1,7 +1,6 @@
 import os
 from typing import Optional, Dict
 import traceback
-
 import pandas as pd
 
 from DPF.filesystems.filesystem import FileSystem
@@ -9,6 +8,9 @@ from .filewriter import FileWriter
 
 
 class RawFileWriter(FileWriter):
+    """
+    RawFileWriter
+    """
 
     def __init__(
         self,

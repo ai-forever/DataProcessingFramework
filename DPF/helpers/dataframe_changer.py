@@ -3,6 +3,10 @@ import pandas as pd
 
 
 class DataframeChanger:
+    """
+    DataframeChanger is used to change dataframes.
+    """
+
     def __init__(self, filesystem, imagename_column, image_ext):
         self.filesystem = filesystem
 

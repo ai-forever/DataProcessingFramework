@@ -23,7 +23,7 @@ class RawProcessor(T2IProcessor):
             imagename_column: str,
             caption_column: str,
             image_ext: str
-        ):
+    ):
         super().__init__(
             filesystem, df, dataset_path,
             datafiles_ext, imagename_column,

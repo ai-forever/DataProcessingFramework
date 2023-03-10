@@ -21,7 +21,7 @@ class ComplexFilter(Filter):
             use_same_preprocess: bool = False,
             workers: int = 16,
             pbar: bool = True
-        ):
+    ):
         super().__init__()
 
         self.filter_list = filter_list

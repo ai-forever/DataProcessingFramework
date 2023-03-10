@@ -1,10 +1,11 @@
-import abc
+from abc import abstractmethod
 import traceback
 from typing import Optional, Dict
 
+
 class FileWriter:
 
-    @abc.abstractmethod
+    @abstractmethod
     def save_file(
         self,
         file_bytes: bytes,
@@ -13,11 +14,11 @@ class FileWriter:
     ) -> None:
         pass
 
-    @abc.abstractmethod
+    @abstractmethod
     def __enter__(self) -> "FileWriter":
         pass
 
-    @abc.abstractmethod
+    @abstractmethod
     def __exit__(
         self, exception_type, exception_value: Optional[Exception], exception_traceback: traceback
     ) -> None:

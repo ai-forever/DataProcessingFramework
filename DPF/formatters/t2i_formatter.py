@@ -5,7 +5,6 @@ from tqdm.contrib.concurrent import process_map
 from DPF.processors.text2image.raw_processor import RawProcessor
 from DPF.processors.text2image.shards_processor import ShardsProcessor
 from DPF.helpers.dataframe_reader import DataframeReader
-
 from .formatter import Formatter
 
 
@@ -19,7 +18,7 @@ class T2IFormatter(Formatter):
             self,
             filesystem: str = 'local',
             **filesystem_kwargs
-        ):
+    ):
         super().__init__(filesystem, **filesystem_kwargs)
 
     def _postprocess_dataframe(self, df: pd.DataFrame):

@@ -1,16 +1,17 @@
-import abc
+from abc import ABC, abstractmethod
 import os
 import io
 import tarfile
 from typing import Union, List, Tuple, Iterable
 import pandas as pd
 
-class FileSystem:
+
+class FileSystem(ABC):
     """
     Abstract class for all filesystems
     """
 
-    @abc.abstractmethod
+    @abstractmethod
     def read_file(self, filepath: str, binary: bool) -> io.BytesIO:
         """
         Reads file content
@@ -29,7 +30,7 @@ class FileSystem:
         """
         pass
 
-    @abc.abstractmethod
+    @abstractmethod
     def save_file(self, data: Union[str, bytes, io.BytesIO], filepath: str, binary: bool) -> None:
         """
         Saves data to file
@@ -73,7 +74,7 @@ class FileSystem:
         pd.DataFrame
             Pandas dataframe
         """
-        filetype = os.path.splitext(filepath)[1] # get extinsion
+        filetype = os.path.splitext(filepath)[1]  # get extension
         filetype = filetype.lstrip('.')
         data = self.read_file(filepath, binary=True)
         if filetype == 'csv':
@@ -96,7 +97,7 @@ class FileSystem:
         **kwargs
             kwargs for pandas save function
         """
-        filetype = os.path.splitext(filepath)[1] # get extinsion
+        filetype = os.path.splitext(filepath)[1] # get extension
         filetype = filetype.lstrip('.')
         data = io.BytesIO()
         if filetype == 'csv':
@@ -107,7 +108,7 @@ class FileSystem:
             raise NotImplementedError(f"Unknown file format: {filetype}")
         self.save_file(data=data, filepath=filepath, binary=True)
 
-    @abc.abstractmethod
+    @abstractmethod
     def listdir(self, folder_path: str, filenames_only: bool = False) -> List[str]:
         """
         Returns the contents of folder
@@ -149,7 +150,7 @@ class FileSystem:
         return [f for f in self.listdir(folder_path, filenames_only=filenames_only)
                 if f.endswith(ext)]
 
-    @abc.abstractmethod
+    @abstractmethod
     def mkdir(self, folder_path: str) -> None:
         """
         Creates a directory
@@ -161,7 +162,7 @@ class FileSystem:
         """
         pass
 
-    @abc.abstractmethod
+    @abstractmethod
     def walk(self, folder_path: str) -> Iterable[Tuple[str, List[str], List[str]]]:
         """
         Recursively get contents of folder in os.walk style

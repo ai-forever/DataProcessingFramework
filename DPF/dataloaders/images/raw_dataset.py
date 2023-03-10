@@ -1,19 +1,23 @@
 from typing import List, Optional
 import pandas as pd
 from torch.utils.data import Dataset
+
 from DPF.filesystems.filesystem import FileSystem
 from .utils import default_preprocess
 
 
 class RawDataset(Dataset):
+    """
+    Dataset class for raw-data format
+    """
 
     def __init__(
             self,
             filesystem: FileSystem,
             df: pd.DataFrame,
             cols_to_return: Optional[List[str]] = None,
-            preprocess_f = default_preprocess
-        ):
+            preprocess_f=default_preprocess
+    ):
         super(RawDataset).__init__()
         if cols_to_return is None:
             cols_to_return = []

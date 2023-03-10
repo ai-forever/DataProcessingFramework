@@ -1,4 +1,4 @@
-import abc
+from abc import ABC, abstractmethod
 import pandas as pd
 from tqdm import tqdm
 
@@ -7,21 +7,24 @@ from DPF.filesystems.filesystem import FileSystem
 from DPF.filters import Filter
 
 
-class T2IFilter(Filter):
+class T2IFilter(ABC, Filter):
+    """
+    Base class for all text-to-image filters.
+    """
 
     def __init__(
             self,
             pbar: bool
-        ):
+    ):
         super().__init__()
 
         self.pbar = pbar
 
-    @abc.abstractmethod
+    @abstractmethod
     def preprocess(self, img_bytes, data):
         pass
 
-    @abc.abstractmethod
+    @abstractmethod
     def process_batch(self, batch) -> dict:
         pass
 

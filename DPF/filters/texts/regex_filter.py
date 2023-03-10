@@ -1,5 +1,4 @@
 from typing import Optional
-from .text_filter import TextFilter
 
 try:
     import re2 as re
@@ -7,6 +6,8 @@ except ModuleNotFoundError:
     print("Can't import package re2, using re package.",
           "It is recommended to use more efficient re2 package.")
     import re
+
+from .text_filter import TextFilter
 
 
 def replace_matches(caption, re_compiled, replacement):
@@ -18,13 +19,16 @@ def replace_matches(caption, re_compiled, replacement):
 
 
 class RegexFilter(TextFilter):
+    """
+    RegexFilter class
+    """
 
     def __init__(
             self,
             regex_replacement_list: Optional[list] = None,
             text_column_name: str = 'caption',
             workers: int = 16
-        ):
+    ):
         super().__init__(text_column_name, workers)
 
         if regex_replacement_list is None:

@@ -6,7 +6,7 @@ from DPF.filesystems import FileSystem
 
 class DataframeReader:
     """
-    DataframeReader is used to read and preprocess dataframes
+    DataframeReader is used to read and preprocess dataframes.
     """
 
     def __init__(
@@ -15,7 +15,7 @@ class DataframeReader:
             read_params: dict,
             df_needed_columns: Set[str],
             check_same_columns: bool = True,
-        ):
+    ):
         self.filesystem = filesystem
         self.read_params = read_params
 
@@ -71,6 +71,6 @@ class DataframeReader:
 
         self._add_base_columns(df, filepath, caption_column, imagename_column, image_ext)
 
-        df['image_path'] = df['table_path'].str.slice(0,-(len(datafiles_ext)+1)) \
+        df['image_path'] = df['table_path'].str.slice(0, -(len(datafiles_ext)+1)) \
                            + '/' + df['image_name']
         return df

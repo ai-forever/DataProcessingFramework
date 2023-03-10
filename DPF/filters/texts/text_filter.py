@@ -1,4 +1,4 @@
-import abc
+from abc import ABC, abstractmethod
 import pandas as pd
 import numpy as np
 from pandarallel import pandarallel
@@ -7,13 +7,16 @@ from DPF.filesystems.filesystem import FileSystem
 from DPF.filters import Filter
 
 
-class TextFilter(Filter):
+class TextFilter(ABC, Filter):
+    """
+    Base class for all text filters.
+    """
 
     def __init__(
             self,
             text_column_name: str = 'caption',
             workers: int = 16
-        ):
+    ):
         super().__init__()
 
         self.text_column_name = text_column_name
@@ -21,7 +24,7 @@ class TextFilter(Filter):
 
         self.schema = []
 
-    @abc.abstractmethod
+    @abstractmethod
     def process(self, row):
         pass
 

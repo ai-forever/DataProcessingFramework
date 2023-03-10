@@ -34,7 +34,8 @@ def load_safety_model(clip_model, cache_folder, device):
     if clip_model == "ViT-L/14":
         model_dir = cache_folder + "/clip_autokeras_binary_nsfw"
         dim = 768
-        url_model = "https://raw.githubusercontent.com/LAION-AI/CLIP-based-NSFW-Detector/main/clip_autokeras_binary_nsfw.zip"
+        url_model = "https://raw.githubusercontent.com/LAION-AI/" \
+                    "CLIP-based-NSFW-Detector/main/clip_autokeras_binary_nsfw.zip"
     else:
         raise ValueError("Unsupported clip model")
 
@@ -58,6 +59,9 @@ def normalized(a, axis=-1, order=2):
 
 
 class NSFWFilter(ImageFilter):
+    """
+    NSFWFilter class
+    """
 
     def __init__(
             self,
@@ -67,7 +71,7 @@ class NSFWFilter(ImageFilter):
             batch_size: int = 64,
             device: str = 'cuda:0',
             pbar: bool = True
-        ):
+    ):
         super().__init__(pbar)
 
         self.num_workers = workers

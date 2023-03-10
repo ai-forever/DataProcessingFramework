@@ -1,6 +1,8 @@
+from abc import ABC
 from DPF.filesystems import LocalFileSystem, S3FileSystem
 
-class Formatter:
+
+class Formatter(ABC):
     """
     Abstract class for all formatters
     """
@@ -9,7 +11,7 @@ class Formatter:
             self,
             filesystem: str = 'local',
             **filesystem_kwargs
-        ):
+    ):
         """
         Parameters
         ----------

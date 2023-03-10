@@ -30,7 +30,7 @@ class T2IProcessor:
             imagename_column: str,
             caption_column: str,
             image_ext: str
-        ):
+    ):
         self.filesystem = filesystem
 
         self.df = df

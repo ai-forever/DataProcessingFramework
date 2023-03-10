@@ -11,14 +11,17 @@ from .utils import default_preprocess
 
 
 class ShardsDataset(IterableDataset):
+    """
+    Dataset class for sharded dataformat
+    """
 
     def __init__(
             self,
             filesystem: FileSystem,
             df: pd.DataFrame,
             cols_to_return: Optional[List[str]] = None,
-            preprocess_f = default_preprocess
-        ):
+            preprocess_f=default_preprocess
+    ):
         super(ShardsDataset).__init__()
         if cols_to_return is None:
             cols_to_return = []
