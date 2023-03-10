@@ -7,7 +7,7 @@ from DPF.filesystems.filesystem import FileSystem
 from DPF.filters import Filter
 
 
-class T2IFilter(ABC, Filter):
+class T2IFilter(Filter):
     """
     Base class for all text-to-image filters.
     """

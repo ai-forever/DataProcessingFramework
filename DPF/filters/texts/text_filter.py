@@ -7,7 +7,7 @@ from DPF.filesystems.filesystem import FileSystem
 from DPF.filters import Filter
 
 
-class TextFilter(ABC, Filter):
+class TextFilter(Filter):
     """
     Base class for all text filters.
     """

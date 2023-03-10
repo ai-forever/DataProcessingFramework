@@ -7,7 +7,7 @@ from DPF.filesystems.filesystem import FileSystem
 from DPF.filters import Filter
 
 
-class ImageFilter(ABC, Filter):
+class ImageFilter(Filter):
     """
     Abstract class for all image filters.
     """
