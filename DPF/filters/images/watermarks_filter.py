@@ -1,6 +1,7 @@
 import os
 import torch
 import torch.nn as nn
+
 try:
     from torch.utils.data.dataloader import default_collate
 except ImportError:
@@ -14,34 +15,36 @@ from .img_filter import ImageFilter
 
 
 MODELS = {
-    'resnext101_32x8d-large': {
-        'resnet': models.resnext101_32x8d,
-        'repo_id': 'boomb0om/dataset-filters',
-        'filename': 'watermark_classifier-resnext101_32x8d-input_size320-4epochs_c097_w082.pth',
+    "resnext101_32x8d-large": {
+        "resnet": models.resnext101_32x8d,
+        "repo_id": "boomb0om/dataset-filters",
+        "filename": "watermark_classifier-resnext101_32x8d-input_size320-4epochs_c097_w082.pth",
     },
-    'resnext50_32x4d-small': {
-        'resnet': models.resnext50_32x4d,
-        'repo_id': 'boomb0om/dataset-filters',
-        'filename': 'watermark_classifier-resnext50_32x4d-input_size320-4epochs_c082_w078.pth',
-    }
+    "resnext50_32x4d-small": {
+        "resnet": models.resnext50_32x4d,
+        "repo_id": "boomb0om/dataset-filters",
+        "filename": "watermark_classifier-resnext50_32x4d-input_size320-4epochs_c082_w078.pth",
+    },
 }
 
 
 def get_watermarks_detection_model(
-        name: str,
-        device: str = 'cuda:0',
-        fp16: bool = True,
-        cache_dir: str = '/tmp/datasets_utils'
+    name: str,
+    device: str = "cuda:0",
+    fp16: bool = True,
+    cache_dir: str = "/tmp/datasets_utils",
 ):
     assert name in MODELS
     config = MODELS[name]
-    model_ft = config['resnet'](pretrained=False)
+    model_ft = config["resnet"](pretrained=False)
     num_ftrs = model_ft.fc.in_features
     model_ft.fc = nn.Linear(num_ftrs, 2)
 
-    config_file_url = hf_hub_url(repo_id=config['repo_id'], filename=config['filename'])
-    cached_download(config_file_url, cache_dir=cache_dir, force_filename=config['filename'])
-    weights = torch.load(os.path.join(cache_dir, config['filename']), device)
+    config_file_url = hf_hub_url(repo_id=config["repo_id"], filename=config["filename"])
+    cached_download(
+        config_file_url, cache_dir=cache_dir, force_filename=config["filename"]
+    )
+    weights = torch.load(os.path.join(cache_dir, config["filename"]), device)
     model_ft.load_state_dict(weights)
 
     if fp16:
@@ -56,7 +59,7 @@ def get_watermarks_detection_model(
 class WatermarksFilter(ImageFilter):
     """
     Filter for detecting watermarks.
-    
+
     Parameters
     ----------
     watermarks_model: str
@@ -71,7 +74,7 @@ class WatermarksFilter(ImageFilter):
         Number of processes for use in dataloader
     batch_size: int = 64
         Batch size for model
-        
+
     Attributes
     ----------
     schema: List[str]
@@ -81,14 +84,14 @@ class WatermarksFilter(ImageFilter):
     """
 
     def __init__(
-            self,
-            watermarks_model: str,
-            weights_folder: str,
-            device: str = 'cuda:0',
-            workers: int = 16,
-            batch_size: int = 64,
-            pbar: bool = True
-        ):
+        self,
+        watermarks_model: str,
+        weights_folder: str,
+        device: str = "cuda:0",
+        workers: int = 16,
+        batch_size: int = 64,
+        pbar: bool = True,
+    ):
         super().__init__(pbar)
 
         self.num_workers = workers
@@ -97,23 +100,28 @@ class WatermarksFilter(ImageFilter):
 
         self.watermarks_model = watermarks_model
         self.weights_folder = weights_folder
-        self.model = get_watermarks_detection_model(watermarks_model, device=device,
-                                                    fp16=True, cache_dir=weights_folder)
-        self.resnet_transforms = transforms.Compose([
-            transforms.Resize((320, 320)),
-            transforms.ToTensor(),
-            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-        ])
+        self.model = get_watermarks_detection_model(
+            watermarks_model, device=device, fp16=True, cache_dir=weights_folder
+        )
+        self.resnet_transforms = transforms.Compose(
+            [
+                transforms.Resize((320, 320)),
+                transforms.ToTensor(),
+                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+            ]
+        )
 
-        self.schema = ['image_path', f'watermark_{self.watermarks_model}']
+        self.schema = ["image_path", f"watermark_{self.watermarks_model}"]
         self.dataloader_kwargs = {
-            'num_workers': self.num_workers, 'batch_size': self.batch_size,
-            'preprocess_f': self.preprocess, 'collate_fn': identical_collate_fn,
-            'drop_last': False
+            "num_workers": self.num_workers,
+            "batch_size": self.batch_size,
+            "preprocess_f": self.preprocess,
+            "collate_fn": identical_collate_fn,
+            "drop_last": False,
         }
 
     def preprocess(self, img_bytes: bytes, data: dict):
-        image_path = data['image_path']
+        image_path = data["image_path"]
         pil_img = read_image_rgb_from_bytes(img_bytes)
         img_tensor = self.resnet_transforms(pil_img)
         return image_path, img_tensor
@@ -126,7 +134,9 @@ class WatermarksFilter(ImageFilter):
 
         with torch.no_grad():
             outputs = self.model(batch)
-            df_batch_labels[f'watermark_{self.watermarks_model}'].extend(torch.max(outputs, 1)[1].cpu().reshape(-1).tolist())
-        df_batch_labels['image_path'].extend(image_paths)
+            df_batch_labels[f"watermark_{self.watermarks_model}"].extend(
+                torch.max(outputs, 1)[1].cpu().reshape(-1).tolist()
+            )
+        df_batch_labels["image_path"].extend(image_paths)
 
         return df_batch_labels

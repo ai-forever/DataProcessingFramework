@@ -20,15 +20,15 @@ class ShardsFileWriter(FileWriter):
         destination_dir: str,
         max_files_in_shard: Optional[int] = 1000,
         image_ext: Optional[str] = None,
-        datafiles_ext: Optional[str] = 'csv',
-        archive_ext: Optional[str] = 'tar',
+        datafiles_ext: Optional[str] = "csv",
+        archive_ext: Optional[str] = "tar",
     ) -> None:
         self.filesystem = filesystem
         self.destination_dir = destination_dir
         self.max_files_in_shard = max_files_in_shard
-        self.image_ext = '.'+image_ext.lstrip('.') if image_ext is not None else None
-        self.datafiles_ext = '.'+datafiles_ext.lstrip('.')
-        self.archive_ext = '.'+archive_ext.lstrip('.')
+        self.image_ext = "." + image_ext.lstrip(".") if image_ext is not None else None
+        self.datafiles_ext = "." + datafiles_ext.lstrip(".")
+        self.archive_ext = "." + archive_ext.lstrip(".")
 
         self.df_raw = []
         self.tar_bytes = io.BytesIO()
@@ -39,12 +39,14 @@ class ShardsFileWriter(FileWriter):
         self,
         file_bytes: bytes,
         image_ext: Optional[str] = None,
-        file_data: Optional[Dict[str, str]] = None
+        file_data: Optional[Dict[str, str]] = None,
     ) -> None:
         # check tar
-        path_to_tar = os.path.join(self.destination_dir, self._calculate_current_tarname())
+        path_to_tar = os.path.join(
+            self.destination_dir, self._calculate_current_tarname()
+        )
         if self.tar is None:
-            self.tar = tarfile.open(mode='w', fileobj=self.tar_bytes)
+            self.tar = tarfile.open(mode="w", fileobj=self.tar_bytes)
 
         # writing to file
         filename = self._calculate_current_filename(image_ext=image_ext)
@@ -61,8 +63,9 @@ class ShardsFileWriter(FileWriter):
         self._try_close_batch()
 
     @staticmethod
-    def _prepare_image_for_tar_format(file_bytes: bytes,
-                                      filename: str) -> Tuple[tarfile.TarInfo, io.BytesIO]:
+    def _prepare_image_for_tar_format(
+        file_bytes: bytes, filename: str
+    ) -> Tuple[tarfile.TarInfo, io.BytesIO]:
         fp = io.BytesIO(file_bytes)
         img_tar_info = tarfile.TarInfo(name=filename)
         img_tar_info.size = len(fp.getvalue())
@@ -72,7 +75,10 @@ class ShardsFileWriter(FileWriter):
         return self
 
     def __exit__(
-        self, exception_type, exception_value: Optional[Exception], exception_traceback: traceback
+        self,
+        exception_type,
+        exception_value: Optional[Exception],
+        exception_traceback: traceback,
     ) -> None:
         if len(self.df_raw) != 0:
             self._flush(self._calculate_current_tarname())
@@ -81,17 +87,18 @@ class ShardsFileWriter(FileWriter):
     def _download_to_fileobj(self, s3_path: str) -> io.BytesIO:
         # todo move method to CloudS3
         data = io.BytesIO()
-        self.connector.client.download_fileobj(Bucket=self.connector.bucket,
-                                               Key=s3_path, Fileobj=data)
+        self.connector.client.download_fileobj(
+            Bucket=self.connector.bucket, Key=s3_path, Fileobj=data
+        )
         data.seek(0)
         return data
 
     def _init_writer_from_last_uploaded_file(self) -> int:
         self.filesystem.mkdir(self.destination_dir)
         list_csv = [
-            int(os.path.basename(filename[:-len(self.datafiles_ext)]))
+            int(os.path.basename(filename[: -len(self.datafiles_ext)]))
             for filename in self.filesystem.listdir(self.destination_dir)
-            if filename.endswith('.csv')
+            if filename.endswith(".csv")
         ]
         if len(list_csv) < 1:
             return 0
@@ -101,27 +108,26 @@ class ShardsFileWriter(FileWriter):
             os.path.join(self.destination_dir, last_csv + self.datafiles_ext)
         ).to_dict("records")
         #
-        self.tar_bytes = self.filesystem.read_file(os.path.join(self.destination_dir,
-                                                                last_csv + self.archive_ext),
-                                                   binary=True)
-        self.tar = tarfile.open(mode='a', fileobj=self.tar_bytes)
+        self.tar_bytes = self.filesystem.read_file(
+            os.path.join(self.destination_dir, last_csv + self.archive_ext), binary=True
+        )
+        self.tar = tarfile.open(mode="a", fileobj=self.tar_bytes)
         #
         list_files = [
-            int(os.path.splitext(data['image_name'])[0])
-            for data in self.df_raw
+            int(os.path.splitext(data["image_name"])[0]) for data in self.df_raw
         ]
         last_file = sorted(list_files)[-1]
 
         return last_file + 1
 
     def _calculate_current_tarname(self) -> str:
-        return str(self.last_file_index // self.max_files_in_shard)+self.archive_ext
+        return str(self.last_file_index // self.max_files_in_shard) + self.archive_ext
 
     def _calculate_current_filename(self, image_ext: str) -> str:
         if image_ext is None:
             return f"{self.last_file_index}{self.image_ext}"
         else:
-            image_ext = image_ext.lstrip('.')
+            image_ext = image_ext.lstrip(".")
             return f"{self.last_file_index}.{image_ext}"
 
     def _try_close_batch(self) -> None:
@@ -140,11 +146,12 @@ class ShardsFileWriter(FileWriter):
     def _flush_and_upload_tar(self, filename: str) -> None:
         self.tar.close()
         self.tar_bytes.seek(0)
-        self.filesystem.save_file(self.tar_bytes, os.path.join(self.destination_dir, filename),
-                                  binary=True)
+        self.filesystem.save_file(
+            self.tar_bytes, os.path.join(self.destination_dir, filename), binary=True
+        )
         self.tar = None
         self.tar_bytes = io.BytesIO()
 
     def _flush(self, tarname: str) -> None:
-        self._flush_and_upload_datafile(tarname[:-4]+self.datafiles_ext)
+        self._flush_and_upload_datafile(tarname[:-4] + self.datafiles_ext)
         self._flush_and_upload_tar(tarname)

@@ -18,13 +18,13 @@ class RawFileWriter(FileWriter):
         destination_dir: str,
         max_files_in_folder: Optional[int] = 1000,
         image_ext: Optional[str] = None,
-        datafiles_ext: Optional[str] = 'csv',
+        datafiles_ext: Optional[str] = "csv",
     ) -> None:
         self.filesystem = filesystem
         self.destination_dir = destination_dir
         self.max_files_in_folder = max_files_in_folder
-        self.image_ext = '.'+image_ext.lstrip('.') if image_ext is not None else None
-        self.datafiles_ext = '.'+datafiles_ext.lstrip('.')
+        self.image_ext = "." + image_ext.lstrip(".") if image_ext is not None else None
+        self.datafiles_ext = "." + datafiles_ext.lstrip(".")
 
         self.df_raw = []
         self.last_file_index = self._init_writer_from_last_uploaded_file()
@@ -34,10 +34,12 @@ class RawFileWriter(FileWriter):
         self,
         file_bytes: bytes,
         image_ext: Optional[str] = None,
-        file_data: Optional[Dict[str, str]] = None
+        file_data: Optional[Dict[str, str]] = None,
     ) -> None:
         # creating directory
-        path_to_dir = os.path.join(self.destination_dir, self._calculate_current_dirname())
+        path_to_dir = os.path.join(
+            self.destination_dir, self._calculate_current_dirname()
+        )
         if (self.last_path_to_dir is None) or (self.last_path_to_dir != path_to_dir):
             self.last_path_to_dir = path_to_dir
             self.filesystem.mkdir(path_to_dir)
@@ -60,9 +62,10 @@ class RawFileWriter(FileWriter):
         return self
 
     def __exit__(
-        self, exception_type: Optional[type],
+        self,
+        exception_type: Optional[type],
         exception_value: Optional[Exception],
-        exception_traceback: traceback
+        exception_traceback: traceback,
     ) -> None:
         if len(self.df_raw) != 0:
             self._flush(self._calculate_current_dirname())
@@ -71,9 +74,9 @@ class RawFileWriter(FileWriter):
     def _init_writer_from_last_uploaded_file(self) -> int:
         self.filesystem.mkdir(self.destination_dir)
         list_dirs = [
-            int(os.path.basename(filename[:-len(self.datafiles_ext)]))
+            int(os.path.basename(filename[: -len(self.datafiles_ext)]))
             for filename in self.filesystem.listdir(self.destination_dir)
-            if filename.endswith('.csv')
+            if filename.endswith(".csv")
         ]
         if len(list_dirs) < 1:
             return 0
@@ -83,8 +86,7 @@ class RawFileWriter(FileWriter):
             os.path.join(self.destination_dir, last_dir + self.datafiles_ext)
         ).to_dict("records")
         list_files = [
-            int(os.path.splitext(data['image_name'])[0])
-            for data in self.df_raw
+            int(os.path.splitext(data["image_name"])[0]) for data in self.df_raw
         ]
         last_file = sorted(list_files)[-1]
 
@@ -97,7 +99,7 @@ class RawFileWriter(FileWriter):
         if image_ext is None:
             return f"{self.last_file_index}{self.image_ext}"
         else:
-            image_ext = image_ext.lstrip('.')
+            image_ext = image_ext.lstrip(".")
             return f"{self.last_file_index}.{image_ext}"
 
     def _try_close_batch(self) -> None:
@@ -109,6 +111,8 @@ class RawFileWriter(FileWriter):
 
     def _flush(self, dirname: str) -> None:
         df_to_save = pd.DataFrame(self.df_raw)
-        path_to_csv_file = os.path.join(self.destination_dir, f"{dirname}{self.datafiles_ext}")
+        path_to_csv_file = os.path.join(
+            self.destination_dir, f"{dirname}{self.datafiles_ext}"
+        )
         self.filesystem.save_dataframe(df_to_save, path_to_csv_file, index=False)
         self.df_raw = []

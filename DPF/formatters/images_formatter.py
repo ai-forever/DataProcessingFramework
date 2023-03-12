@@ -11,20 +11,16 @@ from .formatter import Formatter
 
 class ImagesFormatter(Formatter):
     """
-    Formatter for image datasets. 
+    Formatter for image datasets.
     Formatter is used to read and create a Processor class for a dataset.
     """
 
-    def __init__(
-            self,
-            filesystem: str = 'local',
-            **filesystem_kwargs
-    ):
+    def __init__(self, filesystem: str = "local", **filesystem_kwargs):
         super().__init__(filesystem, **filesystem_kwargs)
 
     def _postprocess_dataframe(self, df: pd.DataFrame):
         # TODO: do not create a copy of df, use inplace operations
-        columns = ['image_name', 'image_path', 'data_format', 'label']
+        columns = ["image_name", "image_path", "data_format", "label"]
         columns = [i for i in columns if i in df.columns]
         return df[columns]
 
@@ -34,12 +30,11 @@ class ImagesFormatter(Formatter):
         progress_bar: bool = True,
         allowed_image_formats: Optional[set] = None,
     ) -> ImagesProcessor:
-
         if allowed_image_formats is None:
             allowed_image_formats = ALLOWED_IMAGES_FORMATS
         allowed_image_formats = set(allowed_image_formats)
 
-        directory = directory.rstrip('/')
+        directory = directory.rstrip("/")
 
         image_paths = []
         pbar = tqdm(disable=not progress_bar)
@@ -54,7 +49,7 @@ class ImagesFormatter(Formatter):
         return self.from_paths(
             image_paths=image_paths,
             check_image_extenstions=False,
-            allowed_image_formats=allowed_image_formats
+            allowed_image_formats=allowed_image_formats,
         )
 
     def from_labeled_folder(
@@ -63,12 +58,11 @@ class ImagesFormatter(Formatter):
         progress_bar: bool = True,
         allowed_image_formats: Optional[set] = None,
     ) -> ImagesProcessor:
-
         if allowed_image_formats is None:
             allowed_image_formats = ALLOWED_IMAGES_FORMATS
         allowed_image_formats = set(allowed_image_formats)
 
-        directory = directory.rstrip('/')
+        directory = directory.rstrip("/")
 
         image_paths = []
         labels = []
@@ -80,14 +74,14 @@ class ImagesFormatter(Formatter):
                 if file_ext in allowed_image_formats:
                     path = os.path.join(root, filename)
                     image_paths.append(path)
-                    label = root.lstrip(directory+'/').split('/')[0]
+                    label = root.lstrip(directory + "/").split("/")[0]
                     labels.append(label)
 
         return self.from_paths(
             image_paths=image_paths,
             check_image_extenstions=False,
-            additional_columns={'label': labels},
-            allowed_image_formats=allowed_image_formats
+            additional_columns={"label": labels},
+            allowed_image_formats=allowed_image_formats,
         )
 
     def from_paths(
@@ -97,7 +91,6 @@ class ImagesFormatter(Formatter):
         additional_columns: Optional[Dict[str, list]] = None,
         allowed_image_formats: Optional[set] = None,
     ) -> ImagesProcessor:
-
         if allowed_image_formats is None:
             allowed_image_formats = ALLOWED_IMAGES_FORMATS
         allowed_image_formats = set(allowed_image_formats)
@@ -118,12 +111,13 @@ class ImagesFormatter(Formatter):
             additional_columns = {}
 
         df = pd.DataFrame(
-            {'image_path': image_paths_filtered, 'image_name': image_names, **additional_columns}
+            {
+                "image_path": image_paths_filtered,
+                "image_name": image_names,
+                **additional_columns,
+            }
         )
-        df['data_format'] = 'images_raw'
+        df["data_format"] = "images_raw"
         df = self._postprocess_dataframe(df)
 
-        return ImagesProcessor(
-            filesystem=self.filesystem,
-            df=df
-        )
+        return ImagesProcessor(filesystem=self.filesystem, df=df)

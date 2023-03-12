@@ -20,12 +20,7 @@ class MultiGPUFilter(Filter):
     Class for multi-gpu inference
     """
 
-    def __init__(
-            self,
-            devices: List[torch.device],
-            filter_class,
-            **filter_kwargs
-    ):
+    def __init__(self, devices: List[torch.device], filter_class, **filter_kwargs):
         super().__init__()
         self.filter_class = filter_class
         self.filter_kwargs = filter_kwargs
@@ -39,10 +34,17 @@ class MultiGPUFilter(Filter):
         df_splits = np.array_split(df, self.num_parts)
         params = []
         for i in range(self.num_parts):
-            params.append((
-                df_splits[i], filesystem, df_splits[i].index, shared_results,
-                self.filter_class, self.filter_kwargs, self.devices[i]
-            ))
+            params.append(
+                (
+                    df_splits[i],
+                    filesystem,
+                    df_splits[i].index,
+                    shared_results,
+                    self.filter_class,
+                    self.filter_kwargs,
+                    self.devices[i],
+                )
+            )
 
         processes = []
         for param in params:

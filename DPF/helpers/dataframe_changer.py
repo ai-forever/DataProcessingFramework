@@ -49,11 +49,15 @@ class DataframeChanger:
     def _delete_and_write_table_mp(self, data):
         return self._delete_and_write_table(*data)
 
-    def _merge_and_write_table(self, table_path, df_to_add, overwrite_columns=True) -> List[str]:
+    def _merge_and_write_table(
+        self, table_path, df_to_add, overwrite_columns=True
+    ) -> List[str]:
         if self.image_ext:
-            image_ext = self.image_ext.lstrip('.')
-            df_to_add['image_name'] = df_to_add['image_name'].str.slice(0, -len(image_ext)-1)
-        df_to_add.rename(columns={'image_name': self.imagename_column}, inplace=True)
+            image_ext = self.image_ext.lstrip(".")
+            df_to_add["image_name"] = df_to_add["image_name"].str.slice(
+                0, -len(image_ext) - 1
+            )
+        df_to_add.rename(columns={"image_name": self.imagename_column}, inplace=True)
 
         df = self.filesystem.read_dataframe(table_path)
         columns = [i for i in df.columns if i != self.imagename_column]
@@ -72,13 +76,17 @@ class DataframeChanger:
 
             errname = None
             if len(df) != shape_orig:
-                errname = f'Shape of dataframe {table_path} changed after merging. ' \
-                          'Skipping this dataframe. Check for errors'
-                print('[WARNING]', errname)
+                errname = (
+                    f"Shape of dataframe {table_path} changed after merging. "
+                    "Skipping this dataframe. Check for errors"
+                )
+                print("[WARNING]", errname)
             elif set(df[self.imagename_column]) != image_names_orig:
-                errname = f'Image names from dataframe {table_path} changed after merging. ' \
-                          'Skipping this dataframe. Check for errors'
-                print('[WARNING]', errname)
+                errname = (
+                    f"Image names from dataframe {table_path} changed after merging. "
+                    "Skipping this dataframe. Check for errors"
+                )
+                print("[WARNING]", errname)
             else:
                 errname = self._save_dataframe(df, table_path, index=False)
             if errname:

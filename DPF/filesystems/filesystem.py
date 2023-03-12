@@ -15,7 +15,7 @@ class FileSystem(ABC):
     def read_file(self, filepath: str, binary: bool) -> io.BytesIO:
         """
         Reads file content
-        
+
         Parameters
         ----------
         filepath: str
@@ -31,10 +31,12 @@ class FileSystem(ABC):
         pass
 
     @abstractmethod
-    def save_file(self, data: Union[str, bytes, io.BytesIO], filepath: str, binary: bool) -> None:
+    def save_file(
+        self, data: Union[str, bytes, io.BytesIO], filepath: str, binary: bool
+    ) -> None:
         """
         Saves data to file
-        
+
         Parameters
         ----------
         data: Union[str, bytes, io.BytesIO]
@@ -49,19 +51,19 @@ class FileSystem(ABC):
     def read_tar(self, filepath: str):
         """
         Reads a tar file like tarfile.open
-        
+
         Parameters
         ----------
         filepath: str
             Path to file
         """
         tar_bytes = self.read_file(filepath, binary=True)
-        return tarfile.open(fileobj=tar_bytes, mode='r')
+        return tarfile.open(fileobj=tar_bytes, mode="r")
 
     def read_dataframe(self, filepath: str, **kwargs) -> pd.DataFrame:
         """
         Reads dataframe
-        
+
         Parameters
         ----------
         filepath: str
@@ -75,11 +77,11 @@ class FileSystem(ABC):
             Pandas dataframe
         """
         filetype = os.path.splitext(filepath)[1]  # get extension
-        filetype = filetype.lstrip('.')
+        filetype = filetype.lstrip(".")
         data = self.read_file(filepath, binary=True)
-        if filetype == 'csv':
+        if filetype == "csv":
             return pd.read_csv(data, **kwargs)
-        elif filetype == 'parquet':
+        elif filetype == "parquet":
             return pd.read_parquet(data, **kwargs)
         else:
             raise NotImplementedError(f"Unknown file format: {filetype}")
@@ -87,7 +89,7 @@ class FileSystem(ABC):
     def save_dataframe(self, df: pd.DataFrame, filepath: str, **kwargs) -> None:
         """
         Saves dataframe
-        
+
         Parameters
         ----------
         df: pd.DataFrame
@@ -97,12 +99,12 @@ class FileSystem(ABC):
         **kwargs
             kwargs for pandas save function
         """
-        filetype = os.path.splitext(filepath)[1] # get extension
-        filetype = filetype.lstrip('.')
+        filetype = os.path.splitext(filepath)[1]  # get extension
+        filetype = filetype.lstrip(".")
         data = io.BytesIO()
-        if filetype == 'csv':
+        if filetype == "csv":
             df.to_csv(data, **kwargs)
-        elif filetype == 'parquet':
+        elif filetype == "parquet":
             df.to_parquet(data, **kwargs)
         else:
             raise NotImplementedError(f"Unknown file format: {filetype}")
@@ -112,7 +114,7 @@ class FileSystem(ABC):
     def listdir(self, folder_path: str, filenames_only: bool = False) -> List[str]:
         """
         Returns the contents of folder
-        
+
         Parameters
         ----------
         folder_path: str
@@ -127,11 +129,12 @@ class FileSystem(ABC):
         """
         pass
 
-    def listdir_with_ext(self, folder_path: str, ext: str,
-                         filenames_only: bool = False) -> List[str]:
+    def listdir_with_ext(
+        self, folder_path: str, ext: str, filenames_only: bool = False
+    ) -> List[str]:
         """
         Returns all files in folder with provided extinsion
-        
+
         Parameters
         ----------
         folder_path: str
@@ -146,15 +149,18 @@ class FileSystem(ABC):
         List[str]
             List of filepaths (filenames if filenames_only)
         """
-        ext = '.'+ext.lstrip('.')
-        return [f for f in self.listdir(folder_path, filenames_only=filenames_only)
-                if f.endswith(ext)]
+        ext = "." + ext.lstrip(".")
+        return [
+            f
+            for f in self.listdir(folder_path, filenames_only=filenames_only)
+            if f.endswith(ext)
+        ]
 
     @abstractmethod
     def mkdir(self, folder_path: str) -> None:
         """
         Creates a directory
-        
+
         Parameters
         ----------
         folder_path: str
@@ -166,7 +172,7 @@ class FileSystem(ABC):
     def walk(self, folder_path: str) -> Iterable[Tuple[str, List[str], List[str]]]:
         """
         Recursively get contents of folder in os.walk style
-        
+
         Parameters
         ----------
         folder_path: str

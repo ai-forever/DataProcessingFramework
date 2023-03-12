@@ -17,10 +17,10 @@ class ImagesProcessor:
     """
 
     def __init__(
-            self,
-            filesystem: FileSystem,
-            df: pd.DataFrame,
-        ):
+        self,
+        filesystem: FileSystem,
+        df: pd.DataFrame,
+    ):
         self.filesystem = filesystem
 
         self.df = df
@@ -29,7 +29,7 @@ class ImagesProcessor:
     def get_filesystem(self):
         """
         Get a FileSystem object
-        
+
         Returns
         -------
         DPF.filesystems.FileSystem
@@ -37,21 +37,17 @@ class ImagesProcessor:
         """
         return self.filesystem
 
-    def get_random_samples(
-            self,
-            df: Optional[pd.DataFrame] = None,
-            n: int = 1
-        ) -> list:
+    def get_random_samples(self, df: Optional[pd.DataFrame] = None, n: int = 1) -> list:
         """
         Get N random samples from dataset
-        
+
         Parameters
         ----------
         df: pd.DataFrame | None
             DataFrame to sample from. If none, processor.df is used
         n: int = 1
             Number of samples to return
-            
+
         Returns
         -------
         list
@@ -64,21 +60,20 @@ class ImagesProcessor:
         df_samples = df.sample(n)
 
         samples = []
-        for item in df_samples.to_dict('records'):
-            filepath = item['image_path']
+        for item in df_samples.to_dict("records"):
+            filepath = item["image_path"]
             image_bytes = self.filesystem.read_file(filepath, binary=True)
             img = Image.open(image_bytes)
             samples.append((img, item))
         return samples
 
     def apply_filter(
-            self,
-            filter_func: Callable[[pd.DataFrame, FileSystem], pd.DataFrame]
-        ):
+        self, filter_func: Callable[[pd.DataFrame, FileSystem], pd.DataFrame]
+    ):
         """
         Applies a function to processor.df and stores result to processor.df:
         self.df = filter_func(self.df, self.filesystem)
-        
+
         Parameters
         ----------
         filter_func: Callable[[pd.DataFrame, FileSystem], pd.DataFrame]

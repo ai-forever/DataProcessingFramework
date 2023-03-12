@@ -4,6 +4,7 @@ import zipfile
 import numpy as np
 import clip
 import torch
+
 try:
     from torch.utils.data.dataloader import default_collate
 except ImportError:
@@ -16,13 +17,13 @@ from DPF.utils import read_image_rgb_from_bytes
 from DPF.filters.utils import identical_collate_fn
 from .img_filter import ImageFilter
 
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 
 def load_safety_model(clip_model, cache_folder, device):
     """load the safety model"""
 
-    gpus = tf.config.list_physical_devices('GPU')
+    gpus = tf.config.list_physical_devices("GPU")
     if gpus:
         try:
             # Currently, memory growth needs to be the same across GPUs
@@ -34,8 +35,10 @@ def load_safety_model(clip_model, cache_folder, device):
     if clip_model == "ViT-L/14":
         model_dir = cache_folder + "/clip_autokeras_binary_nsfw"
         dim = 768
-        url_model = "https://raw.githubusercontent.com/LAION-AI/" \
-                    "CLIP-based-NSFW-Detector/main/clip_autokeras_binary_nsfw.zip"
+        url_model = (
+            "https://raw.githubusercontent.com/LAION-AI/"
+            "CLIP-based-NSFW-Detector/main/clip_autokeras_binary_nsfw.zip"
+        )
     else:
         raise ValueError("Unsupported clip model")
 
@@ -64,13 +67,13 @@ class NSFWFilter(ImageFilter):
     """
 
     def __init__(
-            self,
-            clip_model: str,
-            weights_folder: str,
-            workers: int = 16,
-            batch_size: int = 64,
-            device: str = 'cuda:0',
-            pbar: bool = True
+        self,
+        clip_model: str,
+        weights_folder: str,
+        workers: int = 16,
+        batch_size: int = 64,
+        device: str = "cuda:0",
+        pbar: bool = True,
     ):
         super().__init__(pbar)
 
@@ -79,20 +82,26 @@ class NSFWFilter(ImageFilter):
         self.device = device
 
         self.weights_folder = weights_folder
-        self.clip_model, self.clip_transforms = clip.load(clip_model, device=self.device,
-                                                          download_root=weights_folder)
-        self.safety_model = load_safety_model(clip_model, weights_folder,
-                                              device=self.device.lower().replace('cuda', 'gpu'))
+        self.clip_model, self.clip_transforms = clip.load(
+            clip_model, device=self.device, download_root=weights_folder
+        )
+        self.safety_model = load_safety_model(
+            clip_model,
+            weights_folder,
+            device=self.device.lower().replace("cuda", "gpu"),
+        )
 
-        self.schema = ['image_path', 'nsfw']
+        self.schema = ["image_path", "nsfw"]
         self.dataloader_kwargs = {
-            'num_workers': self.num_workers, 'batch_size': self.batch_size,
-            'preprocess_f': self.preprocess, 'collate_fn': identical_collate_fn,
-            'drop_last': False
+            "num_workers": self.num_workers,
+            "batch_size": self.batch_size,
+            "preprocess_f": self.preprocess,
+            "collate_fn": identical_collate_fn,
+            "drop_last": False,
         }
 
     def preprocess(self, img_bytes, data):
-        image_path = data['image_path']
+        image_path = data["image_path"]
         pil_img = read_image_rgb_from_bytes(img_bytes)
         img_tensor = self.clip_transforms(pil_img)
         return image_path, img_tensor
@@ -106,9 +115,12 @@ class NSFWFilter(ImageFilter):
         with torch.no_grad():
             image_features = self.clip_model.encode_image(batch)
             emb = np.asarray(normalized(image_features.detach().cpu()))
-        nsfw_values = self.safety_model.predict(emb, batch_size=self.batch_size,
-                                                verbose=0).reshape(-1).tolist()
-        df_batch_labels['nsfw'].extend(nsfw_values)
-        df_batch_labels['image_path'].extend(image_paths)
+        nsfw_values = (
+            self.safety_model.predict(emb, batch_size=self.batch_size, verbose=0)
+            .reshape(-1)
+            .tolist()
+        )
+        df_batch_labels["nsfw"].extend(nsfw_values)
+        df_batch_labels["image_path"].extend(image_paths)
 
         return df_batch_labels

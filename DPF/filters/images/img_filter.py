@@ -12,10 +12,7 @@ class ImageFilter(Filter):
     Abstract class for all image filters.
     """
 
-    def __init__(
-            self,
-            pbar: bool
-    ):
+    def __init__(self, pbar: bool):
         super().__init__()
 
         self.pbar = pbar
@@ -49,6 +46,6 @@ class ImageFilter(Filter):
             self._add_values_from_batch(df_labels, df_batch_labels)
 
         df_result = pd.DataFrame(df_labels)
-        df = pd.merge(df, df_result, on='image_path')
+        df = pd.merge(df, df_result, on="image_path")
 
         return df

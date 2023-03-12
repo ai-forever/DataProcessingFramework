@@ -12,11 +12,7 @@ class TextFilter(Filter):
     Base class for all text filters.
     """
 
-    def __init__(
-            self,
-            text_column_name: str = 'caption',
-            workers: int = 16
-    ):
+    def __init__(self, text_column_name: str = "caption", workers: int = 16):
         super().__init__()
 
         self.text_column_name = text_column_name

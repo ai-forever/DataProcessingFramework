@@ -10,50 +10,52 @@ from .formatter import Formatter
 
 class T2IFormatter(Formatter):
     """
-    Formatter for text-to-image datasets. 
+    Formatter for text-to-image datasets.
     Formatter is used to read and create a Processor class for a dataset.
     """
 
-    def __init__(
-            self,
-            filesystem: str = 'local',
-            **filesystem_kwargs
-    ):
+    def __init__(self, filesystem: str = "local", **filesystem_kwargs):
         super().__init__(filesystem, **filesystem_kwargs)
 
     def _postprocess_dataframe(self, df: pd.DataFrame):
         # TODO: do not create a copy of df, use inplace operations
-        columns = ['image_name', 'image_path', 'table_path',
-                   'archive_path', 'data_format', 'caption']
+        columns = [
+            "image_name",
+            "image_path",
+            "table_path",
+            "archive_path",
+            "data_format",
+            "caption",
+        ]
         columns = [i for i in columns if i in df.columns]
         orig_columns = [i for i in df.columns if i not in columns]
         columns.extend(list(orig_columns))
 
-        df_has_null_caption = df['caption'].isnull().values.any()
+        df_has_null_caption = df["caption"].isnull().values.any()
         if df_has_null_caption:
-            print('[WARNING] Column with captions has NaN values.')
-            df.fillna(value={'caption': ''}, inplace=True)
+            print("[WARNING] Column with captions has NaN values.")
+            df.fillna(value={"caption": ""}, inplace=True)
 
-        df['caption'] = df['caption'].astype("string")
+        df["caption"] = df["caption"].astype("string")
 
         return df[columns]
 
     def from_shards(
         self,
         dataset_path: str,
-        archive_ext: str = 'tar',
-        datafiles_ext: str = 'csv',
-        imagename_column: str = 'image_name',
-        caption_column: str = 'caption',
+        archive_ext: str = "tar",
+        datafiles_ext: str = "csv",
+        imagename_column: str = "image_name",
+        caption_column: str = "caption",
         check_same_columns: bool = True,
         image_ext: Optional[str] = None,
         processes: int = 1,
-        progress_bar: bool = False
+        progress_bar: bool = False,
     ) -> ShardsProcessor:
         """
         Reads a dataset in shards (images in archives and dataframes)
         and creates a ShardsProcessor for dataset.
-        
+
         Parameters
         ----------
         dataset_path: str
@@ -74,16 +76,16 @@ class T2IFormatter(Formatter):
             Number of parallel processes to read a dataset data
         progress_bar: bool = False
             Progress bar to track dataset reading process
-            
+
         Returns
         -------
         ShardsProcessor
             ShardsProcessor object for given dataset
         """
 
-        dataset_path = dataset_path.rstrip('/')
-        datafiles_ext = datafiles_ext.lstrip('.')
-        archive_ext = archive_ext.lstrip('.')
+        dataset_path = dataset_path.rstrip("/")
+        datafiles_ext = datafiles_ext.lstrip(".")
+        archive_ext = archive_ext.lstrip(".")
 
         datafiles = self.filesystem.listdir_with_ext(dataset_path, ext=datafiles_ext)
 
@@ -92,20 +94,27 @@ class T2IFormatter(Formatter):
             reader = DataframeReader(
                 self.filesystem,
                 {
-                    "datafiles_ext": datafiles_ext, "archive_ext": archive_ext,
-                    "image_ext": image_ext, "imagename_column": imagename_column,
-                    "caption_column": caption_column
+                    "datafiles_ext": datafiles_ext,
+                    "archive_ext": archive_ext,
+                    "image_ext": image_ext,
+                    "imagename_column": imagename_column,
+                    "caption_column": caption_column,
                 },
-                check_same_columns = check_same_columns,
-                df_needed_columns = set(self.filesystem.read_dataframe(datafiles[0]).columns)
+                check_same_columns=check_same_columns,
+                df_needed_columns=set(
+                    self.filesystem.read_dataframe(datafiles[0]).columns
+                ),
             )
             dataframes = process_map(
-                reader.load_shards_df, datafiles, disable=not progress_bar,
-                max_workers=processes, chunksize=1
+                reader.load_shards_df,
+                datafiles,
+                disable=not progress_bar,
+                max_workers=processes,
+                chunksize=1,
             )
 
         df = pd.concat(dataframes, ignore_index=True)
-        df['data_format'] = 'shards'
+        df["data_format"] = "shards"
         df = self._postprocess_dataframe(df)
 
         processor = ShardsProcessor(
@@ -116,16 +125,16 @@ class T2IFormatter(Formatter):
             datafiles_ext=datafiles_ext,
             imagename_column=imagename_column,
             caption_column=caption_column,
-            image_ext=image_ext
+            image_ext=image_ext,
         )
         return processor
 
     def from_raw(
         self,
         dataset_path: str,
-        datafiles_ext: str = 'csv',
-        imagename_column: str = 'image_name',
-        caption_column: str = 'caption',
+        datafiles_ext: str = "csv",
+        imagename_column: str = "image_name",
+        caption_column: str = "caption",
         check_same_columns: bool = True,
         image_ext: Optional[str] = None,
         processes: int = 1,
@@ -134,7 +143,7 @@ class T2IFormatter(Formatter):
         """
         Reads a dataset in raw format (images in folders and dataframes)
         and creates a RawProcessor for dataset.
-        
+
         Parameters
         ----------
         dataset_path: str
@@ -153,15 +162,15 @@ class T2IFormatter(Formatter):
             Number of parallel processes to read a dataset data
         progress_bar: bool = False
             Progress bar to track dataset reading process
-            
+
         Returns
         -------
         RawProcessor
             RawProcessor object for given dataset
         """
 
-        dataset_path = dataset_path.rstrip('/')
-        datafiles_ext = datafiles_ext.lstrip('.')
+        dataset_path = dataset_path.rstrip("/")
+        datafiles_ext = datafiles_ext.lstrip(".")
 
         datafiles = self.filesystem.listdir_with_ext(dataset_path, ext=datafiles_ext)
 
@@ -170,19 +179,26 @@ class T2IFormatter(Formatter):
             reader = DataframeReader(
                 self.filesystem,
                 {
-                    "datafiles_ext": datafiles_ext, "image_ext": image_ext,
-                    "imagename_column": imagename_column, "caption_column": caption_column
+                    "datafiles_ext": datafiles_ext,
+                    "image_ext": image_ext,
+                    "imagename_column": imagename_column,
+                    "caption_column": caption_column,
                 },
-                check_same_columns = check_same_columns,
-                df_needed_columns = set(self.filesystem.read_dataframe(datafiles[0]).columns)
+                check_same_columns=check_same_columns,
+                df_needed_columns=set(
+                    self.filesystem.read_dataframe(datafiles[0]).columns
+                ),
             )
             dataframes = process_map(
-                reader.load_raw_df, datafiles, disable=not progress_bar,
-                max_workers=processes, chunksize=1
+                reader.load_raw_df,
+                datafiles,
+                disable=not progress_bar,
+                max_workers=processes,
+                chunksize=1,
             )
 
         df = pd.concat(dataframes, ignore_index=True)
-        df['data_format'] = 'raw'
+        df["data_format"] = "raw"
         df = self._postprocess_dataframe(df)
 
         processor = RawProcessor(
@@ -192,6 +208,6 @@ class T2IFormatter(Formatter):
             datafiles_ext=datafiles_ext,
             imagename_column=imagename_column,
             caption_column=caption_column,
-            image_ext=image_ext
+            image_ext=image_ext,
         )
         return processor
