@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 import pandas as pd
 import numpy as np
 from pandarallel import pandarallel

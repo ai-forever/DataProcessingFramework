@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 import pandas as pd
 from tqdm import tqdm
 
@@ -16,6 +16,8 @@ class T2IFilter(Filter):
         super().__init__()
 
         self.pbar = pbar
+        self.schema = []  # fill with your columns
+        self.dataloader_kwargs = {}  # Insert your params
 
     @abstractmethod
     def preprocess(self, img_bytes, data):

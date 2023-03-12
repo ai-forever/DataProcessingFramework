@@ -34,7 +34,7 @@ class ComplexFilter(Filter):
         ), f"All filters should be an instance of these classes: {allowed_filter_types}"
 
         self.batch_size = max(
-            [f.dataloader_kwargs["batch_size"] for f in self.filter_list]
+            f.dataloader_kwargs["batch_size"] for f in self.filter_list
         )
 
         self.columns_to_return_for_dataloader = set()

@@ -207,9 +207,7 @@ class T2IProcessor:
         assert set(columns_to_add).issubset(set(self.df.columns))
 
         table_to_new_data = self.df.groupby("table_path").apply(
-            lambda x: tuple(
-                [v for v in x[["image_name"] + columns_to_add].to_dict("records")]
-            )
+            lambda x: tuple(v for v in x[["image_name"] + columns_to_add].to_dict("records"))
         )
 
         def gen():

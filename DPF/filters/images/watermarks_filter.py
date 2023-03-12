@@ -1,6 +1,6 @@
 import os
 import torch
-import torch.nn as nn
+from torch import nn
 
 try:
     from torch.utils.data.dataloader import default_collate

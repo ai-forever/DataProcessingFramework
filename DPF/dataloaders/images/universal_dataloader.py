@@ -32,7 +32,7 @@ class UniversalT2IDataloader:
         self.df = df
         self.df_formats = df["data_format"].unique().tolist()
         assert all(
-            [f in FORMAT_TO_DATASET for f in self.df_formats]
+            f in FORMAT_TO_DATASET for f in self.df_formats
         ), "Unknown data format in dataloader"
         self.cols_to_return = cols_to_return
         self.preprocess_f = preprocess_f
@@ -41,8 +41,8 @@ class UniversalT2IDataloader:
 
     def test(self):
         for data_format in self.df_formats:
-            DatasetClass = FORMAT_TO_DATASET[data_format]
-            dataset = DatasetClass(
+            dataset_class = FORMAT_TO_DATASET[data_format]
+            dataset = dataset_class(
                 self.filesystem,
                 self.df[self.df["data_format"] == data_format],
                 self.cols_to_return,
@@ -63,17 +63,15 @@ class UniversalT2IDataloader:
 
         format_counts = self.df["data_format"].value_counts().to_dict()
         batched_len = sum(
-            [
-                count // bs if count % bs == 0 else (count // bs) + 1
-                for count in format_counts.values()
-            ]
+            count // bs if count % bs == 0 else (count // bs) + 1
+            for count in format_counts.values()
         )
         return batched_len
 
     def __iter__(self):
         for data_format in self.df_formats:
-            DatasetClass = FORMAT_TO_DATASET[data_format]
-            dataset = DatasetClass(
+            dataset_class = FORMAT_TO_DATASET[data_format]
+            dataset = dataset_class(
                 self.filesystem,
                 self.df[self.df["data_format"] == data_format],
                 self.cols_to_return,

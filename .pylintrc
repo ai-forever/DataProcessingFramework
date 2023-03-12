@@ -97,16 +97,14 @@ enable=
 
 disable=
     attribute-defined-outside-init,
-    invalid-name,
     missing-docstring,
-    protected-access,
     too-few-public-methods,
-    # handled by black
-    format,
+    import-error,
     # We anticipate #3512 where it will become optional
     fixme,
-    cyclic-import,
-    import-error,
+    # Typing considers
+    consider-alternative-union-syntax,
+    consider-using-alias,
 
 
 [REPORTS]
@@ -267,7 +265,7 @@ function-rgx=[a-z_][a-z0-9_]{2,30}$
 variable-naming-style=snake_case
 
 # Regular expression matching correct variable names
-variable-rgx=[a-z_][a-z0-9_]{2,30}$
+variable-rgx=[a-z_][a-z0-9_]{1,30}$
 
 # Naming style matching correct constant names.
 const-naming-style=UPPER_CASE
@@ -285,13 +283,13 @@ attr-rgx=[a-z_][a-z0-9_]{2,}$
 argument-naming-style=snake_case
 
 # Regular expression matching correct argument names
-argument-rgx=[a-z_][a-z0-9_]{2,30}$
+argument-rgx=[a-z_][a-z0-9_]{1,30}$
 
 # Naming style matching correct class attribute names.
 class-attribute-naming-style=any
 
 # Regular expression matching correct class attribute names
-class-attribute-rgx=([A-Za-z_][A-Za-z0-9_]{2,30}|(__.*__))$
+class-attribute-rgx=([A-Za-z_][A-Za-z0-9_]{1,30}|(__.*__))$
 
 # Naming style matching correct class constant names.
 class-const-naming-style=UPPER_CASE

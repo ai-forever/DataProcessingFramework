@@ -28,7 +28,6 @@ class FileSystem(ABC):
         io.BytesIO | str
             io.BytesIO object if binary, string otherwise
         """
-        pass
 
     @abstractmethod
     def save_file(
@@ -46,7 +45,6 @@ class FileSystem(ABC):
         binary: bool
             Write file in binary mode or in text mode
         """
-        pass
 
     def read_tar(self, filepath: str):
         """
@@ -81,7 +79,7 @@ class FileSystem(ABC):
         data = self.read_file(filepath, binary=True)
         if filetype == "csv":
             return pd.read_csv(data, **kwargs)
-        elif filetype == "parquet":
+        if filetype == "parquet":
             return pd.read_parquet(data, **kwargs)
         else:
             raise NotImplementedError(f"Unknown file format: {filetype}")
@@ -127,7 +125,6 @@ class FileSystem(ABC):
         List[str]
             List of filepaths (filenames if filenames_only)
         """
-        pass
 
     def listdir_with_ext(
         self, folder_path: str, ext: str, filenames_only: bool = False
@@ -166,7 +163,6 @@ class FileSystem(ABC):
         folder_path: str
             Path to folder to create
         """
-        pass
 
     @abstractmethod
     def walk(self, folder_path: str) -> Iterable[Tuple[str, List[str], List[str]]]:
@@ -183,4 +179,3 @@ class FileSystem(ABC):
         Iterable[Tuple[str, List[str], List[str]]]
             Iterable of tuples with 3 elements: root, dirs, files
         """
-        pass

@@ -86,13 +86,13 @@ class MD5Filter(ImageFilter):
         self.num_workers = workers
 
         self.schema = ["image_path", "image_md5"]
-        self.dataloader_kwargs = dict(
-            num_workers=self.num_workers,
-            batch_size=1,
-            preprocess_f=self.preprocess,
-            collate_fn=identical_collate_fn,
-            drop_last=False,
-        )
+        self.dataloader_kwargs = {
+            "num_workers": self.num_workers,
+            "batch_size": 1,
+            "preprocess_f": self.preprocess,
+            "collate_fn": identical_collate_fn,
+            "drop_last": False,
+        }
 
     def preprocess(self, img_bytes: bytes, data: dict):
         image_path = data["image_path"]
