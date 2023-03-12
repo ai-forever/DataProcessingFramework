@@ -1,38 +1,29 @@
-import abc
-import os
+from abc import abstractmethod
 import pandas as pd
-from PIL import Image
 import numpy as np
-import random
-import string
 from pandarallel import pandarallel
 
-from tqdm import tqdm
-import torch
-
-from DPF.dataloaders.images import UniversalT2IDataloader
 from DPF.filesystems.filesystem import FileSystem
 from DPF.filters import Filter
 
 
 class TextFilter(Filter):
-    
-    def __init__(
-            self, 
-            text_column_name: str = 'caption',
-            workers: int = 16
-        ):
-        super(TextFilter, self).__init__()
-        
+    """
+    Base class for all text filters.
+    """
+
+    def __init__(self, text_column_name: str = "caption", workers: int = 16):
+        super().__init__()
+
         self.text_column_name = text_column_name
         self.workers = workers
-        
+
         self.schema = []
-           
-    @abc.abstractmethod
+
+    @abstractmethod
     def process(self, row):
         pass
-        
+
     def run(self, df: pd.DataFrame, filesystem: FileSystem) -> pd.DataFrame:
         pandarallel.initialize(nb_workers=self.workers)
         res = np.array(list(df.parallel_apply(self.process, axis=1)))

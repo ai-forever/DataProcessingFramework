@@ -19,6 +19,7 @@ def conversion_helper(val, conversion):
 
 def fp32_to_fp16(val):
     """Convert fp32 `val` to fp16"""
+
     def half_conversion(val):
         val_typecheck = val
         if isinstance(val_typecheck, (Parameter, Variable)):
@@ -26,11 +27,13 @@ def fp32_to_fp16(val):
         if isinstance(val_typecheck, FLOAT_TYPES):
             val = val.half()
         return val
+
     return conversion_helper(val, half_conversion)
 
 
 def fp16_to_fp32(val):
     """Convert fp16 `val` to fp32"""
+
     def float_conversion(val):
         val_typecheck = val
         if isinstance(val_typecheck, (Parameter, Variable)):
@@ -38,18 +41,19 @@ def fp16_to_fp32(val):
         if isinstance(val_typecheck, HALF_TYPES):
             val = val.float()
         return val
+
     return conversion_helper(val, float_conversion)
 
 
 class FP16Module(nn.Module):
     def __init__(self, module):
-        super(FP16Module, self).__init__()
-        self.add_module('module', module.half())
+        super().__init__()
+        self.add_module("module", module.half())
 
     def forward(self, *inputs, **kwargs):
         return fp16_to_fp32(self.module(*(fp32_to_fp16(inputs)), **kwargs))
 
-    def state_dict(self, destination=None, prefix='', keep_vars=False):
+    def state_dict(self, destination=None, prefix="", keep_vars=False):
         return self.module.state_dict(destination, prefix, keep_vars)
 
     def load_state_dict(self, state_dict, strict=True):
