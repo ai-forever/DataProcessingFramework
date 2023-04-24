@@ -288,6 +288,8 @@ class T2IProcessor:
     ) -> None:
         if columns_to_save is None:
             columns_to_save = []
+        elif self.imagename_column in columns_to_save:
+            columns_to_save.remove(self.imagename_column)
         dataloader = UniversalT2IDataloader(
             self.filesystem,
             self.df,
