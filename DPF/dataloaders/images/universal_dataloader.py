@@ -24,6 +24,7 @@ class UniversalT2IDataloader:
         df,
         cols_to_return=None,
         preprocess_f=default_preprocess,
+        return_none_on_error: bool = False,
         **dataloader_kwargs,
     ):
         if cols_to_return is None:
@@ -36,6 +37,7 @@ class UniversalT2IDataloader:
         ), "Unknown data format in dataloader"
         self.cols_to_return = cols_to_return
         self.preprocess_f = preprocess_f
+        self.return_none_on_error = return_none_on_error
         self.dataloader_kwargs = dataloader_kwargs
         self.len = None
 
@@ -47,6 +49,7 @@ class UniversalT2IDataloader:
                 self.df[self.df["data_format"] == data_format],
                 self.cols_to_return,
                 self.preprocess_f,
+                self.return_none_on_error
             )
             print(f'"{data_format}" dataset created')
             dataloader = DataLoader(dataset, **self.dataloader_kwargs)
