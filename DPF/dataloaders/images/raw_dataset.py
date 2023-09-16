@@ -17,6 +17,7 @@ class RawDataset(Dataset):
         df: pd.DataFrame,
         cols_to_return: Optional[List[str]] = None,
         preprocess_f=default_preprocess,
+        return_none_on_error: bool = False
     ):
         super(RawDataset).__init__()
         if cols_to_return is None:
@@ -25,6 +26,7 @@ class RawDataset(Dataset):
         self.columns = ["image_path"] + cols_to_return
         self.data_to_iterate = df[self.columns].values
         self.preprocess_f = preprocess_f
+        self.return_none_on_error = return_none_on_error
 
     def __len__(self):
         return len(self.data_to_iterate)
@@ -34,5 +36,12 @@ class RawDataset(Dataset):
             self.columns[c]: item for c, item in enumerate(self.data_to_iterate[idx])
         }
         image_path = data["image_path"]
-        image_bytes = self.filesystem.read_file(image_path, binary=True).getvalue()
+        if self.return_none_on_error:
+            try:
+                image_bytes = self.filesystem.read_file(image_path, binary=True).getvalue()
+            except Exception as err:
+                img_bytes = None
+        else:
+            image_bytes = self.filesystem.read_file(image_path, binary=True).getvalue()
+
         return self.preprocess_f(image_bytes, data)

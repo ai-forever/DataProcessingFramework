@@ -21,6 +21,7 @@ class ShardsDataset(IterableDataset):
         df: pd.DataFrame,
         cols_to_return: Optional[List[str]] = None,
         preprocess_f=default_preprocess,
+        return_none_on_error: bool = False
     ):
         super(ShardsDataset).__init__()
         if cols_to_return is None:
@@ -32,6 +33,7 @@ class ShardsDataset(IterableDataset):
         )
         self.total_samples = len(df)
         self.preprocess_f = preprocess_f
+        self.return_none_on_error = return_none_on_error
 
     def __len__(self):
         return self.total_samples
@@ -49,6 +51,13 @@ class ShardsDataset(IterableDataset):
             for data in data_all:
                 data = {self.columns[i]: item for i, item in enumerate(data)}
                 filename = os.path.basename(data["image_path"])
-                img_bytes = tar.extractfile(filename).read()
+                if self.return_none_on_error:
+                    try:
+                        img_bytes = tar.extractfile(filename).read()
+                    except Exception as err:
+                        img_bytes = None
+                else:
+                    img_bytes = tar.extractfile(filename).read()
+                    
                 yield self.preprocess_f(img_bytes, data)
             tar.close()

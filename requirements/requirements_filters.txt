@@ -3,3 +3,4 @@ torchvision
 autokeras
 git+https://github.com/openai/CLIP.git
 huggingface_hub
+git+https://github.com/boomb0om/CRAFT-text-detection/
