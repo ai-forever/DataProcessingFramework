@@ -2,8 +2,31 @@ from abc import ABC, abstractmethod
 import os
 import io
 import tarfile
-from typing import Union, List, Tuple, Iterable
+import datetime
+from typing import Union, List, Dict, Optional, Tuple, Iterable
 import pandas as pd
+
+
+class FileData:
+    """Class that represents a file with his metadata"""
+
+    def __init__(
+        self,
+        path: str,
+        type: str,
+        last_modified: Optional[datetime.datetime] = None,
+        file_size: Optional[int] = None
+    ):
+        self.path = path
+        self.name = os.path.basename(self.path.rstrip('/'))
+        assert type in {'directory', 'file'}, \
+            "param 'type' must be one of {'directory', 'file'}, got "+str(type)
+        self.type = type
+        self.last_modified = last_modified
+        self.file_size = file_size
+
+    def __repr__(self) -> str:
+        return f'File(path="{self.path}, size={self.file_size}, last_modified={self.last_modified}")'
 
 
 class FileSystem(ABC):
@@ -152,6 +175,22 @@ class FileSystem(ABC):
             for f in self.listdir(folder_path, filenames_only=filenames_only)
             if f.endswith(ext)
         ]
+
+    @abstractmethod
+    def listdir_meta(self, folder_path: str) -> List[FileData]:
+        """
+        Returns the contents of folder with meta information (datetime created, etc)
+
+        Parameters
+        ----------
+        folder_path: str
+            Path to folder
+
+        Returns
+        -------
+        List[FileData]
+            List of FileData objects
+        """
 
     @abstractmethod
     def mkdir(self, folder_path: str) -> None:
