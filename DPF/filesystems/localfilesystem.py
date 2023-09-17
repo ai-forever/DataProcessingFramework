@@ -1,8 +1,9 @@
 import os
 import io
+from datetime import datetime
 from typing import Union, List, Optional, Tuple, Iterable
 
-from .filesystem import FileSystem
+from .filesystem import FileSystem, FileData
 
 
 class LocalFileSystem(FileSystem):
@@ -43,6 +44,18 @@ class LocalFileSystem(FileSystem):
         if not filenames_only:
             files = [folder_path + f for f in files]
         return files
+
+    def listdir_meta(self, folder_path: str) -> List[FileData]:
+        folder_path = folder_path.rstrip("/") + "/"
+        results = []
+        for fd in os.scandir(folder_path):
+            path = fd.path
+            type_ = 'directory' if fd.is_dir() else 'file'
+            stats = fd.stat()
+            size = stats.st_size
+            last_modified = datetime.fromtimestamp(stats.st_mtime)
+            results.append(FileData(path, type_, last_modified, size))
+        return results
 
     def mkdir(self, folder_path: str) -> None:
         folder_path = folder_path.rstrip("/") + "/"
