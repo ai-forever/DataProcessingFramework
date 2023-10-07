@@ -1,20 +1,19 @@
 from abc import abstractmethod
 import traceback
-from typing import Optional, Dict
+from typing import Optional, Dict, Tuple
 
 
-class FileWriter:
+class ABSWriter:
     @abstractmethod
-    def save_file(
+    def save_sample(
         self,
-        file_bytes: bytes,
-        image_ext: Optional[str] = None,
-        file_data: Optional[Dict[str, str]] = None,
+        modality2sample_data: Dict[str, Tuple[str, bytes]],
+        table_data: Dict[str, str] = {},
     ) -> None:
         pass
 
     @abstractmethod
-    def __enter__(self) -> "FileWriter":
+    def __enter__(self) -> "ABSWriter":
         pass
 
     @abstractmethod

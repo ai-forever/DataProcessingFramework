@@ -2,7 +2,7 @@ from typing import List, Union
 import pandas as pd
 from tqdm import tqdm
 
-from DPF.dataloaders.images import UniversalT2IDataloader
+from DPF.dataloaders.deprecated.images import UniversalT2IDataloader
 from DPF.filters.images.img_filter import ImageFilter
 from DPF.filters.text2image.t2i_filter import T2IFilter
 from DPF.filters import Filter

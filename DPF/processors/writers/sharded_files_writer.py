@@ -1,13 +1,14 @@
 import os
-from typing import Optional, Dict
+from typing import Optional, Dict, List, Tuple
 import traceback
 import pandas as pd
 
+from DPF.modalities import MODALITIES
 from DPF.filesystems.filesystem import FileSystem
-from .filewriter import FileWriter
+from .filewriter import ABSWriter
 
 
-class RawFileWriter(FileWriter):
+class ShardedFilesWriter(ABSWriter):
     """
     RawFileWriter
     """
@@ -17,24 +18,21 @@ class RawFileWriter(FileWriter):
         filesystem: FileSystem,
         destination_dir: str,
         max_files_in_folder: Optional[int] = 1000,
-        image_ext: Optional[str] = None,
         datafiles_ext: Optional[str] = "csv",
     ) -> None:
         self.filesystem = filesystem
         self.destination_dir = destination_dir
         self.max_files_in_folder = max_files_in_folder
-        self.image_ext = "." + image_ext.lstrip(".") if image_ext is not None else None
         self.datafiles_ext = "." + datafiles_ext.lstrip(".")
 
         self.df_raw = []
         self.last_file_index = self._init_writer_from_last_uploaded_file()
         self.last_path_to_dir = None
 
-    def save_file(
+    def save_sample(
         self,
-        file_bytes: bytes,
-        image_ext: Optional[str] = None,
-        file_data: Optional[Dict[str, str]] = None,
+        modality2sample_data: Dict[str, Tuple[str, bytes]],
+        table_data: Dict[str, str] = {},
     ) -> None:
         # creating directory
         path_to_dir = os.path.join(
@@ -45,17 +43,13 @@ class RawFileWriter(FileWriter):
             self.filesystem.mkdir(path_to_dir)
 
         # writing to file
-        filename = self._calculate_current_filename(image_ext=image_ext)
-        path_to_file = os.path.join(path_to_dir, filename)
-        self.filesystem.save_file(file_bytes, path_to_file, binary=True)
+        for modality, (extension, file_bytes) in modality2sample_data.items():
+            filename = self.get_current_filename(extension)
+            table_data[MODALITIES[modality].sharded_file_name_column] = filename
+            path_to_file = os.path.join(path_to_dir, filename)
+            self.filesystem.save_file(file_bytes, path_to_file, binary=True)
 
-        save_data = {
-            "image_name": filename,
-        }
-        if file_data is not None:
-            save_data.update(file_data)
-
-        self.df_raw.append(save_data)
+        self.df_raw.append(table_data)
         self._try_close_batch()
 
     def __enter__(self) -> "FileWriter":
@@ -76,31 +70,31 @@ class RawFileWriter(FileWriter):
         list_dirs = [
             int(os.path.basename(filename[: -len(self.datafiles_ext)]))
             for filename in self.filesystem.listdir(self.destination_dir)
-            if filename.endswith(".csv")
+            if filename.endswith(self.datafiles_ext)
         ]
-        if len(list_dirs) < 1:
+        if len(list_dirs) == 0:
             return 0
 
         last_dir = str(sorted(list_dirs)[-1])
-        self.df_raw = self.filesystem.read_dataframe(
-            os.path.join(self.destination_dir, last_dir + self.datafiles_ext)
-        ).to_dict("records")
-        list_files = [
-            int(os.path.splitext(data["image_name"])[0]) for data in self.df_raw
-        ]
-        last_file = sorted(list_files)[-1]
+        dir_path = os.path.join(self.destination_dir, last_dir)
 
-        return last_file + 1
+        filenames = self.filesystem.listdir(dir_path, filenames_only=True)
+        names = [os.path.splitext(f)[0] for f in filenames if not f.startswith('.')]
+        if len(names) == 0:
+            return int(last_dir)*self.max_files_in_folder
+
+        if all([name.isdigit() for name in names]):
+            index = int(sorted(names)[-1]) + 1
+        else:
+            raise ValueError(f'Could read index from {dir_path}. Check filenames')
+        return index
+
+    def get_current_filename(self, extension: str) -> str:
+        extension = extension.lstrip('.')
+        return f"{self.last_file_index}.{extension}"
 
     def _calculate_current_dirname(self) -> str:
         return str(self.last_file_index // self.max_files_in_folder)
-
-    def _calculate_current_filename(self, image_ext: str) -> str:
-        if image_ext is None:
-            return f"{self.last_file_index}{self.image_ext}"
-        else:
-            image_ext = image_ext.lstrip(".")
-            return f"{self.last_file_index}.{image_ext}"
 
     def _try_close_batch(self) -> None:
         old_dirname = self._calculate_current_dirname()
@@ -110,9 +104,10 @@ class RawFileWriter(FileWriter):
             self._flush(old_dirname)
 
     def _flush(self, dirname: str) -> None:
-        df_to_save = pd.DataFrame(self.df_raw)
-        path_to_csv_file = os.path.join(
-            self.destination_dir, f"{dirname}{self.datafiles_ext}"
-        )
-        self.filesystem.save_dataframe(df_to_save, path_to_csv_file, index=False)
+        if len(self.df_raw) > 0:
+            df_to_save = pd.DataFrame(self.df_raw)
+            path_to_csv_file = os.path.join(
+                self.destination_dir, f"{dirname}{self.datafiles_ext}"
+            )
+            self.filesystem.save_dataframe(df_to_save, path_to_csv_file, index=False)
         self.df_raw = []

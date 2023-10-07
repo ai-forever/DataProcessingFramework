@@ -4,7 +4,7 @@ from tqdm import tqdm
 from tqdm.contrib.concurrent import process_map
 
 from DPF.filesystems import LocalFileSystem, FileSystem
-from DPF.dataloaders.images import UniversalT2IDataloader
+from DPF.dataloaders.deprecated.images import UniversalT2IDataloader
 from DPF.processors.writers.shardsfilewriter import ShardsFileWriter
 from DPF.utils import get_file_extension
 from DPF.helpers.dataframe_changer import DataframeChanger

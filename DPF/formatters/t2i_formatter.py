@@ -2,8 +2,8 @@ from typing import Optional
 import pandas as pd
 from tqdm.contrib.concurrent import process_map
 
-from DPF.processors.text2image.raw_processor import RawProcessor
-from DPF.processors.text2image.shards_processor import ShardsProcessor
+from DPF.processors.deprecated.text2image import RawProcessor
+from DPF.processors.deprecated.text2image.shards_processor import ShardsProcessor
 from DPF.helpers.dataframe_reader import DataframeReader
 from .formatter import Formatter
 

@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Dict, Union
 import hashlib
 from PIL import Image
 import numpy as np
@@ -15,7 +15,7 @@ def get_md5_hash(img_byte_arr):
 
 def get_phash(pil_img, hash_size=8, highfreq_factor=4):
     img_size = hash_size * highfreq_factor
-    image_array = np.array(pil_img.resize((img_size, img_size), Image.ANTIALIAS))
+    image_array = np.array(pil_img.resize((img_size, img_size), Image.LANCZOS))
 
     dct_coef = dct(dct(image_array, axis=0), axis=1)
     dct_reduced_coef = dct_coef[:hash_size, :hash_size]
@@ -42,27 +42,26 @@ class PHashFilter(ImageFilter):
         self.num_workers = workers
         self.sim_hash_size = sim_hash_size
 
-        self.schema = ["image_path", f"image_phash_{self.sim_hash_size}"]
+        self.schema = [self.key_column, f"image_phash_{self.sim_hash_size}"]
         self.dataloader_kwargs = {
             "num_workers": self.num_workers,
             "batch_size": 1,
-            "preprocess_f": self.preprocess,
             "collate_fn": identical_collate_fn,
             "drop_last": False,
         }
 
-    def preprocess(self, img_bytes: bytes, data: dict):
-        image_path = data["image_path"]
+    def preprocess(self, modality2data: Dict[str, Union[bytes, str]], metadata: dict):
+        key = metadata[self.key_column]
         img_simhash = get_phash(
-            read_image_rgb_from_bytes(img_bytes), hash_size=self.sim_hash_size
+            read_image_rgb_from_bytes(modality2data['image']), hash_size=self.sim_hash_size
         )
-        return image_path, img_simhash
+        return key, img_simhash
 
     def process_batch(self, batch) -> dict:
         df_batch_labels = self._generate_dict_from_schema()
 
-        image_paths, img_simhashes = list(zip(*batch))
-        df_batch_labels["image_path"].extend(image_paths)
+        keys, img_simhashes = list(zip(*batch))
+        df_batch_labels[self.key_column].extend(keys)
         df_batch_labels[f"image_phash_{self.sim_hash_size}"].extend(img_simhashes)
 
         return df_batch_labels
@@ -75,13 +74,10 @@ class MD5Filter(ImageFilter):
 
     def __init__(
         self,
-        task_name: Optional[str] = None,
-        save_parquets_dir: Optional[str] = None,
-        save_parquets: bool = False,
         pbar: bool = True,
         workers: int = 16,
     ):
-        super().__init__(task_name, save_parquets, save_parquets_dir, pbar)
+        super().__init__(pbar)
 
         self.num_workers = workers
 
@@ -89,7 +85,6 @@ class MD5Filter(ImageFilter):
         self.dataloader_kwargs = {
             "num_workers": self.num_workers,
             "batch_size": 1,
-            "preprocess_f": self.preprocess,
             "collate_fn": identical_collate_fn,
             "drop_last": False,
         }

@@ -5,7 +5,7 @@ from tqdm import tqdm
 
 from DPF.utils import get_file_extension
 from DPF.utils.constants import ALLOWED_IMAGES_FORMATS
-from DPF.processors.images import ImagesProcessor
+from DPF.processors.deprecated.images import ImagesProcessor
 from .formatter import Formatter
 
 

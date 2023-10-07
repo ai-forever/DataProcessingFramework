@@ -49,9 +49,7 @@ class DataframeReader:
             image_ext = image_ext.lstrip(".")
             df["image_name"] += "." + image_ext
 
-    def load_shards_df(self, filepath: str) -> pd.DataFrame:
-        datafiles_ext = self.read_params["datafiles_ext"]
-        archive_ext = self.read_params["archive_ext"]
+    def load_df(self, filepath: str) -> pd.DataFrame:
         image_ext = self.read_params["image_ext"]
         caption_column = self.read_params["caption_column"]
         imagename_column = self.read_params["imagename_column"]
@@ -60,27 +58,5 @@ class DataframeReader:
 
         self._add_base_columns(
             df, filepath, caption_column, imagename_column, image_ext
-        )
-
-        df["archive_path"] = df["table_path"].str.rstrip(datafiles_ext) + archive_ext
-        df["image_path"] = df["archive_path"] + "/" + df["image_name"]
-        return df
-
-    def load_raw_df(self, filepath: str) -> pd.DataFrame:
-        datafiles_ext = self.read_params["datafiles_ext"]
-        image_ext = self.read_params["image_ext"]
-        caption_column = self.read_params["caption_column"]
-        imagename_column = self.read_params["imagename_column"]
-
-        df = self.filesystem.read_dataframe(filepath)
-
-        self._add_base_columns(
-            df, filepath, caption_column, imagename_column, image_ext
-        )
-
-        df["image_path"] = (
-            df["table_path"].str.slice(0, -(len(datafiles_ext) + 1))
-            + "/"
-            + df["image_name"]
         )
         return df

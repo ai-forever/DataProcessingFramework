@@ -2,7 +2,7 @@ from abc import abstractmethod
 import pandas as pd
 from tqdm import tqdm
 
-from DPF.dataloaders.images import UniversalT2IDataloader
+from DPF.dataloaders.deprecated.images import UniversalT2IDataloader
 from DPF.filesystems.filesystem import FileSystem
 from DPF.filters import Filter
 

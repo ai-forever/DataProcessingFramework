@@ -6,7 +6,7 @@ import pandas as pd
 from PIL import Image
 
 from DPF.filesystems import FileSystem
-from DPF.processors.text2image.t2i_processor import T2IProcessor
+from DPF.processors.deprecated.text2image.t2i_processor import T2IProcessor
 
 
 class ShardsProcessor(T2IProcessor):
