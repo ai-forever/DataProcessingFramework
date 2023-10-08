@@ -96,7 +96,7 @@ class OCRFilter(ImageFilter):
     def preprocess(self, img_bytes: bytes, data: dict):
         image_path = data["image_path"]
         boxes = json.loads(data[self.text_box_col])
-        pil_img = read_image_rgb_from_bytes(img_bytes).convert('L')
+        pil_img = read_image_rgb_from_bytes(img_bytes)._convert('L')
         return image_path, pil_img, boxes
 
     def process_batch(self, batch) -> dict:

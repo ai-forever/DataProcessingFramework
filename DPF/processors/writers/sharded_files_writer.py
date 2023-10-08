@@ -17,12 +17,12 @@ class ShardedFilesWriter(ABSWriter):
         self,
         filesystem: FileSystem,
         destination_dir: str,
-        max_files_in_folder: Optional[int] = 1000,
-        datafiles_ext: Optional[str] = "csv",
+        max_files_in_shard: int = 1000,
+        datafiles_ext: str = "csv",
     ) -> None:
         self.filesystem = filesystem
         self.destination_dir = destination_dir
-        self.max_files_in_folder = max_files_in_folder
+        self.max_files_in_shard = max_files_in_shard
         self.datafiles_ext = "." + datafiles_ext.lstrip(".")
 
         self.df_raw = []
@@ -81,7 +81,7 @@ class ShardedFilesWriter(ABSWriter):
         filenames = self.filesystem.listdir(dir_path, filenames_only=True)
         names = [os.path.splitext(f)[0] for f in filenames if not f.startswith('.')]
         if len(names) == 0:
-            return int(last_dir)*self.max_files_in_folder
+            return int(last_dir)*self.max_files_in_shard
 
         if all([name.isdigit() for name in names]):
             index = int(sorted(names)[-1]) + 1
@@ -94,7 +94,7 @@ class ShardedFilesWriter(ABSWriter):
         return f"{self.last_file_index}.{extension}"
 
     def _calculate_current_dirname(self) -> str:
-        return str(self.last_file_index // self.max_files_in_folder)
+        return str(self.last_file_index // self.max_files_in_shard)
 
     def _try_close_batch(self) -> None:
         old_dirname = self._calculate_current_dirname()
@@ -105,9 +105,28 @@ class ShardedFilesWriter(ABSWriter):
 
     def _flush(self, dirname: str) -> None:
         if len(self.df_raw) > 0:
-            df_to_save = pd.DataFrame(self.df_raw)
+            df_to_save = pd.DataFrame(
+                self.df_raw,
+                columns=self._rearrange_cols(list(self.df_raw[0].keys()))
+            )
             path_to_csv_file = os.path.join(
                 self.destination_dir, f"{dirname}{self.datafiles_ext}"
             )
             self.filesystem.save_dataframe(df_to_save, path_to_csv_file, index=False)
         self.df_raw = []
+
+    def _rearrange_cols(self, columns: List[str]) -> List[str]:
+        cols_first = []
+        for modality in MODALITIES.values():
+            if modality.sharded_file_name_column:
+                cols_first.append(modality.sharded_file_name_column)
+        for modality in MODALITIES.values():
+            if modality.path_column:
+                cols_first.append(modality.path_column)
+        for modality in MODALITIES.values():
+            if modality.column:
+                cols_first.append(modality.column)
+
+        cols_first = [col for col in cols_first if col in columns]
+        cols_end = [col for col in columns if col not in cols_first]
+        return cols_first+cols_end

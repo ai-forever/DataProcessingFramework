@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Tuple
+from typing import Optional, Dict, Tuple, List
 import os
 import io
 import tarfile
@@ -6,10 +6,11 @@ import traceback
 import pandas as pd
 
 from DPF.filesystems.filesystem import FileSystem
-from .filewriter import FileWriter
+from .filewriter import ABSWriter
+from DPF.modalities import MODALITIES
 
 
-class ShardsFileWriter(FileWriter):
+class ShardsWriter(ABSWriter):
     """
     ShardsFileWriter
     """
@@ -19,47 +20,37 @@ class ShardsFileWriter(FileWriter):
         filesystem: FileSystem,
         destination_dir: str,
         max_files_in_shard: Optional[int] = 1000,
-        image_ext: Optional[str] = None,
         datafiles_ext: Optional[str] = "csv",
-        archive_ext: Optional[str] = "tar",
+        archives_ext: Optional[str] = "tar",
     ) -> None:
         self.filesystem = filesystem
         self.destination_dir = destination_dir
         self.max_files_in_shard = max_files_in_shard
-        self.image_ext = "." + image_ext.lstrip(".") if image_ext is not None else None
         self.datafiles_ext = "." + datafiles_ext.lstrip(".")
-        self.archive_ext = "." + archive_ext.lstrip(".")
+        self.archives_ext = "." + archives_ext.lstrip(".")
 
         self.df_raw = []
         self.tar_bytes = io.BytesIO()
         self.tar = None
         self.last_file_index = self._init_writer_from_last_uploaded_file()
 
-    def save_file(
+    def save_sample(
         self,
-        file_bytes: bytes,
-        image_ext: Optional[str] = None,
-        file_data: Optional[Dict[str, str]] = None,
+        modality2sample_data: Dict[str, Tuple[str, bytes]],
+        table_data: Dict[str, str] = {},
     ) -> None:
         # check tar
-        path_to_tar = os.path.join(
-            self.destination_dir, self._calculate_current_tarname()
-        )
         if self.tar is None:
             self.tar = tarfile.open(mode="w", fileobj=self.tar_bytes)
 
         # writing to file
-        filename = self._calculate_current_filename(image_ext=image_ext)
-        img_tar_info, fp = self._prepare_image_for_tar_format(file_bytes, filename)
-        self.tar.addfile(img_tar_info, fp)
+        for modality, (extension, file_bytes) in modality2sample_data.items():
+            filename = self.get_current_filename(extension)
+            table_data[MODALITIES[modality].sharded_file_name_column] = filename
+            img_tar_info, fp = self._prepare_image_for_tar_format(file_bytes, filename)
+            self.tar.addfile(img_tar_info, fp)
 
-        save_data = {
-            "image_name": filename,
-        }
-        if file_data is not None:
-            save_data.update(file_data)
-
-        self.df_raw.append(save_data)
+        self.df_raw.append(table_data)
         self._try_close_batch()
 
     @staticmethod
@@ -84,15 +75,6 @@ class ShardsFileWriter(FileWriter):
             self._flush(self._calculate_current_tarname())
         self.last_file_index = 0
 
-    def _download_to_fileobj(self, s3_path: str) -> io.BytesIO:
-        # todo move method to CloudS3
-        data = io.BytesIO()
-        self.connector.client.download_fileobj(
-            Bucket=self.connector.bucket, Key=s3_path, Fileobj=data
-        )
-        data.seek(0)
-        return data
-
     def _init_writer_from_last_uploaded_file(self) -> int:
         self.filesystem.mkdir(self.destination_dir)
         list_csv = [
@@ -109,7 +91,7 @@ class ShardsFileWriter(FileWriter):
         ).to_dict("records")
         #
         self.tar_bytes = self.filesystem.read_file(
-            os.path.join(self.destination_dir, last_csv + self.archive_ext), binary=True
+            os.path.join(self.destination_dir, last_csv + self.archives_ext), binary=True
         )
         self.tar = tarfile.open(mode="a", fileobj=self.tar_bytes)
         #
@@ -121,14 +103,11 @@ class ShardsFileWriter(FileWriter):
         return last_file + 1
 
     def _calculate_current_tarname(self) -> str:
-        return str(self.last_file_index // self.max_files_in_shard) + self.archive_ext
+        return str(self.last_file_index // self.max_files_in_shard) + self.archives_ext
 
-    def _calculate_current_filename(self, image_ext: str) -> str:
-        if image_ext is None:
-            return f"{self.last_file_index}{self.image_ext}"
-        else:
-            image_ext = image_ext.lstrip(".")
-            return f"{self.last_file_index}.{image_ext}"
+    def get_current_filename(self, extension: str) -> str:
+        extension = extension.lstrip('.')
+        return f"{self.last_file_index}.{extension}"
 
     def _try_close_batch(self) -> None:
         old_tarname = self._calculate_current_tarname()
@@ -138,7 +117,10 @@ class ShardsFileWriter(FileWriter):
             self._flush(old_tarname)
 
     def _flush_and_upload_datafile(self, filename: str) -> None:
-        df_to_save = pd.DataFrame(self.df_raw)
+        df_to_save = pd.DataFrame(
+            self.df_raw,
+            columns=self._rearrange_cols(list(self.df_raw[0].keys()))
+        )
         path_to_csv_file = os.path.join(self.destination_dir, filename)
         self.filesystem.save_dataframe(df_to_save, path_to_csv_file, index=False)
         self.df_raw = []
@@ -155,3 +137,19 @@ class ShardsFileWriter(FileWriter):
     def _flush(self, tarname: str) -> None:
         self._flush_and_upload_datafile(tarname[:-4] + self.datafiles_ext)
         self._flush_and_upload_tar(tarname)
+
+    def _rearrange_cols(self, columns: List[str]) -> List[str]:
+        cols_first = []
+        for modality in MODALITIES.values():
+            if modality.sharded_file_name_column:
+                cols_first.append(modality.sharded_file_name_column)
+        for modality in MODALITIES.values():
+            if modality.path_column:
+                cols_first.append(modality.path_column)
+        for modality in MODALITIES.values():
+            if modality.column:
+                cols_first.append(modality.column)
+
+        cols_first = [col for col in cols_first if col in columns]
+        cols_end = [col for col in columns if col not in cols_first]
+        return cols_first+cols_end
