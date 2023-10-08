@@ -1,12 +1,11 @@
 from typing import Dict, List, Optional, Union, Callable, Any
 import pandas as pd
-from torch.utils.data import Dataset
 
 from DPF.filesystems import FileSystem
-from DPF.modalities import MODALITIES
-from DPF.configs import DatasetConfig, ShardedFilesDatasetConfig
+from DPF.configs import ShardedFilesDatasetConfig
 from DPF.dataloaders import FilesDataset, default_preprocess
 from .sharded_processor import ShardedDatasetProcessor
+from DPF.validators.format_validators import ShardedValidationResult, ShardedFilesValidator
 
 
 class ShardedFilesDatasetProcessor(ShardedDatasetProcessor):
@@ -21,6 +20,27 @@ class ShardedFilesDatasetProcessor(ShardedDatasetProcessor):
 
     def get_container_path(self, split_name: str) -> str:
         return self.config.path + '/' + split_name + '/'
+
+    def validate(
+        self,
+        validate_filestructure: bool = True,
+        validate_dataframes: bool = True,
+        columns_to_check: List[str] = [],
+        workers: int = 1,
+        pbar: bool = True
+    ) -> ShardedValidationResult:
+        validator = ShardedFilesValidator(
+            self.df,
+            self.filesystem,
+            self.config,
+            columns_to_check
+        )
+        return validator.validate(
+            validate_filestructure=validate_filestructure,
+            validate_dataframes=validate_dataframes,
+            workers=workers,
+            pbar=pbar
+        )
 
     def get_torch_dataset(
         self,

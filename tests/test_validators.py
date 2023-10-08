@@ -15,8 +15,7 @@ def test_shards_reader():
     reader = DatasetReader()
     processor = reader.from_config(config)
 
-    validator = ShardsValidator(processor.df, processor.filesystem, processor.config, [])
-    result = validator.validate()
+    result = processor.validate()
     assert result.total_errors == 0
 
 
@@ -31,17 +30,12 @@ def test_shards_wrong_columns():
     reader = DatasetReader()
     processor = reader.from_config(config, validate_columns=False)
 
-    validator = ShardsValidator(processor.df, processor.filesystem, processor.config, [])
-    result = validator.validate()
+    result = processor.validate()
     assert len(result.dataframe_errors) == 0
     assert len(result.filestructure_errors) == 1
     assert isinstance(result.filestructure_errors[0], IsNotKeyError)
 
-    validator = ShardsValidator(
-        processor.df, processor.filesystem, processor.config,
-        ['image_name', 'caption', 'test']
-    )
-    result = validator.validate()
+    result = processor.validate(columns_to_check=['image_name', 'caption', 'test'])
     assert len(result.dataframe_errors) == 1
     assert isinstance(result.dataframe_errors[path+'0.csv'][0], MissedColumnsError)
     assert len(result.filestructure_errors) == 1
@@ -58,8 +52,7 @@ def test_shards_wrong_tar():
     reader = DatasetReader()
     processor = reader.from_config(config)
 
-    validator = ShardsValidator(processor.df, processor.filesystem, processor.config, [])
-    result = validator.validate()
+    result = processor.validate()
 
     print(result)
     assert len(result.dataframe_errors) == 1
@@ -78,8 +71,7 @@ def test_files_reader():
     reader = DatasetReader()
     processor = reader.from_config(config)
 
-    validator = ShardedFilesValidator(processor.df, processor.filesystem, processor.config, [])
-    result = validator.validate()
+    result = processor.validate()
     assert result.total_errors == 0
 
 
@@ -94,17 +86,12 @@ def test_files_wrong_columns():
     reader = DatasetReader()
     processor = reader.from_config(config, validate_columns=False)
 
-    validator = ShardedFilesValidator(processor.df, processor.filesystem, processor.config, [])
-    result = validator.validate()
+    result = processor.validate()
     assert len(result.dataframe_errors) == 0
     assert len(result.filestructure_errors) == 1
     assert isinstance(result.filestructure_errors[0], IsNotKeyError)
 
-    validator = ShardedFilesValidator(
-        processor.df, processor.filesystem, processor.config,
-        ['image_name', 'caption', 'test']
-    )
-    result = validator.validate()
+    result = processor.validate(columns_to_check=['image_name', 'caption', 'test'])
     assert len(result.dataframe_errors) == 1
     assert isinstance(result.dataframe_errors[path+'0.csv'][0], MissedColumnsError)
     assert len(result.filestructure_errors) == 1
@@ -121,8 +108,7 @@ def test_files_wrong_tar():
     reader = DatasetReader()
     processor = reader.from_config(config)
 
-    validator = ShardedFilesValidator(processor.df, processor.filesystem, processor.config, [])
-    result = validator.validate()
+    result = processor.validate()
 
     print(result)
     assert len(result.dataframe_errors) == 1

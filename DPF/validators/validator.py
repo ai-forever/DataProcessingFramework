@@ -12,7 +12,7 @@ class Validator(ABC):
         self,
         validate_filestructure: bool = True,
         validate_dataframes: bool = True,
-        threads: int = 16,
+        workers: int = 4,
         pbar: bool = True
     ) -> ValidationResult:
         pass

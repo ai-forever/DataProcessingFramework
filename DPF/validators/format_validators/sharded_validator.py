@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import List, Dict
 
 import pandas as pd
-from tqdm.contrib.concurrent import thread_map
+from tqdm.contrib.concurrent import process_map
 
 from DPF.validators.format_validators import (
     IsNotKeyError, FileStructureError, DataFrameError, MissedColumnsError, DuplicatedValuesError
@@ -85,34 +85,35 @@ class ShardedValidator(Validator, ABC):
 
         filestructure_errors, df_errors = self._validate_shard_files(path, df)
         errors.extend(df_errors)
-        return errors, filestructure_errors
+        return path, errors, filestructure_errors
 
     def _validate_dataframes(
         self,
         filepaths: List[str],
-        threads: int = 16,
+        workers: int = 4,
         pbar: bool = True
     ) -> (Dict[str, List[DataFrameError]], List[FileStructureError]):
         datafiles = [f for f in filepaths if f.endswith('.'+self.config.datafiles_ext)]
 
-        results = thread_map(
-            lambda x: (x, self._validate_shard(x)),
+        results = process_map(
+            self._validate_shard,
             datafiles,
-            max_workers=threads,
-            disable=not pbar
+            max_workers=workers,
+            disable=not pbar,
+            chunksize=1
         )
         dataframe2errors = {}
         filestructure_errors = []
         for res in results:
-            dataframe2errors[res[0]] = res[1][0]
-            filestructure_errors.extend(res[1][1])
+            dataframe2errors[res[0]] = res[1]
+            filestructure_errors.extend(res[2])
         return dataframe2errors, filestructure_errors
 
     def validate(
         self,
         validate_filestructure: bool = True,
         validate_dataframes: bool = True,
-        threads: int = 16,
+        workers: int = 4,
         pbar: bool = True
     ) -> ShardedValidationResult:
         filepaths = self.filesystem.listdir(self.config.path)
@@ -123,7 +124,7 @@ class ShardedValidator(Validator, ABC):
             filestructure_errors.extend(self._validate_filestructure(filepaths))
 
         if validate_dataframes:
-            _dataframe2errors, _filestructure_errors = self._validate_dataframes(filepaths, threads, pbar)
+            _dataframe2errors, _filestructure_errors = self._validate_dataframes(filepaths, workers, pbar)
             filestructure_errors.extend(_filestructure_errors)
             for path, errors in _dataframe2errors.items():
                 if len(errors) > 0:
