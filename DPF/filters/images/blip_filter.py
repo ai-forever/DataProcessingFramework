@@ -1,3 +1,4 @@
+from typing import Dict, List, Union
 import torch
 from lavis.models import load_model_and_preprocess
 
@@ -31,31 +32,30 @@ class BLIPFilter(ImageFilter):
         )
         self.blip_processor = self.blip_processor["eval"]
 
-        self.schema = ["image_path", "blip_caption"]
+        self.schema = [self.key_column, "blip_caption"]
         self.dataloader_kwargs = {
             "num_workers": self.num_workers,
             "batch_size": self.batch_size,
-            "preprocess_f": self.preprocess,
             "collate_fn": identical_collate_fn,
             "drop_last": False,
         }
 
-    def preprocess(self, img_bytes, data):
-        image_path = data["image_path"]
-        pil_img = read_image_rgb_from_bytes(img_bytes)
+    def preprocess(self, modality2data: Dict[str, Union[bytes, str]], metadata: dict):
+        key = metadata[self.key_column]
+        pil_img = read_image_rgb_from_bytes(modality2data['image'])
         img_tensor = self.blip_processor(pil_img)
-        return image_path, img_tensor
+        return key, img_tensor
 
     def process_batch(self, batch) -> dict:
         df_batch_labels = self._generate_dict_from_schema()
 
-        image_paths, image_tensors = list(zip(*batch))
+        keys, image_tensors = list(zip(*batch))
 
         with torch.no_grad():
             batch = default_collate(image_tensors).to(self.device)
             captions = self.blip_model.generate({"image": batch})
 
         df_batch_labels["blip_caption"].extend(captions)
-        df_batch_labels["image_path"].extend(image_paths)
+        df_batch_labels[self.key_column].extend(keys)
 
         return df_batch_labels

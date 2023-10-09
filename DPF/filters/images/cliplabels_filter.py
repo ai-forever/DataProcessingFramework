@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Dict, Union
 import torch
 import clip
 
@@ -77,12 +77,11 @@ class CLIPLabelsFilter(ImageFilter):
         self.label2column = {
             l: f'{self.clip_version} clip score "{l}"' for l in self.labels
         }
-        self.schema = ["image_path"] + [self.label2column[l] for l in self.labels]
+        self.schema = [self.key_column] + [self.label2column[l] for l in self.labels]
         #
         self.dataloader_kwargs = {
             "num_workers": self.num_workers,
             "batch_size": self.batch_size,
-            "preprocess_f": self.preprocess,
             "collate_fn": identical_collate_fn,
             "drop_last": False,
         }
@@ -99,17 +98,17 @@ class CLIPLabelsFilter(ImageFilter):
         text_features = text_features / text_features.norm(dim=-1, keepdim=True)
         return text_features
 
-    def preprocess(self, img_bytes: bytes, data: dict):
-        image_path = data["image_path"]
-        pil_img = read_image_rgb_from_bytes(img_bytes)
+    def preprocess(self, modality2data: Dict[str, Union[bytes, str]], metadata: dict):
+        key = metadata[self.key_column]
+        pil_img = read_image_rgb_from_bytes(modality2data['image'])
 
         img_tensor = self.clip_processor(pil_img)
-        return image_path, img_tensor
+        return key, img_tensor
 
     def process_batch(self, batch) -> dict:
         df_batch_labels = self._generate_dict_from_schema()
 
-        image_paths, image_tensors = list(zip(*batch))
+        keys, image_tensors = list(zip(*batch))
 
         with torch.no_grad():
             batch = default_collate(image_tensors).to(self.device)
@@ -120,6 +119,6 @@ class CLIPLabelsFilter(ImageFilter):
 
         for c, label in enumerate(self.labels):
             df_batch_labels[self.label2column[label]] += [i[c] for i in probs]
-        df_batch_labels["image_path"].extend(image_paths)
+        df_batch_labels[self.key_column].extend(keys)
 
         return df_batch_labels

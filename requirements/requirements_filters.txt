@@ -4,3 +4,5 @@ autokeras
 CLIP @ git+https://github.com/openai/CLIP.git
 huggingface_hub
 CRAFT @ git+https://github.com/boomb0om/CRAFT-text-detection/
+salesforce-lavis
+ruclip

@@ -1,10 +1,11 @@
-from typing import List, Optional
+from typing import List, Dict, Union, Optional
 import numpy as np
 import torch
 from torch.nn.utils.rnn import pad_sequence
 import clip
 
 from DPF.utils import read_image_rgb_from_bytes
+from DPF.filters.utils import identical_collate_fn
 from .t2i_filter import T2IFilter
 
 
@@ -64,27 +65,25 @@ class CLIPFilter(T2IFilter):
             clip_version, device=self.device, download_root=self.weights_folder
         )
 
-        self.schema = ["image_path", f"clip_{self.clip_version}_similarity"]
+        self.schema = [self.key_column, f"clip_{self.clip_version}_similarity"]
         self.dataloader_kwargs = {
             "num_workers": self.num_workers,
             "batch_size": self.batch_size,
-            "preprocess_f": self.preprocess,
-            "collate_fn": lambda x: x,
-            "drop_last": False,
-            "cols_to_return": ["caption"],
+            "collate_fn": identical_collate_fn,
+            "drop_last": False
         }
 
-    def preprocess(self, img_bytes, data):
-        image_path = data["image_path"]
-        text = data["caption"]
-        pil_img = read_image_rgb_from_bytes(img_bytes)
+    def preprocess(self, modality2data: Dict[str, Union[bytes, str]], metadata: dict):
+        key = metadata[self.key_column]
+        text = modality2data['text']
+        pil_img = read_image_rgb_from_bytes(modality2data['image'])
         img_tensor = self.clip_processor(pil_img)
-        return image_path, img_tensor, text
+        return key, img_tensor, text
 
     def process_batch(self, batch) -> dict:
         df_batch_labels = self._generate_dict_from_schema()
 
-        image_paths, image_tensors, batch_labels = list(zip(*batch))
+        keys, image_tensors, batch_labels = list(zip(*batch))
 
         with torch.no_grad():
             image_tensors = [t.to(self.device) for t in image_tensors]
@@ -102,7 +101,7 @@ class CLIPFilter(T2IFilter):
             batch_similarity = self.get_similarity(inputs, text_latents).tolist()
 
         df_batch_labels[f"clip_{self.clip_version}_similarity"].extend(batch_similarity)
-        df_batch_labels["image_path"].extend(image_paths)
+        df_batch_labels[self.key_column].extend(keys)
 
         return df_batch_labels
 

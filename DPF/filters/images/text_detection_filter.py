@@ -1,3 +1,4 @@
+from typing import Dict, List, Union
 import os
 import torch
 from torch import nn
@@ -36,30 +37,29 @@ class CRAFTFilter(ImageFilter):
         self.weights_folder = weights_folder
         self.model = CRAFTModel(weights_folder, device, use_refiner=False, fp16=True)
 
-        self.schema = ["image_path", f"text_boxes", "num_text_boxes", "text_area"]
+        self.schema = [self.key_column, f"text_boxes", "num_text_boxes", "text_area"]
         self.dataloader_kwargs = {
             "num_workers": self.num_workers,
             "batch_size": self.batch_size,
-            "preprocess_f": self.preprocess,
             "collate_fn": identical_collate_fn,
             "drop_last": False,
         }
 
-    def preprocess(self, img_bytes: bytes, data: dict):
-        image_path = data["image_path"]
-        pil_img = read_image_rgb_from_bytes(img_bytes)
+    def preprocess(self, modality2data: Dict[str, Union[bytes, str]], metadata: dict):
+        key = metadata[self.key_column]
+        pil_img = read_image_rgb_from_bytes(modality2data['image'])
         img_tensor, ratio_w, ratio_h = preprocess_image(np.array(pil_img), self.model.canvas_size, self.model.mag_ratio)
-        return image_path, img_tensor, ratio_w, ratio_h, pil_img.size
+        return key, img_tensor, ratio_w, ratio_h, pil_img.size
 
     def process_batch(self, batch) -> dict:
         df_batch_labels = self._generate_dict_from_schema()
         
-        image_path, img_tensor, ratio_w, ratio_h, orig_size = batch[0]
+        key, img_tensor, ratio_w, ratio_h, orig_size = batch[0]
 
         boxes = self.model._get_boxes_preproc(img_tensor, ratio_w, ratio_h)
         df_batch_labels["text_boxes"].append(boxes)
         df_batch_labels["num_text_boxes"].append(len(boxes))
         df_batch_labels["text_area"].append(boxes_area(boxes)/(orig_size[0]*orig_size[1]))
-        df_batch_labels["image_path"].append(image_path)
+        df_batch_labels[self.key_column].append(key)
 
         return df_batch_labels

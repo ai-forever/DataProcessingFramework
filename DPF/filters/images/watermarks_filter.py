@@ -1,3 +1,4 @@
+from typing import List, Dict, Union
 import os
 import torch
 from torch import nn
@@ -111,25 +112,24 @@ class WatermarksFilter(ImageFilter):
             ]
         )
 
-        self.schema = ["image_path", f"watermark_{self.watermarks_model}"]
+        self.schema = [self.key_column, f"watermark_{self.watermarks_model}"]
         self.dataloader_kwargs = {
             "num_workers": self.num_workers,
             "batch_size": self.batch_size,
-            "preprocess_f": self.preprocess,
             "collate_fn": identical_collate_fn,
             "drop_last": False,
         }
 
-    def preprocess(self, img_bytes: bytes, data: dict):
-        image_path = data["image_path"]
-        pil_img = read_image_rgb_from_bytes(img_bytes)
+    def preprocess(self, modality2data: Dict[str, Union[bytes, str]], metadata: dict):
+        key = metadata[self.key_column]
+        pil_img = read_image_rgb_from_bytes(modality2data['image'])
         img_tensor = self.resnet_transforms(pil_img)
-        return image_path, img_tensor
+        return key, img_tensor
 
     def process_batch(self, batch) -> dict:
         df_batch_labels = self._generate_dict_from_schema()
 
-        image_paths, image_tensors = list(zip(*batch))
+        keys, image_tensors = list(zip(*batch))
         batch = default_collate(image_tensors).to(self.device)
 
         with torch.no_grad():
@@ -137,6 +137,6 @@ class WatermarksFilter(ImageFilter):
             df_batch_labels[f"watermark_{self.watermarks_model}"].extend(
                 torch.max(outputs, 1)[1].cpu().reshape(-1).tolist()
             )
-        df_batch_labels["image_path"].extend(image_paths)
+        df_batch_labels[self.key_column].extend(keys)
 
         return df_batch_labels
