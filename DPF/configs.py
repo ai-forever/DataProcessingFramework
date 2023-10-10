@@ -42,7 +42,7 @@ class ShardedDatasetConfig(DatasetConfig):
         datafiles_ext: str = "csv",
     ):
         super().__init__(datatypes)
-        self.path = path
+        self.path = path.rstrip('/')
         self.datatypes = datatypes
         self.datafiles_ext = datafiles_ext.lstrip('.')
         self._modality2datatype = {d.modality.key: d for d in datatypes}

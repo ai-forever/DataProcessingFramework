@@ -73,6 +73,12 @@ class DatasetProcessor(ABC):
     ) -> ValidationResult:
         pass
 
+    def filter_df(
+        self,
+        condition: pd.Series
+    ):
+        self._df = self._df[condition]
+
     def convert(
         self,
         writer: ABSWriter,
@@ -160,3 +166,6 @@ class DatasetProcessor(ABC):
             dataloader_kwargs=dataloader_kwargs,
             pbar=pbar
         )
+
+    def __len__(self) -> int:
+        return len(self.df)
