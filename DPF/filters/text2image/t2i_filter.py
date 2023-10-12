@@ -1,10 +1,6 @@
 from typing import List, Dict, Union
 from abc import abstractmethod, ABC
-import pandas as pd
-from tqdm import tqdm
 
-from DPF.dataloaders.deprecated.images import UniversalT2IDataloader
-from DPF.filesystems.filesystem import FileSystem
 from DPF.filters import DataFilter
 from DPF.modalities import MODALITIES
 

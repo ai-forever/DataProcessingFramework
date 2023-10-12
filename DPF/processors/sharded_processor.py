@@ -82,13 +82,3 @@ class ShardedDatasetProcessor(DatasetProcessor, ABC):
         errors = helper.update_columns(key_column, dict(table_to_new_data))
         return errors
 
-    def apply_data_filter(self, datafilter: DataFilter, validate_filter_result: bool = True):
-        dataset_kwargs = datafilter.get_dataset_kwargs()
-        dataset = self.get_torch_dataset(**dataset_kwargs)
-        df_result = datafilter.run(dataset)
-        # add validation?
-        # if validate_filter_result:
-
-        self._df = pd.merge(self._df, df_result, on=datafilter.key_column)
-
-

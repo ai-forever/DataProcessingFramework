@@ -5,7 +5,6 @@ import numpy as np
 import torch
 
 from DPF.filesystems import FileSystem
-from .filter import Filter
 
 
 def run_one_process(df, fs, index, results, filter_class, filter_kwargs, device):
@@ -15,7 +14,7 @@ def run_one_process(df, fs, index, results, filter_class, filter_kwargs, device)
     results.append(res)
 
 
-class MultiGPUFilter(Filter):
+class MultiGPUFilter:
     """
     Class for multi-gpu inference
     """

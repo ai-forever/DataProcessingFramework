@@ -6,6 +6,7 @@ import pandas as pd
 from tqdm import tqdm
 
 from DPF.filesystems import FileSystem
+from DPF.filters import DataFilter, ColumnFilter
 from DPF.processors.writers import ABSWriter, ShardedFilesWriter, ShardsWriter
 from DPF.dataloaders.utils import default_preprocess, default_collate
 from DPF.datatypes import ColumnDataType
@@ -61,6 +62,28 @@ class DatasetProcessor(ABC):
         return_none_on_error: bool = False
     ) -> Dataset:
         pass
+
+    def apply_data_filter(self, datafilter: DataFilter, validate_filter_result: bool = True):
+        dataset_kwargs = datafilter.get_dataset_kwargs()
+        dataset = self.get_torch_dataset(**dataset_kwargs)
+        df_result = datafilter.run(dataset)
+
+        if validate_filter_result:
+            assert set(self._df[datafilter.key_column]) == set(df_result[datafilter.key_column]), \
+                f"Result dataframe after filter have different values in key column {datafilter.key_column}"
+            assert len(df_result) == len(self._df), \
+                f"Length of resulted dataframe changed after filtering. Old length = {len(self._df)}, new = {len(df_result)}"
+
+        self._df = pd.merge(self._df, df_result, on=datafilter.key_column)
+
+    def apply_column_filter(self, column_filter: ColumnFilter, validate_filter_result: bool = True):
+        filter_res = column_filter(self._df)
+
+        if validate_filter_result:
+            assert len(filter_res) == len(self._df), \
+                f"Length of resulted dataframe changed after filtering. Old length = {len(self._df)}, new = {len(filter_res)}"
+
+        self._df[column_filter.schema] = filter_res
 
     @abstractmethod
     def validate(

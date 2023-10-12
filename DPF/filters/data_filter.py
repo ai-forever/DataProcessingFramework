@@ -1,11 +1,11 @@
 from typing import Dict, List, Union, Any
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 import pandas as pd
 from tqdm import tqdm
 from torch.utils.data import Dataset, DataLoader
 
 
-class DataFilter:
+class DataFilter(ABC):
     """
     Abstract class for all filters that use datalaaders.
     """

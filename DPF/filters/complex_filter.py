@@ -2,10 +2,8 @@ from typing import List, Union
 import pandas as pd
 from tqdm import tqdm
 
-from DPF.dataloaders.deprecated.images import UniversalT2IDataloader
 from DPF.filters.images.img_filter import ImageFilter
 from DPF.filters.text2image.t2i_filter import T2IFilter
-from DPF.filters import Filter
 from DPF.filters.utils import identical_collate_fn
 from DPF.filesystems.filesystem import FileSystem
 
@@ -13,7 +11,7 @@ from DPF.filesystems.filesystem import FileSystem
 allowed_filter_types = (T2IFilter, ImageFilter)
 
 
-class ComplexFilter(Filter):
+class ComplexFilter:
     def __init__(
         self,
         filter_list: List[Union[ImageFilter, T2IFilter]],

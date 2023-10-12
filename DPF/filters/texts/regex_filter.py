@@ -9,7 +9,7 @@ except ModuleNotFoundError:
     )
     import re
 
-from .text_filter import TextFilter
+from DPF.filters import ColumnFilter
 
 
 def replace_matches(caption, re_compiled, replacement):
@@ -20,7 +20,7 @@ def replace_matches(caption, re_compiled, replacement):
     return caption
 
 
-class RegexFilter(TextFilter):
+class RegexFilter(ColumnFilter):
     """
     RegexFilter class
     """
@@ -30,8 +30,9 @@ class RegexFilter(TextFilter):
         regex_replacement_list: Optional[list] = None,
         text_column_name: str = "caption",
         workers: int = 16,
+        pbar: bool = True
     ):
-        super().__init__(text_column_name, workers)
+        super().__init__(workers, pbar)
 
         if regex_replacement_list is None:
             regex_replacement_list = []
@@ -39,6 +40,7 @@ class RegexFilter(TextFilter):
         self.compile_regexs(regex_replacement_list)
 
         self.text_column_name = text_column_name
+        self.df_columns = [self.text_column_name]
         self.schema = "clean_caption"
 
     def add_regex(self, regex, replacement):
@@ -48,7 +50,7 @@ class RegexFilter(TextFilter):
         for regex, replacement in regex_replacement_list:
             self.add_regex(regex, replacement)
 
-    def process(self, row):
+    def process(self, row: dict) -> tuple:
         caption = row[self.text_column_name]
 
         for re_compiled, replacement in self.compiled_regexs:
