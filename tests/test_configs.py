@@ -3,7 +3,7 @@ from DPF.configs import ShardsDatasetConfig, ShardedFilesDatasetConfig
 
 
 def test_shards_config():
-    path = 'tests/datasets/shards_correct/'
+    path = 'tests/datasets/shards_correct'
     fabric = ShardedConfigFabric()
     config = fabric.create_t2i_config(
         path,
@@ -16,7 +16,7 @@ def test_shards_config():
 
 
 def test_files_config():
-    path = 'tests/datasets/files_correct/'
+    path = 'tests/datasets/files_correct'
     fabric = ShardedConfigFabric()
     config = fabric.create_t2i_config(
         path,
