@@ -1,6 +1,7 @@
 from typing import List, Tuple, Union
 import pandas as pd
-from tqdm.contrib.concurrent import thread_map
+from tqdm.contrib.concurrent import process_map
+from functools import partial
 
 from DPF.filesystems import FileSystem, LocalFileSystem, S3FileSystem
 from DPF.datatypes import ShardedDataType, ColumnDataType
@@ -8,6 +9,10 @@ from DPF.configs import DatasetConfig, ShardedDatasetConfig, ShardsDatasetConfig
 from DPF.processors import (
     DatasetProcessor, ShardedDatasetProcessor, ShardsDatasetProcessor, ShardedFilesDatasetProcessor
 )
+
+
+def help_reader(filesystem, path):
+    return path, filesystem.read_dataframe(path)
 
 
 class DatasetReader:
@@ -46,11 +51,12 @@ class DatasetReader:
     ) -> List[Tuple[str, pd.DataFrame]]:
         if len(datafiles) == 0:
             raise ValueError("No datafiles in this path")
-
-        paths_dataframes = thread_map(
-            lambda x: (x, self.filesystem.read_dataframe(x)),
-            datafiles,
+        
+        worker_co = partial(help_reader, self.filesystem)
+        paths_dataframes = process_map(
+            worker_co, datafiles,
             max_workers=processes,
+            chunksize=1,
             disable=not progress_bar
         )
 
