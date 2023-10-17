@@ -1,8 +1,8 @@
-from typing import List, Tuple
+from typing import List, Tuple, Union
 import pandas as pd
 from tqdm.contrib.concurrent import thread_map
 
-from DPF.filesystems import LocalFileSystem, S3FileSystem
+from DPF.filesystems import FileSystem, LocalFileSystem, S3FileSystem
 from DPF.datatypes import ShardedDataType, ColumnDataType
 from DPF.configs import DatasetConfig, ShardedDatasetConfig, ShardsDatasetConfig, ShardedFilesDatasetConfig
 from DPF.processors import (
@@ -15,7 +15,7 @@ class DatasetReader:
     Dataset fabric
     """
 
-    def __init__(self, filesystem: str = "local", **filesystem_kwargs):
+    def __init__(self, filesystem: Union[FileSystem, str] = "local", **filesystem_kwargs):
         """
         Parameters
         ----------
@@ -28,6 +28,8 @@ class DatasetReader:
             self.filesystem = LocalFileSystem()
         elif filesystem == "s3":
             self.filesystem = S3FileSystem(**filesystem_kwargs)
+        elif isinstance(filesystem, FileSystem):
+            self.filesystem = filesystem
         else:
             raise NotImplementedError(f"Unknown filesystem format: {filesystem}")
 
