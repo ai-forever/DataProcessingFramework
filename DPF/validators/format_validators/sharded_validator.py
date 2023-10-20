@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import List, Dict
 
 import pandas as pd
-from tqdm.contrib.concurrent import process_map
+from tqdm.contrib.concurrent import process_map, thread_map
 
 from DPF.validators.format_validators import (
     IsNotKeyError, FileStructureError, DataFrameError, MissedColumnsError, DuplicatedValuesError
@@ -12,7 +12,7 @@ from DPF.validators import Validator, ValidationResult
 from DPF.datatypes import ShardedDataType
 from DPF.filesystems import FileSystem
 from DPF.configs import ShardedDatasetConfig
-
+from timer import Timer
 
 @dataclass
 class ShardedValidationResult(ValidationResult):
@@ -75,7 +75,6 @@ class ShardedValidator(Validator, ABC):
         missed_columns = set(self.columns_to_check).difference(set(df.columns))
         if len(missed_columns) > 0:
             errors.append(MissedColumnsError(path, list(missed_columns)))
-
         for datatype in self.config.datatypes:
             if isinstance(datatype, ShardedDataType):
                 filenames = df[datatype.user_basename_column_name]
@@ -95,7 +94,7 @@ class ShardedValidator(Validator, ABC):
     ) -> (Dict[str, List[DataFrameError]], List[FileStructureError]):
         datafiles = [f for f in filepaths if f.endswith('.'+self.config.datafiles_ext)]
 
-        results = process_map(
+        results = thread_map(
             self._validate_shard,
             datafiles,
             max_workers=workers,
@@ -122,7 +121,6 @@ class ShardedValidator(Validator, ABC):
 
         if validate_filestructure:
             filestructure_errors.extend(self._validate_filestructure(filepaths))
-
         if validate_dataframes:
             _dataframe2errors, _filestructure_errors = self._validate_dataframes(filepaths, workers, pbar)
             filestructure_errors.extend(_filestructure_errors)

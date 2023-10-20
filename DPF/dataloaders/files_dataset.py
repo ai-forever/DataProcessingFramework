@@ -4,7 +4,7 @@ from torch.utils.data import Dataset
 
 from DPF.filesystems.filesystem import FileSystem
 from DPF.dataloaders.utils import default_preprocess
-from DPF.datatypes import ShardedDataType, ColumnDataType
+from DPF.datatypes import ShardedDataType, ColumnDataType, FileDataType
 
 
 class FilesDataset(Dataset):
@@ -16,7 +16,7 @@ class FilesDataset(Dataset):
         self,
         filesystem: FileSystem,
         df: pd.DataFrame,
-        datatypes: List[Union[ShardedDataType, ColumnDataType]],
+        datatypes: List[Union[ShardedDataType, FileDataType, ColumnDataType]],
         meta_columns: Optional[List[str]] = None,
         preprocess_f: Callable[[dict, dict], Any] = default_preprocess,
         return_none_on_error: bool = False
@@ -38,7 +38,7 @@ class FilesDataset(Dataset):
         for d in self.datatypes:
             if isinstance(d, ColumnDataType):
                 self.column2modality[d.modality.column] = d.modality.key
-            elif isinstance(d, ShardedDataType):
+            elif isinstance(d, (ShardedDataType, FileDataType)):
                 self.path_column2modality[d.modality.path_column] = d.modality.key
             else:
                 raise ValueError()

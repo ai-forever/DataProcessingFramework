@@ -5,9 +5,11 @@ from functools import partial
 
 from DPF.filesystems import FileSystem, LocalFileSystem, S3FileSystem
 from DPF.datatypes import ShardedDataType, ColumnDataType
-from DPF.configs import DatasetConfig, ShardedDatasetConfig, ShardsDatasetConfig, ShardedFilesDatasetConfig
+from DPF.configs import DatasetConfig, ShardedDatasetConfig, ShardsDatasetConfig, ShardedFilesDatasetConfig, \
+    FilesDatasetConfig
 from DPF.processors import (
-    DatasetProcessor, ShardedDatasetProcessor, ShardsDatasetProcessor, ShardedFilesDatasetProcessor
+    DatasetProcessor, ShardedDatasetProcessor, ShardsDatasetProcessor, ShardedFilesDatasetProcessor,
+    FilesDatasetProcessor
 )
 
 
@@ -152,7 +154,7 @@ class DatasetReader:
         self,
         config: ShardsDatasetConfig,
         validate_columns: bool = True,
-        processes: int = 1,
+        workers: int = 1,
         progress_bar: bool = True,
     ) -> ShardsDatasetProcessor:
         dataset_path = config.path.rstrip("/")
@@ -179,7 +181,7 @@ class DatasetReader:
         #
 
         paths_dataframes = self._read_dfs(
-            datafiles, validate_columns, processes, progress_bar,
+            datafiles, validate_columns, workers, progress_bar,
         )
         if validate_columns:
             self._validate_dfs(config, paths_dataframes)
@@ -192,11 +194,11 @@ class DatasetReader:
         )
         return processor
 
-    def from_files(
+    def from_sharded_files(
         self,
         config: ShardedFilesDatasetConfig,
         validate_columns: bool = True,
-        processes: int = 1,
+        workers: int = 1,
         progress_bar: bool = True,
     ) -> ShardedDatasetProcessor:
         dataset_path = config.path.rstrip("/")
@@ -215,7 +217,7 @@ class DatasetReader:
         #
 
         paths_dataframes = self._read_dfs(
-            datafiles, validate_columns, processes, progress_bar,
+            datafiles, validate_columns, workers, progress_bar,
         )
         if validate_columns:
             self._validate_dfs(config, paths_dataframes)
@@ -228,6 +230,30 @@ class DatasetReader:
         )
         return processor
 
+    def from_files(
+        self,
+        config: FilesDatasetConfig,
+    ) -> FilesDatasetProcessor:
+        table_path = config.table_path.rstrip("/")
+        df = self.filesystem.read_dataframe(table_path)
+
+        required_columns = list(config.columns_mapping.keys())
+        column_set = set(df.columns.tolist())
+        for col in required_columns:
+            assert col in column_set, f'Expected table to have "{col}" column'
+
+        column_mapping = {}
+        for k, v in config.columns_mapping.items():
+            if k != v:
+                column_mapping[k] = v
+        if len(column_mapping) > 0:
+            df.rename(columns=column_mapping, inplace=True)
+        return FilesDatasetProcessor(
+            filesystem=self.filesystem,
+            df=df,
+            config=config
+        )
+
     def from_config(
         self,
         config: DatasetConfig,
@@ -236,7 +262,9 @@ class DatasetReader:
         if isinstance(config, ShardsDatasetConfig):
             processor = self.from_shards(config, **kwargs)
         elif isinstance(config, ShardedFilesDatasetConfig):
-            processor = self.from_files(config, **kwargs)
+            processor = self.from_sharded_files(config, **kwargs)
+        elif isinstance(config, FilesDatasetConfig):
+            processor = self.from_files(config)
         else:
             raise ValueError(f"Unsupported config: {config}")
         return processor

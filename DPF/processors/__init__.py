@@ -2,3 +2,4 @@ from .processor import DatasetProcessor
 from .sharded_processor import ShardedDatasetProcessor
 from .shards_processor import ShardsDatasetProcessor
 from .sharded_files_processor import ShardedFilesDatasetProcessor
+from .files_processor import FilesDatasetProcessor

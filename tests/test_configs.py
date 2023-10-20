@@ -16,7 +16,7 @@ def test_shards_config():
 
 
 def test_files_config():
-    path = 'tests/datasets/files_correct'
+    path = 'tests/datasets/sharded_files_correct'
     fabric = ShardedConfigFabric()
     config = fabric.create_t2i_config(
         path,

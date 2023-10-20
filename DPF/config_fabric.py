@@ -1,8 +1,11 @@
-from typing import Type
+from typing import Type, Optional
 
 from DPF.modalities import MODALITIES
-from DPF.datatypes import ShardedDataType, ColumnDataType
-from DPF.configs import DatasetConfig, ShardsDatasetConfig, ShardedDatasetConfig, ShardedFilesDatasetConfig
+from DPF.datatypes import ShardedDataType, ColumnDataType, FileDataType
+from DPF.configs import (
+    DatasetConfig, ShardsDatasetConfig, ShardedDatasetConfig, ShardedFilesDatasetConfig,
+    FilesDatasetConfig
+)
 
 
 class ShardedConfigFabric:
@@ -15,6 +18,20 @@ class ShardedConfigFabric:
             return ShardedFilesDatasetConfig
         else:
             raise ValueError()
+
+    def create_files_config(
+        self,
+        data_path: str,
+        image_path_col: Optional[str] = None,
+        caption_col: Optional[str] = None,
+    ) -> FilesDatasetConfig:
+        datatypes = []
+        if image_path_col:
+            datatypes.append(FileDataType(MODALITIES['image'], image_path_col))
+        if caption_col:
+            datatypes.append(ColumnDataType(MODALITIES['text'], caption_col))
+        assert len(datatypes) > 0
+        return FilesDatasetConfig(data_path, datatypes)
 
     def create_t2i_config(
         self,

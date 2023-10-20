@@ -51,7 +51,7 @@ def test_shards_wrong_tar():
 
 
 def test_files_reader():
-    path = 'tests/datasets/files_correct/'
+    path = 'tests/datasets/sharded_files_correct/'
     fabric = ShardedConfigFabric()
     config = fabric.create_t2i_config(
         path,
@@ -65,7 +65,7 @@ def test_files_reader():
 
 
 def test_files_wrong_columns():
-    path = 'tests/datasets/files_wrong_columns/'
+    path = 'tests/datasets/sharded_files_wrong_columns/'
     fabric = ShardedConfigFabric()
     config = fabric.create_t2i_config(
         path,
@@ -86,7 +86,7 @@ def test_files_wrong_columns():
 
 
 def test_files_wrong_tar():
-    path = 'tests/datasets/files_wrong_folder/'
+    path = 'tests/datasets/sharded_files_wrong_folder/'
     fabric = ShardedConfigFabric()
     config = fabric.create_t2i_config(
         path,

@@ -2,7 +2,7 @@ from typing import List, Dict, Optional, Union
 from abc import ABC, abstractmethod
 
 from DPF.modalities import MODALITIES
-from DPF.datatypes import DataType, ShardedDataType, ColumnDataType
+from DPF.datatypes import DataType, ShardedDataType, ColumnDataType, FileDataType
 
 
 class DatasetConfig:
@@ -110,3 +110,44 @@ class ShardedFilesDatasetConfig(ShardedDatasetConfig):
         datafiles_ext: str = "csv",
     ):
         super().__init__(path, datatypes, datafiles_ext)
+
+
+class FilesDatasetConfig(DatasetConfig):
+
+    def __init__(
+        self,
+        table_path: str,
+        datatypes: List[Union[FileDataType, ColumnDataType]],
+    ):
+        super().__init__(datatypes)
+        self.table_path = table_path.rstrip('/')
+        self.datatypes = datatypes
+        self._modality2datatype = {d.modality.key: d for d in datatypes}
+        self.validate_datatypes()
+
+    def validate_datatypes(self):
+        for data in self.datatypes:
+            assert isinstance(data, (ColumnDataType, FileDataType))
+
+    @property
+    def modality2datatype(self) -> Dict[str, DataType]:
+        return self._modality2datatype
+
+    @property
+    def columns_mapping(self) -> Dict[str, str]:
+        mapping = {}
+        for data in self.datatypes:
+            if isinstance(data, ColumnDataType):
+                mapping[data.user_column_name] = data.modality.column
+            elif isinstance(data, FileDataType):
+                mapping[data.user_path_column_name] = data.modality.path_column
+        return mapping
+
+    def __repr__(self) -> str:
+        s = "FilesDatasetConfig(\n\t"
+        s += f'table_path="{self.table_path}",\n\t'
+        s += 'datatypes=[\n\t\t'
+        s += '\n\t\t'.join([str(i) for i in self.datatypes])
+        s += '\n\t]'
+        s += '\n)'
+        return s
