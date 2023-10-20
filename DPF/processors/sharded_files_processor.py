@@ -6,6 +6,7 @@ from DPF.configs import ShardedFilesDatasetConfig
 from DPF.dataloaders import FilesDataset, default_preprocess
 from .sharded_processor import ShardedDatasetProcessor
 from DPF.validators.format_validators import ShardedValidationResult, ShardedFilesValidator
+from DPF.datatypes import ColumnDataType, ShardedDataType
 
 
 class ShardedFilesDatasetProcessor(ShardedDatasetProcessor):
@@ -58,3 +59,29 @@ class ShardedFilesDatasetProcessor(ShardedDatasetProcessor):
             meta_columns=meta_columns,
             preprocess_f=preprocess_f
         )
+
+    def _read_files_from_sample(
+        self,
+        sample: Dict[str, str]
+    ) -> Dict[str, bytes]:
+        path_column2modality = {}
+        column2modality = {}
+        for d in self.config.datatypes:
+            if isinstance(d, ColumnDataType):
+                column2modality[d.modality.column] = d.modality.key
+            elif isinstance(d, ShardedDataType):
+                path_column2modality[d.modality.path_column] = d.modality.key
+            else:
+                raise ValueError()
+
+        modality2data = {}
+        # read files
+        for col in path_column2modality.keys():
+            modality = path_column2modality[col]
+            file_bytes = self.filesystem.read_file(sample[col], binary=True).getvalue()
+            modality2data[modality] = file_bytes
+        # read data from columns
+        for col in column2modality.keys():
+            modality = column2modality[col]
+            modality2data[modality] = sample[col]
+        return modality2data

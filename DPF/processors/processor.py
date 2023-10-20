@@ -96,6 +96,26 @@ class DatasetProcessor(ABC):
     ) -> ValidationResult:
         pass
 
+    def get_random_sample(
+        self,
+        df_filter: Optional[pd.Series] = None
+    ) -> (Dict[str, bytes], Dict[str, str]):
+        if df_filter:
+            df_to_sample = self.df[df_filter]
+        else:
+            df_to_sample = self.df
+
+        sample = df_to_sample.sample(1).iloc[0].to_dict()
+        modality2bytes = self._read_files_from_sample(sample)
+        return modality2bytes, sample
+
+    @abstractmethod
+    def _read_files_from_sample(
+        self,
+        sample: Dict[str, str]
+    ) -> Dict[str, bytes]:
+        pass
+
     def filter_df(
         self,
         condition: pd.Series
