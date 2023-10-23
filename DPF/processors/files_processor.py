@@ -3,8 +3,6 @@ import pandas as pd
 from abc import ABC, abstractmethod
 import os
 
-from datasets import Dataset
-
 from DPF.filesystems import FileSystem
 from DPF.datatypes import FileDataType, ColumnDataType
 from DPF.configs import DatasetConfig, FilesDatasetConfig

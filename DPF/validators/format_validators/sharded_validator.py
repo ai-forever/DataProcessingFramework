@@ -12,7 +12,7 @@ from DPF.validators import Validator, ValidationResult
 from DPF.datatypes import ShardedDataType
 from DPF.filesystems import FileSystem
 from DPF.configs import ShardedDatasetConfig
-from timer import Timer
+
 
 @dataclass
 class ShardedValidationResult(ValidationResult):
