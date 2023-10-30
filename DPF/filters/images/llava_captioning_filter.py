@@ -32,7 +32,7 @@ class LLaVaCaptioningFilter(ImageFilter):
 
     def __init__(
         self, 
-        model_path: str = "4bit/llava-v1.5-13b-3GB", 
+        model_path: str = 'liuhaotian/llava-v1.5-13b', 
         prompt: str = 'detailed-long', 
         workers: int = 16, 
         device="cuda:0", 
@@ -46,20 +46,14 @@ class LLaVaCaptioningFilter(ImageFilter):
         #
         self.prompt_to_use = prompt
         prompts = {
-            'detailed-long': 'Please provide a caption for this image. Describe it as if it were in a dataset for an image generation model. Speak confidently and describe everything clearly. Caption should be short but detailed. Please, dont lie and describe only what you can see'
+            'detailed-long': 'Please provide a caption for this image. Speak confidently and describe everything clearly. Do not lie and describe only what you can see',
+            'pixart': 'Describe this image and its style in a very detailed manner'
         }
         self.prompt = prompts[self.prompt_to_use]
+        print(self.prompt)
         #
         self.model_path = model_path
-        kwargs = {"device_map": self.device}
-        kwargs['load_in_4bit'] = True
-        kwargs['quantization_config'] = BitsAndBytesConfig(
-            load_in_4bit=True,
-            bnb_4bit_compute_dtype=torch.float16,
-            bnb_4bit_use_double_quant=True,
-            bnb_4bit_quant_type='nf4'
-        )
-        self.model = LlavaLlamaForCausalLM.from_pretrained(self.model_path, low_cpu_mem_usage=True, **kwargs)
+        self.model = LlavaLlamaForCausalLM.from_pretrained(model_path).to(self.device).half()
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_path, use_fast=False)
         #
         vision_tower = self.model.get_vision_tower()
@@ -112,8 +106,8 @@ class LLaVaCaptioningFilter(ImageFilter):
 
             with torch.inference_mode():
                 output_ids = self.model.generate(
-                    self.input_ids, images=image_tensor, do_sample=True, temperature=0.2, 
-                    max_new_tokens=1024, use_cache=True, stopping_criteria=[self.stopping_criteria]
+                    self.input_ids, images=image_tensor, do_sample=True, temperature=0.2, top_p=None,
+                    max_new_tokens=128, use_cache=True, stopping_criteria=[self.stopping_criteria]
                 )
             output = self.tokenizer.decode(output_ids[0, self.input_ids.shape[1]:]).strip()[:-4]
         else:
