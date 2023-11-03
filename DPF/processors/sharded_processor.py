@@ -30,18 +30,18 @@ class ShardedDatasetProcessor(DatasetProcessor, ABC):
     def get_datafile_path(self, split_name: str) -> str:
         return self.config.path+'/'+split_name+'.'+self.config.datafiles_ext
 
-    def rename_columns(self, column_map: Dict[str, str]) -> List[str]:
+    def rename_columns(self, column_map: Dict[str, str], workers: int = 16) -> List[str]:
         splits = self.df['split_name'].unique().tolist()
         datafile_paths = [self.get_datafile_path(split) for split in splits]
 
         helper = DataFramesChanger(
             datafile_paths, self.filesystem, self.config
         )
-        errors = helper.rename_columns(column_map)
+        errors = helper.rename_columns(column_map, max_threads=workers)
         self._df.rename(columns=column_map, inplace=True)
         return errors
 
-    def delete_columns(self, columns: List[str]) -> List[str]:
+    def delete_columns(self, columns: List[str], workers: int = 16) -> List[str]:
         for col in columns:
             assert col not in self.config.columns_mapping.keys(), \
                 f'Column "{col}" is required column for "{self.config.columns_mapping[col]}"'
@@ -52,11 +52,11 @@ class ShardedDatasetProcessor(DatasetProcessor, ABC):
         helper = DataFramesChanger(
             datafile_paths, self.filesystem, self.config
         )
-        errors = helper.delete_columns(columns)
+        errors = helper.delete_columns(columns, max_threads=workers)
         self._df.drop(columns=columns, inplace=True)
         return errors
 
-    def update_columns(self, columns: List[str]) -> List[str]:
+    def update_columns(self, columns: List[str], workers: int = 16) -> List[str]:
         key_column = None
         path_column = None
         for d in self.config.datatypes:
@@ -79,6 +79,6 @@ class ShardedDatasetProcessor(DatasetProcessor, ABC):
         helper = DataFramesChanger(
             list(table_to_new_data.keys()), self.filesystem, self.config
         )
-        errors = helper.update_columns(key_column, dict(table_to_new_data))
+        errors = helper.update_columns(key_column, dict(table_to_new_data), max_threads=workers)
         return errors
 
