@@ -34,12 +34,13 @@ class LLaVaCaptioningFilter(ImageFilter):
         self, 
         model_path: str = 'liuhaotian/llava-v1.5-13b', 
         prompt: str = 'detailed-long', 
-        workers: int = 16, 
+        workers: int = 16,
+        batch_size: int = 16,
         device="cuda:0", 
         pbar=True
     ):
         super().__init__(pbar)
-
+        self.batch_size = batch_size
         self.num_workers = workers
         self.device = device
         
@@ -75,6 +76,7 @@ class LLaVaCaptioningFilter(ImageFilter):
         self.input_ids = tokenizer_image_token(
             raw_prompt, self.tokenizer, IMAGE_TOKEN_INDEX, return_tensors='pt'
         ).unsqueeze(0).to(self.device)
+        #
         stop_str = conv.sep if conv.sep_style != SeparatorStyle.TWO else conv.sep2
         keywords = [stop_str]
         self.stopping_criteria = KeywordsStoppingCriteria(keywords, self.tokenizer, self.input_ids)
@@ -82,39 +84,36 @@ class LLaVaCaptioningFilter(ImageFilter):
         self.schema = [self.key_column, f"caption {self.model_path} prompt {self.prompt_to_use}"]
         self.dataloader_kwargs = {
             "num_workers": self.num_workers,
-            "batch_size": 1,
-            "collate_fn": identical_collate_fn,
+            "batch_size": batch_size,
+            "collate_fn": default_collate,
             "drop_last": False,
         }
 
     def preprocess(self, modality2data: Dict[str, Union[bytes, str]], metadata: dict):
         key = metadata[self.key_column]
-        try:
-            pil_img = read_image_rgb_from_bytes(modality2data['image']).convert('RGB')
-            img_tensor = self.image_processor.preprocess(pil_img, return_tensors='pt')['pixel_values'].half()
-            return key, img_tensor
-        except Exception as err:
-            return key, None
+        pil_img = read_image_rgb_from_bytes(modality2data['image']).convert('RGB')
+        img_tensor = self.image_processor.preprocess(pil_img, return_tensors='pt')['pixel_values'].half()
+        return key, img_tensor
 
     def process_batch(self, batch) -> dict:
         df_batch_labels = self._generate_dict_from_schema()
 
-        keys, image_tensors = list(zip(*batch))
-        key = keys[0]
-        if image_tensors[0] is not None:
-            image_tensor = image_tensors[0].to(self.device)
-
-            with torch.inference_mode():
-                output_ids = self.model.generate(
-                    self.input_ids, images=image_tensor, do_sample=True, temperature=0.2, top_p=None,
-                    max_new_tokens=128, use_cache=True, stopping_criteria=[self.stopping_criteria]
-                )
-            output = self.tokenizer.decode(output_ids[0, self.input_ids.shape[1]:]).strip()[:-4]
-        else:
-            output = None
-            print('error:', key)
-
-        df_batch_labels[self.schema[1]].append(output)
-        df_batch_labels[self.key_column].append(key)
+        keys, image_tensors = batch
+        image_tensors = image_tensors.to(self.device)
+        
+        input_ids_batch = self.input_ids.repeat_interleave(image_tensors.shape[0], 0).to(self.device)
+        with torch.inference_mode():
+            output_ids = self.model.generate(
+                input_ids_batch, images=image_tensors, do_sample=True, temperature=0.2, top_p=None,
+                max_new_tokens=128, use_cache=True, stopping_criteria=[self.stopping_criteria]
+            )
+        
+        all_outputs = []
+        for i in range(output_ids.shape[0]):
+            output = self.tokenizer.decode(output_ids[i, self.input_ids.shape[1]:]).strip().split('</s>')[0]
+            all_outputs.append(output)
+            
+        df_batch_labels[self.schema[1]].extend(all_outputs)
+        df_batch_labels[self.key_column].extend(keys)
 
         return df_batch_labels
