@@ -1,4 +1,4 @@
-from typing import List, Tuple, Union
+from typing import List, Tuple, Union, Optional
 import pandas as pd
 from tqdm.contrib.concurrent import process_map
 from functools import partial
@@ -13,8 +13,14 @@ from DPF.processors import (
 )
 
 
-def help_reader(filesystem, path):
-    return path, filesystem.read_dataframe(path)
+def help_reader(filesystem: FileSystem, required_columns: Optional[list[str]], path: str):
+    df = filesystem.read_dataframe(path)
+
+    if required_columns:
+        for col in required_columns:
+            assert col in df.columns, f'Expected {path} to have "{col}" column'
+
+    return path, df
 
 
 class DatasetReader:
@@ -47,14 +53,17 @@ class DatasetReader:
     def _read_dfs(
         self,
         datafiles: List[str],
+        config: DatasetConfig,
         validate_columns: bool = True,
         processes: int = 1,
         progress_bar: bool = False,
     ) -> List[Tuple[str, pd.DataFrame]]:
         if len(datafiles) == 0:
             raise ValueError("No datafiles in this path")
+
+        required_columns = list(config.columns_mapping.keys()) if validate_columns else None
         
-        worker_co = partial(help_reader, self.filesystem)
+        worker_co = partial(help_reader, self.filesystem, required_columns)
         paths_dataframes = process_map(
             worker_co, datafiles,
             max_workers=processes,
@@ -181,7 +190,7 @@ class DatasetReader:
         #
 
         paths_dataframes = self._read_dfs(
-            datafiles, validate_columns, workers, progress_bar,
+            datafiles, config, validate_columns, workers, progress_bar,
         )
         if validate_columns:
             self._validate_dfs(config, paths_dataframes)
