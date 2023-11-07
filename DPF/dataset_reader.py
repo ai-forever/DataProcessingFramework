@@ -226,7 +226,7 @@ class DatasetReader:
         #
 
         paths_dataframes = self._read_dfs(
-            datafiles, validate_columns, workers, progress_bar,
+            datafiles, config, validate_columns, workers, progress_bar,
         )
         if validate_columns:
             self._validate_dfs(config, paths_dataframes)
