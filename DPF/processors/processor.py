@@ -42,15 +42,15 @@ class DatasetProcessor(ABC):
         self._df[key] = value
 
     @abstractmethod
-    def rename_columns(self, column_map: Dict[str, str]) -> List[str]:
+    def rename_columns(self, column_map: Dict[str, str], workers: int = 16) -> List[str]:
         pass
 
     @abstractmethod
-    def delete_columns(self, columns: List[str]) -> List[str]:
+    def delete_columns(self, columns: List[str], workers: int = 16) -> List[str]:
         pass
 
     @abstractmethod
-    def update_columns(self, columns: List[str]) -> List[str]:
+    def update_columns(self, columns: List[str], workers: int = 16) -> List[str]:
         pass
 
     @abstractmethod
