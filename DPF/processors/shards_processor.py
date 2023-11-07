@@ -27,7 +27,7 @@ class ShardsDatasetProcessor(ShardedDatasetProcessor):
     def validate(
         self,
         validate_filestructure: bool = True,
-        validate_dataframes: bool = True,
+        validate_shards: bool = True,
         columns_to_check: List[str] = [],
         workers: int = 1,
         pbar: bool = True
@@ -40,7 +40,7 @@ class ShardsDatasetProcessor(ShardedDatasetProcessor):
         )
         return validator.validate(
             validate_filestructure=validate_filestructure,
-            validate_dataframes=validate_dataframes,
+            validate_shards=validate_shards,
             workers=workers,
             pbar=pbar
         )

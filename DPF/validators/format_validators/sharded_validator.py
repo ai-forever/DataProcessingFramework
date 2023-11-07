@@ -70,23 +70,26 @@ class ShardedValidator(Validator, ABC):
 
     def _validate_shard(self, path: str) -> (List[DataFrameError], List[FileStructureError]):
         df = self.filesystem.read_dataframe(path)
-        errors = []
+        dataframe_errors = []
 
+        # validate dataframe
         missed_columns = set(self.columns_to_check).difference(set(df.columns))
         if len(missed_columns) > 0:
-            errors.append(MissedColumnsError(path, list(missed_columns)))
+            dataframe_errors.append(MissedColumnsError(path, list(missed_columns)))
         for datatype in self.config.datatypes:
             if isinstance(datatype, ShardedDataType):
                 filenames = df[datatype.user_basename_column_name]
                 has_duplicates = filenames.duplicated().any()
                 if has_duplicates:
-                    errors.append(DuplicatedValuesError(path, datatype.user_basename_column_name))
+                    dataframe_errors.append(DuplicatedValuesError(path, datatype.user_basename_column_name))
 
+        # validate contents
         filestructure_errors, df_errors = self._validate_shard_files(path, df)
-        errors.extend(df_errors)
-        return path, errors, filestructure_errors
+        #
+        dataframe_errors.extend(df_errors)
+        return path, dataframe_errors, filestructure_errors
 
-    def _validate_dataframes(
+    def _validate_shards(
         self,
         filepaths: List[str],
         workers: int = 4,
@@ -111,7 +114,7 @@ class ShardedValidator(Validator, ABC):
     def validate(
         self,
         validate_filestructure: bool = True,
-        validate_dataframes: bool = True,
+        validate_shards: bool = True,
         workers: int = 4,
         pbar: bool = True
     ) -> ShardedValidationResult:
@@ -121,8 +124,8 @@ class ShardedValidator(Validator, ABC):
 
         if validate_filestructure:
             filestructure_errors.extend(self._validate_filestructure(filepaths))
-        if validate_dataframes:
-            _dataframe2errors, _filestructure_errors = self._validate_dataframes(filepaths, workers, pbar)
+        if validate_shards:
+            _dataframe2errors, _filestructure_errors = self._validate_shards(filepaths, workers, pbar)
             filestructure_errors.extend(_filestructure_errors)
             for path, errors in _dataframe2errors.items():
                 if len(errors) > 0:

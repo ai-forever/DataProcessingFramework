@@ -89,7 +89,6 @@ class DatasetProcessor(ABC):
     def validate(
         self,
         validate_filestructure: bool = True,
-        validate_dataframes: bool = True,
         columns_to_check: List[str] = [],
         workers: int = 1,
         pbar: bool = True

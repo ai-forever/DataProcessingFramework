@@ -11,7 +11,6 @@ class Validator(ABC):
     def validate(
         self,
         validate_filestructure: bool = True,
-        validate_dataframes: bool = True,
         workers: int = 4,
         pbar: bool = True
     ) -> ValidationResult:
