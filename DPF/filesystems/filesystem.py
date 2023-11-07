@@ -218,3 +218,19 @@ class FileSystem(ABC):
         Iterable[Tuple[str, List[str], List[str]]]
             Iterable of tuples with 3 elements: root, dirs, files
         """
+
+    @abstractmethod
+    def join(self, *args) -> str:
+        """
+        Join paths like os.path.join
+
+        Parameters
+        ----------
+        *args: str
+            List of strings - subfolders, etc
+
+        Returns
+        -------
+        str
+            Joined full path
+        """

@@ -5,7 +5,7 @@ from torch.utils.data import Dataset, DataLoader
 import pandas as pd
 from tqdm import tqdm
 
-from DPF.filesystems import FileSystem
+from DPF.filesystems import FileSystem, LocalFileSystem
 from DPF.filters import DataFilter, ColumnFilter
 from DPF.processors.writers import ABSWriter, ShardedFilesWriter, ShardsWriter
 from DPF.dataloaders.utils import default_preprocess, default_collate
@@ -167,38 +167,44 @@ class DatasetProcessor(ABC):
     def to_sharded_files(
         self,
         destination_dir: str,
+        filesystem: FileSystem = LocalFileSystem(),
         max_files_in_shard: int = 1000,
         datafiles_ext: str = "csv",
         meta_columns: Optional[List[str]] = None,
-        dataloader_kwargs: Optional[dict] = None,
+        keys_mapping: Optional[dict[str, str]] = None,
+        workers: int = 8,
         pbar: bool = True
     ):
         writer = ShardedFilesWriter(
-            self.filesystem,
+            filesystem,
             destination_dir,
+            keys_mapping=keys_mapping,
             max_files_in_shard=max_files_in_shard,
             datafiles_ext=datafiles_ext
         )
         self.convert(
             writer,
             meta_columns=meta_columns,
-            dataloader_kwargs=dataloader_kwargs,
+            dataloader_kwargs={'num_workers': workers},
             pbar=pbar
         )
 
     def to_shards(
         self,
         destination_dir: str,
+        filesystem: FileSystem = LocalFileSystem(),
         max_files_in_shard: int = 1000,
         datafiles_ext: str = "csv",
         archives_ext: Optional[str] = "tar",
         meta_columns: Optional[List[str]] = None,
-        dataloader_kwargs: Optional[dict] = None,
+        keys_mapping: Optional[dict[str, str]] = None,
+        workers: int = 8,
         pbar: bool = True
     ):
         writer = ShardsWriter(
-            self.filesystem,
+            filesystem,
             destination_dir,
+            keys_mapping=keys_mapping,
             max_files_in_shard=max_files_in_shard,
             datafiles_ext=datafiles_ext,
             archives_ext=archives_ext
@@ -206,7 +212,7 @@ class DatasetProcessor(ABC):
         self.convert(
             writer,
             meta_columns=meta_columns,
-            dataloader_kwargs=dataloader_kwargs,
+            dataloader_kwargs={'num_workers': workers},
             pbar=pbar
         )
 

@@ -6,6 +6,7 @@ import pandas as pd
 from DPF.modalities import MODALITIES
 from DPF.filesystems.filesystem import FileSystem
 from .filewriter import ABSWriter
+from .utils import rename_dict_keys
 
 
 class ShardedFilesWriter(ABSWriter):
@@ -17,11 +18,13 @@ class ShardedFilesWriter(ABSWriter):
         self,
         filesystem: FileSystem,
         destination_dir: str,
+        keys_mapping: Optional[dict[str, str]] = None,
         max_files_in_shard: int = 1000,
         datafiles_ext: str = "csv",
     ) -> None:
         self.filesystem = filesystem
         self.destination_dir = destination_dir
+        self.keys_mapping = keys_mapping
         self.max_files_in_shard = max_files_in_shard
         self.datafiles_ext = "." + datafiles_ext.lstrip(".")
 
@@ -35,7 +38,7 @@ class ShardedFilesWriter(ABSWriter):
         table_data: Dict[str, str] = {},
     ) -> None:
         # creating directory
-        path_to_dir = os.path.join(
+        path_to_dir = self.filesystem.join(
             self.destination_dir, self._calculate_current_dirname()
         )
         if (self.last_path_to_dir is None) or (self.last_path_to_dir != path_to_dir):
@@ -46,8 +49,11 @@ class ShardedFilesWriter(ABSWriter):
         for modality, (extension, file_bytes) in modality2sample_data.items():
             filename = self.get_current_filename(extension)
             table_data[MODALITIES[modality].sharded_file_name_column] = filename
-            path_to_file = os.path.join(path_to_dir, filename)
+            path_to_file = self.filesystem.join(path_to_dir, filename)
             self.filesystem.save_file(file_bytes, path_to_file, binary=True)
+
+        if self.keys_mapping:
+            table_data = rename_dict_keys(table_data, self.keys_mapping)
 
         self.df_raw.append(table_data)
         self._try_close_batch()
@@ -76,7 +82,7 @@ class ShardedFilesWriter(ABSWriter):
             return 0
 
         last_dir = str(sorted(list_dirs)[-1])
-        dir_path = os.path.join(self.destination_dir, last_dir)
+        dir_path = self.filesystem.join(self.destination_dir, last_dir)
 
         filenames = self.filesystem.listdir(dir_path, filenames_only=True)
         names = [os.path.splitext(f)[0] for f in filenames if not f.startswith('.')]
@@ -109,7 +115,7 @@ class ShardedFilesWriter(ABSWriter):
                 self.df_raw,
                 columns=self._rearrange_cols(list(self.df_raw[0].keys()))
             )
-            path_to_csv_file = os.path.join(
+            path_to_csv_file = self.filesystem.join(
                 self.destination_dir, f"{dirname}{self.datafiles_ext}"
             )
             self.filesystem.save_dataframe(df_to_save, path_to_csv_file, index=False)

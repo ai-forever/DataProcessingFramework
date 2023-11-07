@@ -92,3 +92,12 @@ class S3FileSystem(FileSystem):
         fs = fsspec.filesystem("s3", **self.storage_options)
 
         yield from fs.walk(folder_path)
+
+    def join(self, *args) -> str:
+        path = ''
+        for arg in args:
+            if arg.endswith('/'):
+                path += arg
+            else:
+                path += arg+'/'
+        return path[:-1]

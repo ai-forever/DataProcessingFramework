@@ -63,3 +63,6 @@ class LocalFileSystem(FileSystem):
 
     def walk(self, folder_path: str) -> Iterable[Tuple[str, List[str], List[str]]]:
         yield from os.walk(folder_path)
+
+    def join(self, *args) -> str:
+        return os.path.join(*args)
