@@ -1,5 +1,6 @@
 torch
 numpy
+pillow
 tqdm
 pandas
 pandarallel
