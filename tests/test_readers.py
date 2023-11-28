@@ -1,14 +1,14 @@
-from DPF import ShardedConfigFabric, DatasetReader
-from DPF.configs import ShardsDatasetConfig
+from DPF import DatasetReader
+from DPF.configs import ShardsDatasetConfig, ShardedFilesDatasetConfig
 from DPF.processors import ShardsDatasetProcessor, ShardedFilesDatasetProcessor
 
 
 def test_shards_reader():
     path = 'tests/datasets/shards_correct/'
-    fabric = ShardedConfigFabric()
-    config = fabric.create_t2i_config(
+    config = ShardsDatasetConfig.from_modalities(
         path,
-        format_type='shards'
+        image_name_col="image_name",
+        caption_col="caption"
     )
 
     reader = DatasetReader()
@@ -19,10 +19,10 @@ def test_shards_reader():
 
 def test_shards_wrong_columns():
     path = 'tests/datasets/shards_wrong_columns/'
-    fabric = ShardedConfigFabric()
-    config = fabric.create_t2i_config(
+    config = ShardsDatasetConfig.from_modalities(
         path,
-        format_type='shards'
+        image_name_col="image_name",
+        caption_col="caption"
     )
 
     reader = DatasetReader()
@@ -40,10 +40,10 @@ def test_shards_wrong_columns():
 
 def test_shards_wrong_tar():
     path = 'tests/datasets/shards_wrong_tar/'
-    fabric = ShardedConfigFabric()
-    config = fabric.create_t2i_config(
+    config = ShardsDatasetConfig.from_modalities(
         path,
-        format_type='shards'
+        image_name_col="image_name",
+        caption_col="caption"
     )
     reader = DatasetReader()
     dataset = reader.from_config(config)
@@ -52,10 +52,10 @@ def test_shards_wrong_tar():
 
 def test_files_reader():
     path = 'tests/datasets/sharded_files_correct/'
-    fabric = ShardedConfigFabric()
-    config = fabric.create_t2i_config(
+    config = ShardedFilesDatasetConfig.from_modalities(
         path,
-        format_type='sharded_files'
+        image_name_col="image_name",
+        caption_col="caption"
     )
 
     reader = DatasetReader()
@@ -66,10 +66,10 @@ def test_files_reader():
 
 def test_files_wrong_columns():
     path = 'tests/datasets/sharded_files_wrong_columns/'
-    fabric = ShardedConfigFabric()
-    config = fabric.create_t2i_config(
+    config = ShardedFilesDatasetConfig.from_modalities(
         path,
-        format_type='sharded_files'
+        image_name_col="image_name",
+        caption_col="caption"
     )
 
     reader = DatasetReader()
@@ -87,10 +87,10 @@ def test_files_wrong_columns():
 
 def test_files_wrong_tar():
     path = 'tests/datasets/sharded_files_wrong_folder/'
-    fabric = ShardedConfigFabric()
-    config = fabric.create_t2i_config(
+    config = ShardedFilesDatasetConfig.from_modalities(
         path,
-        format_type='sharded_files'
+        image_name_col="image_name",
+        caption_col="caption"
     )
     reader = DatasetReader()
     dataset = reader.from_config(config)

@@ -1,13 +1,12 @@
-from DPF import ShardedConfigFabric
 from DPF.configs import ShardsDatasetConfig, ShardedFilesDatasetConfig
 
 
 def test_shards_config():
     path = 'tests/datasets/shards_correct'
-    fabric = ShardedConfigFabric()
-    config = fabric.create_t2i_config(
+    config = ShardsDatasetConfig.from_modalities(
         path,
-        format_type='shards'
+        image_name_col="image_name",
+        caption_col="caption"
     )
     print(config)
     assert isinstance(config, ShardsDatasetConfig)
@@ -17,10 +16,10 @@ def test_shards_config():
 
 def test_files_config():
     path = 'tests/datasets/sharded_files_correct'
-    fabric = ShardedConfigFabric()
-    config = fabric.create_t2i_config(
+    config = ShardedFilesDatasetConfig.from_modalities(
         path,
-        format_type='sharded_files'
+        image_name_col="image_name",
+        caption_col="caption"
     )
     print(config)
     assert isinstance(config, ShardedFilesDatasetConfig)
