@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 @dataclass
 class Modality:
+    """Describes the modality of data"""
     key: str
     can_be_file: bool
     can_be_column: bool
