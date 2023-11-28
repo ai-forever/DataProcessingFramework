@@ -24,9 +24,7 @@ def help_reader(filesystem: FileSystem, required_columns: Optional[List[str]], p
 
 
 class DatasetReader:
-    """
-    Dataset fabric
-    """
+    """Fabric for DPF.processors.DatasetProcessor"""
 
     def __init__(self, filesystem: Union[FileSystem, str] = "local", **filesystem_kwargs):
         """
@@ -166,6 +164,19 @@ class DatasetReader:
         workers: int = 1,
         progress_bar: bool = True,
     ) -> ShardsDatasetProcessor:
+        """Creates ShardsDatasetProcessor dataset
+
+        Parameters
+        ----------
+        config: ShardsDatasetConfig
+            Config of ShardsDatasetConfig type
+        validate_columns: bool = True
+            Whether or not to check if columns in different csvs are matched
+        workers: int = 1
+            Number of parallel processes
+        progress_bar: bool = True
+            Whether or not to display the progress bar
+        """
         dataset_path = config.path.rstrip("/")
         datafiles_ext = config.datafiles_ext.lstrip(".")
         datafiles_ext_dot = '.'+datafiles_ext
@@ -209,7 +220,20 @@ class DatasetReader:
         validate_columns: bool = True,
         workers: int = 1,
         progress_bar: bool = True,
-    ) -> ShardedDatasetProcessor:
+    ) -> ShardedFilesDatasetProcessor:
+        """Creates ShardedFilesDatasetProcessor dataset
+
+        Parameters
+        ----------
+        config: ShardedFilesDatasetConfig
+            Config of ShardedFilesDatasetConfig type
+        validate_columns: bool = True
+            Whether or not to check if columns in different csvs are matched
+        workers: int = 1
+            Number of parallel processes
+        progress_bar: bool = True
+            Whether or not to display the progress bar
+        """
         dataset_path = config.path.rstrip("/")
         datafiles_ext = config.datafiles_ext.lstrip(".")
 
@@ -243,6 +267,13 @@ class DatasetReader:
         self,
         config: FilesDatasetConfig,
     ) -> FilesDatasetProcessor:
+        """Creates FilesDatasetProcessor dataset
+
+        Parameters
+        ----------
+        config: FilesDatasetConfig
+            Config of FilesDatasetConfig type
+        """
         table_path = config.table_path.rstrip("/")
         df = self.filesystem.read_dataframe(table_path)
 

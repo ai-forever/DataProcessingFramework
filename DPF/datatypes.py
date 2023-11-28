@@ -4,6 +4,7 @@ from DPF.modalities import MODALITIES, Modality
 
 
 class DataType(ABC):
+    """Represents modality in a specific dataset"""
 
     def __init__(self, modality: Modality):
         assert modality.key in MODALITIES
@@ -17,12 +18,21 @@ class DataType(ABC):
 
 
 class ColumnDataType(DataType):
+    """Represents modality in the column of table"""
 
     def __init__(
         self,
         modality: Modality,
         user_column_name: str
     ):
+        """
+        Parameters
+        ----------
+        modality: Modality
+            instance of DPF.modalities.Modality
+        user_column_name: str
+            Name of column with data of this modality
+        """
         super().__init__(modality)
         self.user_column_name = user_column_name
 
@@ -35,12 +45,21 @@ class ColumnDataType(DataType):
 
 
 class FileDataType(DataType):
+    """Represents data with modality in files"""
 
     def __init__(
         self,
         modality: Modality,
         user_path_column_name: str
     ):
+        """
+        Parameters
+        ----------
+        modality: Modality
+            instance of DPF.modalities.Modality
+        user_path_column_name: str
+            Name of column with paths to files of this modality
+        """
         super().__init__(modality)
         self.user_path_column_name = user_path_column_name
 
@@ -53,12 +72,21 @@ class FileDataType(DataType):
 
 
 class ShardedDataType(DataType):
+    """Represents data with modality in files in dataset with sharded format"""
 
     def __init__(
         self,
         modality: Modality,
         user_basename_column_name: str,
     ):
+        """
+        Parameters
+        ----------
+        modality: Modality
+            instance of DPF.modalities.Modality
+        user_basename_column_name: str
+            Column name with file names of this modality
+        """
         super().__init__(modality)
         self.user_basename_column_name = user_basename_column_name
 

@@ -4,7 +4,23 @@ from dataclasses import dataclass
 
 @dataclass
 class Modality:
-    """Describes the modality of data"""
+    """Represents the modality of data
+
+    Parameters
+    ----------
+    key: str
+        Name of modality. Should be unique
+    can_be_file: bool
+        Can this modality be in file
+    can_be_column: bool
+        Can this modality be in a column of "csv" file
+    column: Optional[str] = None
+        Default column name if can_be_column=True
+    sharded_file_name_column: Optional[str] = None
+        Default column name of filenames with this modality. Only if can_be_file=True
+    path_column: Optional[str] = None
+        Default column path to files with this modality. Only if can_be_file=True
+    """
     key: str
     can_be_file: bool
     can_be_column: bool
