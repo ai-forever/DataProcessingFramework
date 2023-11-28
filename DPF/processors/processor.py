@@ -169,6 +169,7 @@ class DatasetProcessor(ABC):
         filesystem: FileSystem = LocalFileSystem(),
         max_files_in_shard: int = 1000,
         datafiles_ext: str = "csv",
+        filenaming: str = "counter",
         meta_columns: Optional[List[str]] = None,
         keys_mapping: Optional[Dict[str, str]] = None,
         workers: int = 8,
@@ -179,7 +180,8 @@ class DatasetProcessor(ABC):
             destination_dir,
             keys_mapping=keys_mapping,
             max_files_in_shard=max_files_in_shard,
-            datafiles_ext=datafiles_ext
+            datafiles_ext=datafiles_ext,
+            filenaming=filenaming
         )
         self.convert(
             writer,
@@ -195,6 +197,7 @@ class DatasetProcessor(ABC):
         max_files_in_shard: int = 1000,
         datafiles_ext: str = "csv",
         archives_ext: Optional[str] = "tar",
+        filenaming: str = "counter",
         meta_columns: Optional[List[str]] = None,
         keys_mapping: Optional[Dict[str, str]] = None,
         workers: int = 8,
@@ -206,7 +209,8 @@ class DatasetProcessor(ABC):
             keys_mapping=keys_mapping,
             max_files_in_shard=max_files_in_shard,
             datafiles_ext=datafiles_ext,
-            archives_ext=archives_ext
+            archives_ext=archives_ext,
+            filenaming=filenaming
         )
         self.convert(
             writer,
