@@ -42,7 +42,7 @@ class DatasetProcessor(ABC):
         self._df[key] = value
 
     @abstractmethod
-    def rename_columns(self, column_map: Dict[str, str], workers: int = 16) -> List[str]:
+    def rename_columns(self, column_map: dict, workers: int = 16) -> List[str]:
         pass
 
     @abstractmethod
@@ -57,7 +57,7 @@ class DatasetProcessor(ABC):
     def get_torch_dataset(
         self,
         modalities: List[str],
-        meta_columns: Optional[List[str]] = None,
+        meta_columns: Optional[list] = None,
         preprocess_f: Callable[[dict, dict], Any] = default_preprocess,
         return_none_on_error: bool = False
     ) -> Dataset:
@@ -98,7 +98,7 @@ class DatasetProcessor(ABC):
     def get_random_sample(
         self,
         df_filter: Optional[pd.Series] = None
-    ) -> (Dict[str, bytes], Dict[str, str]):
+    ) -> (dict, dict):
         if df_filter:
             df_to_sample = self.df[df_filter]
         else:
@@ -111,7 +111,7 @@ class DatasetProcessor(ABC):
     @abstractmethod
     def _read_files_from_sample(
         self,
-        sample: Dict[str, str]
+        sample: dict
     ) -> Dict[str, bytes]:
         pass
 
@@ -170,7 +170,7 @@ class DatasetProcessor(ABC):
         max_files_in_shard: int = 1000,
         datafiles_ext: str = "csv",
         meta_columns: Optional[List[str]] = None,
-        keys_mapping: Optional[dict[str, str]] = None,
+        keys_mapping: Optional[dict] = None,
         workers: int = 8,
         pbar: bool = True
     ):
@@ -196,7 +196,7 @@ class DatasetProcessor(ABC):
         datafiles_ext: str = "csv",
         archives_ext: Optional[str] = "tar",
         meta_columns: Optional[List[str]] = None,
-        keys_mapping: Optional[dict[str, str]] = None,
+        keys_mapping: Optional[dict] = None,
         workers: int = 8,
         pbar: bool = True
     ):

@@ -18,7 +18,7 @@ class ShardedFilesWriter(ABSWriter):
         self,
         filesystem: FileSystem,
         destination_dir: str,
-        keys_mapping: Optional[dict[str, str]] = None,
+        keys_mapping: Optional = None,
         max_files_in_shard: int = 1000,
         datafiles_ext: str = "csv",
     ) -> None:
@@ -63,8 +63,8 @@ class ShardedFilesWriter(ABSWriter):
 
     def __exit__(
         self,
-        exception_type: Optional[type],
-        exception_value: Optional[Exception],
+        exception_type: Optional,
+        exception_value: Optional,
         exception_traceback: traceback,
     ) -> None:
         if len(self.df_raw) != 0:
