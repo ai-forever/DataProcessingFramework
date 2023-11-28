@@ -13,7 +13,7 @@ from DPF.processors import (
 )
 
 
-def help_reader(filesystem: FileSystem, required_columns: Optional[list], path: str):
+def help_reader(filesystem: FileSystem, required_columns: Optional[List[str]], path: str):
     df = filesystem.read_dataframe(path)
 
     if required_columns:
