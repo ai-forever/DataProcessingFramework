@@ -170,7 +170,7 @@ class DatasetProcessor(ABC):
         max_files_in_shard: int = 1000,
         datafiles_ext: str = "csv",
         meta_columns: Optional[List[str]] = None,
-        keys_mapping: Optional[dict[str, str]] = None,
+        keys_mapping: Optional[Dict[str, str]] = None,
         workers: int = 8,
         pbar: bool = True
     ):
@@ -196,7 +196,7 @@ class DatasetProcessor(ABC):
         datafiles_ext: str = "csv",
         archives_ext: Optional[str] = "tar",
         meta_columns: Optional[List[str]] = None,
-        keys_mapping: Optional[dict[str, str]] = None,
+        keys_mapping: Optional[Dict[str, str]] = None,
         workers: int = 8,
         pbar: bool = True
     ):

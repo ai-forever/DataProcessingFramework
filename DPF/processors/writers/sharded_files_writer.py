@@ -18,7 +18,7 @@ class ShardedFilesWriter(ABSWriter):
         self,
         filesystem: FileSystem,
         destination_dir: str,
-        keys_mapping: Optional[dict[str, str]] = None,
+        keys_mapping: Optional[Dict[str, str]] = None,
         max_files_in_shard: int = 1000,
         datafiles_ext: str = "csv",
     ) -> None:
