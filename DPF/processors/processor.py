@@ -43,14 +43,56 @@ class DatasetProcessor(ABC):
 
     @abstractmethod
     def rename_columns(self, column_map: Dict[str, str], workers: int = 16) -> List[str]:
+        """Renames columns in files of a dataset
+
+        Parameters
+        ----------
+        column_map: Dict[str, str]
+            Mapping of old column name into new column name
+        workers: int = 16
+            Number of parallel threads
+
+        Returns
+        -------
+        List[str]
+            List of errors
+        """
         pass
 
     @abstractmethod
     def delete_columns(self, columns: List[str], workers: int = 16) -> List[str]:
+        """Deletes columns in files of a dataset
+
+        Parameters
+        ----------
+        columns: List[str]
+            List of column names to delete
+        workers: int = 16
+            Number of parallel threads
+
+        Returns
+        -------
+        List[str]
+            List of errors
+        """
         pass
 
     @abstractmethod
     def update_columns(self, columns: List[str], workers: int = 16) -> List[str]:
+        """Updates info in columns or adds new columns in files of a dataset
+
+        Parameters
+        ----------
+        columns: List[str]
+            List of column names to add or update
+        workers: int = 16
+            Number of parallel threads
+
+        Returns
+        -------
+        List[str]
+            List of errors
+        """
         pass
 
     @abstractmethod
@@ -64,6 +106,15 @@ class DatasetProcessor(ABC):
         pass
 
     def apply_data_filter(self, datafilter: DataFilter, validate_filter_result: bool = True):
+        """Applies a data filter to dataset
+
+        Parameters
+        ----------
+        datafilter: DataFilter
+            Instance of a DataFilter
+        validate_filter_result: bool = True
+            Whether or not to check the correctness of datafilter result (data integrity)
+        """
         dataset_kwargs = datafilter.get_dataset_kwargs()
         dataset = self.get_torch_dataset(**dataset_kwargs)
         df_result = datafilter.run(dataset)
@@ -77,6 +128,15 @@ class DatasetProcessor(ABC):
         self._df = pd.merge(self._df, df_result, on=datafilter.key_column)
 
     def apply_column_filter(self, column_filter: ColumnFilter, validate_filter_result: bool = True):
+        """Applies a column filter to dataset
+
+        Parameters
+        ----------
+        column_filter: ColumnFilter
+            Instance of a DataFilter
+        validate_filter_result: bool = True
+            Whether or not to check the correctness of datafilter result (data integrity)
+        """
         filter_res = column_filter(self._df)
 
         if validate_filter_result:
@@ -93,6 +153,24 @@ class DatasetProcessor(ABC):
         workers: int = 1,
         pbar: bool = True
     ) -> ValidationResult:
+        """Validates a dataset to match the data format
+
+        Parameters
+        ----------
+        validate_filestructure: bool = True
+            Whether to validate the filestructure of a dataset
+        columns_to_check: List[str] = []
+            List of column names that should be in a dataset
+        workers: int = 1
+            Number of parallel threads for validation
+        pbar: bool = True
+            Whether to show progress bar or not
+
+        Returns
+        -------
+        ValidationResult
+            A dataclass with all validation errors
+        """
         pass
 
     def get_random_sample(
@@ -175,6 +253,29 @@ class DatasetProcessor(ABC):
         workers: int = 8,
         pbar: bool = True
     ):
+        """Converts dataset to sharded files format
+
+        Parameters
+        ----------
+        destination_dir: str
+            Path to directory
+        filesystem: FileSystem = LocalFileSystem()
+            The FileSystem where this path is located
+        max_files_in_shard: int = 1000
+            Maximum number of files in shard
+        datafiles_ext: str = "csv"
+            Extension of files with data tables
+        filenaming: str = "counter"
+            File naming type. "counter" and "uuid" are available
+        meta_columns: Optional[List[str]] = None
+            Column names to write in new dataset
+        keys_mapping: Optional[Dict[str, str]] = None
+            Mapping used to rename columns
+        workers: int = 8
+            Number of parallel processes
+        pbar: bool = True
+            Whether to show a progress bar
+        """
         writer = ShardedFilesWriter(
             filesystem,
             destination_dir,
@@ -203,6 +304,31 @@ class DatasetProcessor(ABC):
         workers: int = 8,
         pbar: bool = True
     ):
+        """Converts dataset to sharded files format
+
+        Parameters
+        ----------
+        destination_dir: str
+            Path to directory
+        filesystem: FileSystem = LocalFileSystem()
+            The FileSystem where this path is located
+        max_files_in_shard: int = 1000
+            Maximum number of files in shard
+        datafiles_ext: str = "csv"
+            Extension of files with data tables
+        archives_ext: Optional[str] = "tar"
+            Extension of archives with data
+        filenaming: str = "counter"
+            File naming type. "counter" and "uuid" are available
+        meta_columns: Optional[List[str]] = None
+            Column names to write in new dataset
+        keys_mapping: Optional[Dict[str, str]] = None
+            Mapping used to rename columns
+        workers: int = 8
+            Number of parallel processes
+        pbar: bool = True
+            Whether to show a progress bar
+        """
         writer = ShardsWriter(
             filesystem,
             destination_dir,

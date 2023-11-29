@@ -176,6 +176,11 @@ class DatasetReader:
             Number of parallel processes
         progress_bar: bool = True
             Whether or not to display the progress bar
+
+        Returns
+        -------
+        ShardsDatasetProcessor
+            Instance of ShardsDatasetProcessor dataset
         """
         dataset_path = config.path.rstrip("/")
         datafiles_ext = config.datafiles_ext.lstrip(".")
@@ -233,6 +238,11 @@ class DatasetReader:
             Number of parallel processes
         progress_bar: bool = True
             Whether or not to display the progress bar
+
+        Returns
+        -------
+        ShardedFilesDatasetProcessor
+            Instance of ShardedFilesDatasetProcessor dataset
         """
         dataset_path = config.path.rstrip("/")
         datafiles_ext = config.datafiles_ext.lstrip(".")
@@ -273,6 +283,11 @@ class DatasetReader:
         ----------
         config: FilesDatasetConfig
             Config of FilesDatasetConfig type
+
+        Returns
+        -------
+        FilesDatasetProcessor
+            Instance of FilesDatasetProcessor dataset
         """
         table_path = config.table_path.rstrip("/")
         df = self.filesystem.read_dataframe(table_path)
@@ -299,6 +314,20 @@ class DatasetReader:
         config: DatasetConfig,
         **kwargs
     ) -> DatasetProcessor:
+        """Creates DatasetConfig dataset
+
+        Parameters
+        ----------
+        config: DatasetConfig
+            Config of DatasetConfig type
+        **kwargs
+            Parameters for from_shards, from_sharded_files, from_files methods
+
+        Returns
+        -------
+        DatasetProcessor
+            Instance of DatasetProcessor dataset
+        """
         if isinstance(config, ShardsDatasetConfig):
             processor = self.from_shards(config, **kwargs)
         elif isinstance(config, ShardedFilesDatasetConfig):
