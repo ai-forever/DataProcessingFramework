@@ -96,7 +96,6 @@ class NSFWFilter(ImageFilter):
             "num_workers": self.num_workers,
             "batch_size": self.batch_size,
             "preprocess_f": self.preprocess,
-            "collate_fn": identical_collate_fn,
             "drop_last": False,
         }
 

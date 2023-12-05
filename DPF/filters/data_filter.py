@@ -4,6 +4,8 @@ import pandas as pd
 from tqdm import tqdm
 from torch.utils.data import Dataset, DataLoader
 
+from DPF.filters.utils import identical_collate_fn
+
 
 class DataFilter(ABC):
     """
@@ -52,7 +54,7 @@ class DataFilter(ABC):
         return {i: [] for i in self.schema}
 
     def run(self, dataset: Dataset) -> pd.DataFrame:
-        dataloader = DataLoader(dataset, **self.dataloader_kwargs)
+        dataloader = DataLoader(dataset, collate_fn=identical_collate_fn, **self.dataloader_kwargs)
         df_labels = self._generate_dict_from_schema()
 
         for batch in tqdm(dataloader, disable=not self.pbar):

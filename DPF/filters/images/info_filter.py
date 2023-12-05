@@ -36,9 +36,9 @@ def get_image_info(img_bytes, data, key_column):
     return key, is_correct, width, height, channels, err_str
 
 
-class ImageInfoGatherer(ImageFilter):
+class ImageInfoFilter(ImageFilter):
     """
-    ImageInfoGatherer class
+    ImageInfoFilter class
     """
 
     def __init__(self, workers: int = 16, pbar: bool = True):
@@ -57,7 +57,6 @@ class ImageInfoGatherer(ImageFilter):
         self.dataloader_kwargs = {
             "num_workers": self.num_workers,
             "batch_size": 1,
-            "collate_fn": identical_collate_fn,
             "drop_last": False,
         }
 

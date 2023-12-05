@@ -58,7 +58,6 @@ class VideoInfoFilter(VideoFilter):
         self.dataloader_kwargs = {
             "num_workers": self.num_workers,
             "batch_size": 1,
-            "collate_fn": identical_collate_fn,
             "drop_last": False,
         }
 

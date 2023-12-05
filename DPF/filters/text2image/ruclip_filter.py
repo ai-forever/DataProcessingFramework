@@ -77,7 +77,6 @@ class RuCLIPFilter(T2IFilter):
         self.dataloader_kwargs = {
             "num_workers": self.num_workers,
             "batch_size": self.batch_size,
-            "collate_fn": identical_collate_fn,
             "drop_last": False,
         }
 

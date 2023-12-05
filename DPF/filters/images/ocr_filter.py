@@ -88,7 +88,6 @@ class OCRFilter(ImageFilter):
             "num_workers": self.num_workers,
             "batch_size": self.batch_size,
             "preprocess_f": self.preprocess,
-            "collate_fn": lambda x: x,
             "drop_last": False,
             "cols_to_return": [self.text_box_col],
         }

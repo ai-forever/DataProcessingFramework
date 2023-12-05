@@ -85,7 +85,6 @@ class LLaVaCaptioningFilter(ImageFilter):
         self.dataloader_kwargs = {
             "num_workers": self.num_workers,
             "batch_size": batch_size,
-            "collate_fn": default_collate,
             "drop_last": False,
         }
 
@@ -98,8 +97,8 @@ class LLaVaCaptioningFilter(ImageFilter):
     def process_batch(self, batch) -> dict:
         df_batch_labels = self._generate_dict_from_schema()
 
-        keys, image_tensors = batch
-        image_tensors = image_tensors.to(self.device)
+        keys, image_tensors = list(zip(*batch))
+        image_tensors = default_collate(image_tensors).to(self.device)
         
         input_ids_batch = self.input_ids.repeat_interleave(image_tensors.shape[0], 0).to(self.device)
         with torch.inference_mode():
