@@ -1,6 +1,7 @@
+import os
 from DPF import DatasetReader
-from DPF.configs import ShardsDatasetConfig, ShardedFilesDatasetConfig
-from DPF.processors import ShardsDatasetProcessor, ShardedFilesDatasetProcessor
+from DPF.configs import ShardsDatasetConfig, ShardedFilesDatasetConfig, FilesDatasetConfig
+from DPF.processors import ShardsDatasetProcessor, ShardedFilesDatasetProcessor, FilesDatasetProcessor
 
 
 def test_shards_reader():
@@ -50,7 +51,7 @@ def test_shards_wrong_tar():
     assert dataset.df.shape == (2, 3)
 
 
-def test_files_reader():
+def test_sharded_files_reader():
     path = 'tests/datasets/sharded_files_correct/'
     config = ShardedFilesDatasetConfig.from_modalities(
         path,
@@ -64,7 +65,7 @@ def test_files_reader():
     assert len(dataset.df) == 2
 
 
-def test_files_wrong_columns():
+def test_sharded_files_wrong_columns():
     path = 'tests/datasets/sharded_files_wrong_columns/'
     config = ShardedFilesDatasetConfig.from_modalities(
         path,
@@ -85,7 +86,7 @@ def test_files_wrong_columns():
     assert dataset.df.shape == (4, 4)
 
 
-def test_files_wrong_tar():
+def test_sharded_files_wrong_tar():
     path = 'tests/datasets/sharded_files_wrong_folder/'
     config = ShardedFilesDatasetConfig.from_modalities(
         path,
@@ -95,3 +96,19 @@ def test_files_wrong_tar():
     reader = DatasetReader()
     dataset = reader.from_config(config)
     assert dataset.df.shape == (2, 3)
+
+
+def test_files_reader():
+    path = 'tests/datasets/files_correct/data.csv'
+    config = FilesDatasetConfig.from_modalities(
+        path,
+        image_path_col="image_path",
+        caption_col="caption"
+    )
+
+    reader = DatasetReader()
+    dataset = reader.from_config(config)
+    assert isinstance(dataset, FilesDatasetProcessor)
+    assert len(dataset.df) == 2
+
+    assert all(dataset.df['image_path'].apply(lambda x: os.path.exists(x)).tolist())

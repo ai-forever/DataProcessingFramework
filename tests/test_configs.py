@@ -1,4 +1,4 @@
-from DPF.configs import ShardsDatasetConfig, ShardedFilesDatasetConfig
+from DPF.configs import ShardsDatasetConfig, ShardedFilesDatasetConfig, FilesDatasetConfig
 
 
 def test_shards_config():
@@ -14,7 +14,7 @@ def test_shards_config():
     assert len(config.datatypes) == 2
 
 
-def test_files_config():
+def test_sharded_files_config():
     path = 'tests/datasets/sharded_files_correct'
     config = ShardedFilesDatasetConfig.from_modalities(
         path,
@@ -24,6 +24,19 @@ def test_files_config():
     print(config)
     assert isinstance(config, ShardedFilesDatasetConfig)
     assert config.path == path
+    assert len(config.datatypes) == 2
+
+
+def test_files_config():
+    path = 'tests/datasets/files_correct/data.csv'
+    config = FilesDatasetConfig.from_modalities(
+        path,
+        image_path_col="image_path",
+        caption_col="caption"
+    )
+    print(config)
+    assert isinstance(config, FilesDatasetConfig)
+    assert config.table_path == path
     assert len(config.datatypes) == 2
 
     
