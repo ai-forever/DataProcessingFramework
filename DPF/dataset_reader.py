@@ -4,7 +4,7 @@ from tqdm.contrib.concurrent import process_map
 from functools import partial
 
 from DPF.filesystems import FileSystem, LocalFileSystem, S3FileSystem
-from DPF.datatypes import ShardedDataType, ColumnDataType
+from DPF.datatypes import ShardedDataType, ColumnDataType, FileDataType
 from DPF.configs import DatasetConfig, ShardedDatasetConfig, ShardsDatasetConfig, ShardedFilesDatasetConfig, \
     FilesDatasetConfig
 from DPF.processors import (
@@ -303,6 +303,12 @@ class DatasetReader:
                 column_mapping[k] = v
         if len(column_mapping) > 0:
             df.rename(columns=column_mapping, inplace=True)
+
+        for datatype in config.datatypes:
+            if isinstance(datatype, FileDataType):
+                path_col = datatype.user_path_column_name
+                df[path_col] = df[path_col].apply(lambda x: self.filesystem.join(config.base_path, x))
+
         return FilesDatasetProcessor(
             filesystem=self.filesystem,
             df=df,

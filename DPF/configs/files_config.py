@@ -1,4 +1,5 @@
 from typing import List, Dict, Optional, Union
+import os
 
 from DPF.datatypes import DataType, ColumnDataType, FileDataType
 from .dataset_config import DatasetConfig
@@ -14,6 +15,7 @@ class FilesDatasetConfig(DatasetConfig):
     ):
         super().__init__(datatypes)
         self.table_path = table_path.rstrip('/')
+        self.base_path = os.path.dirname(self.table_path)
         self.datatypes = datatypes
         self._modality2datatype = {d.modality.key: d for d in datatypes}
         self.validate_datatypes()
@@ -43,7 +45,6 @@ class FilesDatasetConfig(DatasetConfig):
         image_path_col: Optional[str] = None,
         video_path_col: Optional[str] = None,
         caption_col: Optional[str] = None,
-        datafiles_ext: str = "csv",
     ):
         datatypes = []
         if image_path_col:
@@ -53,7 +54,7 @@ class FilesDatasetConfig(DatasetConfig):
         if caption_col:
             datatypes.append(ColumnDataType(MODALITIES['text'], caption_col))
         assert len(datatypes) > 0, "At least one modality should be provided"
-        return cls(path, datatypes, datafiles_ext=datafiles_ext)
+        return cls(path, datatypes)
 
     def __repr__(self) -> str:
         s = "FilesDatasetConfig(\n\t"

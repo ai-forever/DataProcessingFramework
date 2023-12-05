@@ -11,7 +11,7 @@ from DPF.filters.data_filter import DataFilter
 from DPF.processors.writers import ABSWriter
 from .processor import DatasetProcessor
 from DPF.dataloaders import default_preprocess, FilesDataset
-from DPF.validators.format_validators import ShardedValidationResult
+from DPF.validators.format_validators import FilesValidator, FilesValidationResult
 
 
 class FilesDatasetProcessor(DatasetProcessor):
@@ -24,7 +24,7 @@ class FilesDatasetProcessor(DatasetProcessor):
     ):
         super().__init__(filesystem, df, config)
 
-    def rename_columns(self, column_map: Dict[str, str]) -> List[str]:
+    def rename_columns(self, column_map: Dict[str, str], workers: int = 1) -> List[str]:
         df = self.filesystem.read_dataframe(self.config.table_path)
         for col_old, col_new in column_map.items():
             assert col_old in df.columns, f'Dataframe dont have "{col_old}" column'
@@ -33,8 +33,9 @@ class FilesDatasetProcessor(DatasetProcessor):
         self.filesystem.save_dataframe(df, self.config.table_path, index=False)
 
         self._df.rename(columns=column_map, inplace=True)
+        return []
 
-    def delete_columns(self, columns: List[str]) -> List[str]:
+    def delete_columns(self, columns: List[str], workers: int = 1) -> List[str]:
         df = self.filesystem.read_dataframe(self.config.table_path)
         for col in columns:
             assert col in df.columns, f'Dataframe dont have "{col}" column'
@@ -42,8 +43,9 @@ class FilesDatasetProcessor(DatasetProcessor):
         self.filesystem.save_dataframe(df, self.config.table_path, index=False)
 
         self._df.drop(columns=columns, inplace=True)
+        return []
 
-    def update_columns(self, columns: List[str]) -> List[str]:
+    def update_columns(self, columns: List[str], workers: int = 1) -> List[str]:
         key_column = None
         for d in self.config.datatypes:
             if isinstance(d, FileDataType):
@@ -53,19 +55,20 @@ class FilesDatasetProcessor(DatasetProcessor):
         assert key_column not in columns, f'Cant update key column "{key_column}"'
 
         df_old = self.filesystem.read_dataframe(self.config.table_path)
+        df_new = self._df[[key_column] + columns]
+        df_new.loc[:,key_column] = df_new[key_column].str.slice(len(self.config.base_path)+1)
         assert key_column in df_old.columns, f'Dataframe dont have "{key_column}" column'
-        assert set(df_old[key_column]) == set(self._df[key_column]), \
+        assert set(df_old[key_column]) == set(df_new[key_column]), \
             f'Dataframe has different values in "{key_column}"'
 
         duplicates = df_old[df_old[key_column].duplicated()][key_column].tolist()
         assert len(duplicates) == 0, f'Dataframe has duplicates in "{key_column}" column: {duplicates}'
 
-        duplicates = self._df[self._df[key_column].duplicated()][key_column].tolist()
-        assert len(duplicates) == 0, f'New dataframe for has duplicates in "{key_column}" column: {duplicates}'
+        duplicates = df_new[df_new[key_column].duplicated()][key_column].tolist()
+        assert len(duplicates) == 0, f'New dataframe has duplicates in "{key_column}" column: {duplicates}'
 
-        assert len(df_old) == len(self._df), f'Length of dataframe is changed'
+        assert len(df_old) == len(df_new), f'Length of dataframe is changed'
 
-        df_new = self._df[[key_column]+columns]
         columns_to_add = [i for i in df_new.columns if i != key_column]
         columns_intersection = set(df_old.columns).intersection(set(columns_to_add))
 
@@ -74,6 +77,7 @@ class FilesDatasetProcessor(DatasetProcessor):
 
         df = pd.merge(df_old, df_new, on=key_column)
         self.filesystem.save_dataframe(df, self.config.table_path, index=False)
+        return []
 
     def validate(
         self,
@@ -82,20 +86,18 @@ class FilesDatasetProcessor(DatasetProcessor):
         columns_to_check: List[str] = [],
         workers: int = 1,
         pbar: bool = True
-    ) -> ShardedValidationResult:
-        # validator = ShardedFilesValidator(
-        #     self.df,
-        #     self.filesystem,
-        #     self.config,
-        #     columns_to_check
-        # )
-        # return validator.validate(
-        #     validate_filestructure=validate_filestructure,
-        #     validate_dataframes=validate_dataframes,
-        #     workers=workers,
-        #     pbar=pbar
-        # )
-        pass
+    ) -> FilesValidationResult:
+        validator = FilesValidator(
+            self.df,
+            self.filesystem,
+            self.config,
+            columns_to_check
+        )
+        return validator.validate(
+            validate_filestructure=validate_filestructure,
+            workers=workers,
+            pbar=pbar
+        )
 
     def get_torch_dataset(
         self,
