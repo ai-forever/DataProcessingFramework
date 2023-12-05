@@ -1,59 +1,32 @@
 from typing import Dict, Union, List
 import imageio.v3 as iio
 import io
+from PIL import Image
 
 from DPF.filters.images.img_filter import ImageFilter
-from DPF.filters.utils import identical_collate_fn
 from .video_filter import VideoFilter
 
 
-def get_video_info(video_bytes, data, key_column):
+class ImageFilterAdapter(VideoFilter):
     """
-    Get image path, read status, width, height, num channels, read error
-    """
-    key = data[key_column]
-
-    is_correct = True
-    width, height, fps, duration = None, None, None, None
-    err_str = None
-
-    try:
-        meta = iio.immeta(io.BytesIO(video_bytes), plugin="pyav")
-        frame = iio.imread(io.BytesIO(video_bytes), index=0, plugin="pyav")
-        fps = meta['fps']
-        duration = meta['duration']
-        height, width = frame.shape[:2]
-    except Exception as err:
-        is_correct = False
-        err_str = str(err)
-
-    return key, is_correct, width, height, fps, duration, err_str
-
-
-class VideoInfoFilter(VideoFilter):
-    """
-    VideoInfoFilter class
+    ImageFilterAdapter class
     """
 
     def __init__(
         self,
         image_filter: ImageFilter,
-        video_frames: List[float],
-        workers: int = 16,
+        video_frame: float,
+        workers: int = 8,
         pbar: bool = True
     ):
         super().__init__(pbar)
         self.image_filter = image_filter
+        self.video_frame = video_frame
         self.num_workers = workers
 
         self.schema = [
             self.key_column,
-            "is_correct",
-            "error",
-            "width",
-            "height",
-            "fps",
-            "duration"
+            *self.image_filter.schema[1:]
         ]
         self.dataloader_kwargs = {
             "num_workers": self.num_workers,
@@ -62,18 +35,29 @@ class VideoInfoFilter(VideoFilter):
         }
 
     def preprocess(self, modality2data: Dict[str, Union[bytes, str]], metadata: dict):
-        return get_video_info(modality2data['video'], metadata, self.key_column)
+        key = metadata[self.key_column]
+
+        video_bytes = modality2data['video']
+        meta = iio.immeta(io.BytesIO(video_bytes), plugin="pyav")
+        fps = meta['fps']
+        duration = meta['duration']
+        total_frames = int(fps*duration)
+        frame_index = int(total_frames*self.video_frame)
+        frame = iio.imread(io.BytesIO(video_bytes), index=frame_index, plugin="pyav")
+
+        buff = io.BytesIO()
+        Image.fromarray(frame).convert('RGB').save(buff, format='JPEG', quality=95)
+        modality2data['image'] = buff.getvalue()
+        metadata[self.image_filter.key_column] = ''
+        return key, self.image_filter.preprocess(modality2data, metadata)
 
     def process_batch(self, batch) -> dict:
         df_batch_labels = self._generate_dict_from_schema()
 
-        for data in batch:
-            key, is_correct, width, height, fps, duration, error = data
+        for key, data in batch:
+            print(key, data)
+            df_batch_labels_images = self.image_filter.process_batch([data])
             df_batch_labels[self.key_column].append(key)
-            df_batch_labels["is_correct"].append(is_correct)
-            df_batch_labels["error"].append(error)
-            df_batch_labels["width"].append(width)
-            df_batch_labels["height"].append(height)
-            df_batch_labels["fps"].append(fps)
-            df_batch_labels["duration"].append(duration)
+            for colname in self.schema[1:]:
+                df_batch_labels[colname].extend(df_batch_labels_images[colname])
         return df_batch_labels
