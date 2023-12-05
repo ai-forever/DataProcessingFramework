@@ -55,7 +55,6 @@ class ImageFilterAdapter(VideoFilter):
         df_batch_labels = self._generate_dict_from_schema()
 
         for key, data in batch:
-            print(key, data)
             df_batch_labels_images = self.image_filter.process_batch([data])
             df_batch_labels[self.key_column].append(key)
             for colname in self.schema[1:]:
