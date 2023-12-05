@@ -9,3 +9,4 @@ s3fs==0.4.2
 py3langid
 huggingface_hub
 imageio
+imageio[pyav]
