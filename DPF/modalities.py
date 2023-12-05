@@ -52,3 +52,7 @@ MODALITIES = {
         'text_name', 'text_path'
     )
 }
+
+Image = 'image'
+Video = 'video'
+Text = 'text'

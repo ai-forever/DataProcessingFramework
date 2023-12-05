@@ -20,24 +20,20 @@ class DataFilter(ABC):
     @property
     @abstractmethod
     def modalities(self) -> List[str]:
+        """List of modalities used in filter. For example, ["image"] or ["video", "text"]."""
         pass
 
     @property
     @abstractmethod
     def key_column(self) -> str:
+        """Column name to use to merge results"""
         pass
 
     @property
     @abstractmethod
     def metadata_columns(self) -> List[str]:
+        """Additional column names needed by filter (will be passed to preprocess method)"""
         pass
-
-    def get_dataset_kwargs(self) -> dict:
-        return {
-            "modalities": self.modalities,
-            "meta_columns": self.metadata_columns+[self.key_column],
-            "preprocess_f": self.preprocess
-        }
 
     @abstractmethod
     def preprocess(self, modality2data: Dict[str, Union[bytes, str]], metadata: dict):

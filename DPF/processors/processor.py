@@ -115,8 +115,11 @@ class DatasetProcessor(ABC):
         validate_filter_result: bool = True
             Whether or not to check the correctness of datafilter result (data integrity)
         """
-        dataset_kwargs = datafilter.get_dataset_kwargs()
-        dataset = self.get_torch_dataset(**dataset_kwargs)
+        dataset = self.get_torch_dataset(
+            modalities=datafilter.modalities,
+            meta_columns=datafilter.metadata_columns+[datafilter.key_column],
+            preprocess_f=datafilter.preprocess
+        )
         df_result = datafilter.run(dataset)
 
         if validate_filter_result:
