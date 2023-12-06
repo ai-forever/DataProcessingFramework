@@ -5,11 +5,18 @@ from DPF.datatypes import DataType
 
 
 class DatasetConfig:
+    """Config for a dataset"""
 
     def __init__(
         self,
         datatypes: List[DataType],
     ):
+        """
+        Parameters
+        ----------
+        datatypes: List[DataType]
+            List of datatypes in dataset
+        """
         assert len(set([d.modality.key for d in datatypes])) == len(datatypes)
         self.datatypes = datatypes
 

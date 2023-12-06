@@ -4,7 +4,7 @@ from DPF.modalities import MODALITIES, Modality
 
 
 class DataType(ABC):
-    """Represents modality in a specific dataset"""
+    """Represents modality in a specific storage format"""
 
     def __init__(self, modality: Modality):
         assert modality.key in MODALITIES
@@ -45,7 +45,7 @@ class ColumnDataType(DataType):
 
 
 class FileDataType(DataType):
-    """Represents data with modality in files"""
+    """Represents data with modality in file"""
 
     def __init__(
         self,

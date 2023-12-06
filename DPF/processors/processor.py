@@ -180,6 +180,20 @@ class DatasetProcessor(ABC):
         self,
         df_filter: Optional[pd.Series] = None
     ) -> (Dict[str, bytes], Dict[str, str]):
+        """Returns a random sample from dataset
+
+        Parameters
+        ----------
+        df_filter: Optional[pd.Series] = None
+            Condition for dataframe to filter, df[df_filter] will be used for sampling. If None, uses original dataframe.
+
+        Returns
+        -------
+        Dict[str, bytes]
+            Mapping from modality name to bytes
+        Dict[str, str]
+            Mapping from column name to its value
+        """
         if df_filter:
             df_to_sample = self.df[df_filter]
         else:

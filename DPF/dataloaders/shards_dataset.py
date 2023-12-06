@@ -13,7 +13,7 @@ from DPF.datatypes import ShardedDataType, ColumnDataType
 
 class ShardsDataset(IterableDataset):
     """
-    Dataset class for sharded dataformat
+    Dataset class for shards format (files in tar archives)
     """
 
     def __init__(
@@ -23,9 +23,28 @@ class ShardsDataset(IterableDataset):
         split2archive_path: Dict[str, str],
         datatypes: List[Union[ShardedDataType, ColumnDataType]],
         meta_columns: Optional[List[str]] = None,
-        preprocess_f: Callable[[dict, dict], Any] = default_preprocess,
+        preprocess_f: Callable[[Dict[str, bytes], Dict[str, str]], Any] = default_preprocess,
         return_none_on_error: bool = False
     ):
+        """
+        Parameters
+        ----------
+        filesystem: FileSystem
+            Object of a DPF.filesystems.Filesystem type
+        df: pd.DataFrame
+            Dataset dataframe from DatasetProcessor
+        split2archive_path: Dict[str, str]
+            Mapping of the shard index (e.g. split index) to the tar path
+        datatypes: List[Union[ShardedDataType, FileDataType, ColumnDataType]]
+            List of datatypes to read
+        meta_columns: Optional[List[str]] = None
+            List of dataframe columns to return from dataloader
+        preprocess_f: Callable[[Dict[str, bytes], Dict[str, str]], Any] = default_preprocess
+            Preprocessing function for data. First argument of the preprocess_f is mapping from modality name to bytes
+            and the second argument is mapping from meta_column name to its value.
+        return_none_on_error: bool = False
+            Whether to return None if error during reading file occures
+        """
         super(ShardsDataset).__init__()
         self.filesystem = filesystem
 
