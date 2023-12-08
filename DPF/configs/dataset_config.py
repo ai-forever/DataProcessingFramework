@@ -9,16 +9,20 @@ class DatasetConfig:
 
     def __init__(
         self,
+        path: str,
         datatypes: List[DataType],
     ):
         """
         Parameters
         ----------
+        path: str
+            Path to dataset
         datatypes: List[DataType]
             List of datatypes in dataset
         """
         assert len(set([d.modality.key for d in datatypes])) == len(datatypes)
         self.datatypes = datatypes
+        self.path = path.rstrip('/')
 
     @property
     @abstractmethod

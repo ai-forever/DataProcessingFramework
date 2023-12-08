@@ -13,7 +13,7 @@ class FilesDatasetConfig(DatasetConfig):
         table_path: str,
         datatypes: List[Union[FileDataType, ColumnDataType]],
     ):
-        super().__init__(datatypes)
+        super().__init__(table_path, datatypes)
         self.table_path = table_path.rstrip('/')
         self.base_path = os.path.dirname(self.table_path)
         self.datatypes = datatypes

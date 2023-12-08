@@ -12,8 +12,7 @@ class ShardedDatasetConfig(DatasetConfig):
         datatypes: List[Union[ShardedDataType, ColumnDataType]],
         datafiles_ext: str = "csv",
     ):
-        super().__init__(datatypes)
-        self.path = path.rstrip('/')
+        super().__init__(path, datatypes)
         self.datatypes = datatypes
         self.datafiles_ext = datafiles_ext.lstrip('.')
         self._modality2datatype = {d.modality.key: d for d in datatypes}
