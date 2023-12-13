@@ -11,17 +11,17 @@ from DPF.processors.writers import ABSWriter, ShardedFilesWriter, ShardsWriter
 from DPF.dataloaders.utils import default_preprocess, default_collate
 from DPF.datatypes import ColumnDataType
 from DPF.modalities import MODALITIES
-from DPF.configs import DatasetConfig
+from DPF.configs import DatasetConfig, config2format
 from DPF.validators import ValidationResult
 
 
 class DatasetProcessor(ABC):
 
     def __init__(
-        self,
-        filesystem: FileSystem,
-        df: pd.DataFrame,
-        config: DatasetConfig,
+self,
+filesystem: FileSystem,
+df: pd.DataFrame,
+config: DatasetConfig,
     ):
         self.filesystem = filesystem
         self._df = df
@@ -40,6 +40,41 @@ class DatasetProcessor(ABC):
 
     def __setitem__(self, key: str, value: Union[List[str], pd.Series]):
         self._df[key] = value
+
+    def summary(self):
+        """Prints summary info about dataset"""
+        print('Dataset format:', config2format(self.config))
+        print('Path:', self.config.path)
+        print('Modalities:', list(self.config.modality2datatype.keys()))
+
+        cols = self.columns
+        print('Columns:', len(cols))
+        last_s = f'Total samples: {len(self.df)}'
+        print(last_s)
+
+        width_columns = ['width', 'WIDTH', 'w']
+        width_col = None
+        for col in width_columns:
+            if col in cols:
+                width_col = col
+                break
+        height_columns = ['height', 'HEIGHT', 'h']
+        height_col = None
+        for col in height_columns:
+            if col in cols:
+                height_col = col
+                break
+        if width_col is not None and height_col is not None:
+            data_width = self.df[width_col].describe()
+            data_height = self.df[height_col].describe()
+            data_aspect_ratio = (self.df[width_col]/self.df[height_col]).describe()
+            data_aspect_ratio = {k:round(v, 2) for k,v in data_aspect_ratio.to_dict().items()}
+            print('-'*len(last_s))
+            print('width:', {k:round(v, 2) for k,v in data_width.to_dict().items()})
+            print('height:', {k:round(v, 2) for k,v in data_height.to_dict().items()})
+            last_s = f'aspect ratio: {data_aspect_ratio}'
+            print(last_s)
+            print('-'*len(last_s))
 
     @abstractmethod
     def rename_columns(self, column_map: Dict[str, str], workers: int = 16) -> List[str]:

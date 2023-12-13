@@ -51,7 +51,6 @@ class LLaVaCaptioningFilter(ImageFilter):
             'pixart': 'Describe this image and its style in a very detailed manner'
         }
         self.prompt = prompts[self.prompt_to_use]
-        print(self.prompt)
         #
         self.model_path = model_path
         self.model = LlavaLlamaForCausalLM.from_pretrained(model_path).to(self.device).half()
