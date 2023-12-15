@@ -12,13 +12,13 @@ from DPF.dataset_reader import DatasetReader
 from DPF.filters.images.llava_captioning_filter import LLaVaCaptioningFilter
 
 
-SAVE_RESULTS_DIR = 'multigpu_filter_res/'
-SHARDS_DIR = 'examples/example_dataset/'
+SAVE_RESULTS_DIR = '/home/jovyan/pavlov/datasets/LSDIR/llava_filter_results/'
+SHARDS_DIR = '/home/jovyan/pavlov/datasets/LSDIR/shards/'
 
 config = ShardsDatasetConfig.from_modalities(
     SHARDS_DIR,
     image_name_col='image_name',
-    caption_col='caption'
+    #caption_col='caption'
 )
 
 reader = DatasetReader()
@@ -39,7 +39,7 @@ end_id = (N // accelerator.num_processes) * (accelerator.process_index + 1)
 
 processor._df = processor._df[start_id:end_id]
 
-datafilter = LLaVaCaptioningFilter(workers=8, prompt='pixart', batch_size=16, device=device)
-processor.apply_data_filter(filter)
+datafilter = LLaVaCaptioningFilter(workers=8, prompt='short', batch_size=16, device=device)
+processor.apply_data_filter(datafilter)
 
-processor.df.to_csv(os.path.join(SAVE_RESULTS_DIR, f'{process}.csv'), index=False)
+processor.df.to_csv(os.path.join(SAVE_RESULTS_DIR, f'{accelerator.process_index}.csv'), index=False)

@@ -48,9 +48,11 @@ class LLaVaCaptioningFilter(ImageFilter):
         self.prompt_to_use = prompt
         prompts = {
             'detailed-long': 'Please provide a caption for this image. Speak confidently and describe everything clearly. Do not lie and describe only what you can see',
-            'pixart': 'Describe this image and its style in a very detailed manner'
+            'pixart': 'Describe this image and its style in a very detailed manner',
+            'short': 'Describe this image very shortly in 1-2 short sentences'
         }
         self.prompt = prompts[self.prompt_to_use]
+        print(self.prompt)
         #
         self.model_path = model_path
         self.model = LlavaLlamaForCausalLM.from_pretrained(model_path).to(self.device).half()
@@ -102,8 +104,8 @@ class LLaVaCaptioningFilter(ImageFilter):
         input_ids_batch = self.input_ids.repeat_interleave(image_tensors.shape[0], 0).to(self.device)
         with torch.inference_mode():
             output_ids = self.model.generate(
-                input_ids_batch, images=image_tensors, do_sample=True, temperature=0.2, top_p=None,
-                max_new_tokens=128, use_cache=True, stopping_criteria=[self.stopping_criteria]
+                input_ids_batch, images=image_tensors, do_sample=True, temperature=0.2, top_p=0.7,
+                max_new_tokens=512, use_cache=True, stopping_criteria=[self.stopping_criteria]
             )
         
         all_outputs = []
