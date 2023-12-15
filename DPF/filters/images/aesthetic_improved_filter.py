@@ -2,19 +2,16 @@ from typing import Dict, List, Union
 import os
 from urllib.request import urlretrieve
 import torch
-from torch import nn
 import clip
 
 import webdataset as wds
 from PIL import Image
-import io
 import matplotlib.pyplot as plt
 import json
 
 from warnings import filterwarnings
 
 import numpy as np
-import pytorch_lightning as pl
 import torch.nn as nn
 from torchvision import datasets, transforms
 import tqdm
@@ -23,8 +20,6 @@ from os.path import join
 from datasets import load_dataset
 import pandas as pd
 from torch.utils.data import Dataset, DataLoader
-
-# from PIL import Image, ImageFile, ImageDraw
 
 try:
     from torch.utils.data.dataloader import default_collate
@@ -36,7 +31,7 @@ from DPF.filters.utils import identical_collate_fn
 from .img_filter import ImageFilter
 
 
-class MLP(pl.LightningModule):
+class MLP(nn.Module):
     def __init__(self, input_size, xcol='emb', ycol='avg_rating'):
         super().__init__()
         self.input_size = input_size
