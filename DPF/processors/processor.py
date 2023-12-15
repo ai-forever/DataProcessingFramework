@@ -18,10 +18,10 @@ from DPF.validators import ValidationResult
 class DatasetProcessor(ABC):
 
     def __init__(
-self,
-filesystem: FileSystem,
-df: pd.DataFrame,
-config: DatasetConfig,
+        self,
+        filesystem: FileSystem,
+        df: pd.DataFrame,
+        config: DatasetConfig,
     ):
         self.filesystem = filesystem
         self._df = df
@@ -229,7 +229,7 @@ config: DatasetConfig,
         Dict[str, str]
             Mapping from column name to its value
         """
-        if df_filter:
+        if df_filter is not None:
             df_to_sample = self.df[df_filter]
         else:
             df_to_sample = self.df

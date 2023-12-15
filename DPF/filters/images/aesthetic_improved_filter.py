@@ -3,23 +3,12 @@ import os
 from urllib.request import urlretrieve
 import torch
 import clip
-
-import webdataset as wds
 from PIL import Image
-import matplotlib.pyplot as plt
 import json
-
-from warnings import filterwarnings
-
 import numpy as np
 import torch.nn as nn
-from torchvision import datasets, transforms
 import tqdm
-
-from os.path import join
-from datasets import load_dataset
 import pandas as pd
-from torch.utils.data import Dataset, DataLoader
 
 try:
     from torch.utils.data.dataloader import default_collate
@@ -44,36 +33,15 @@ class MLP(nn.Module):
             nn.Dropout(0.2),
             nn.Linear(128, 64),
             nn.Dropout(0.1),
-            
             nn.Linear(64, 16),
-
             nn.Linear(16, 1)
         )
 
     def forward(self, x):
         return self.layers(x)
 
-    def training_step(self, batch, batch_idx):
-            x = batch[self.xcol]
-            y = batch[self.ycol].reshape(-1, 1)
-            x_hat = self.layers(x)
-            loss = F.mse_loss(x_hat, y)
-            return loss
-    
-    def validation_step(self, batch, batch_idx):
-        x = batch[self.xcol]
-        y = batch[self.ycol].reshape(-1, 1)
-        x_hat = self.layers(x)
-        loss = F.mse_loss(x_hat, y)
-        return loss
-
-    def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.parameters(), lr=1e-3)
-        return optimizer
 
 def normalized(a, axis=-1, order=2):
-    import numpy as np  # pylint: disable=import-outside-toplevel
-
     l2 = np.atleast_1d(np.linalg.norm(a, order, axis))
     l2[l2 == 0] = 1
     return a / np.expand_dims(l2, axis)
@@ -106,7 +74,7 @@ def get_improved_aesthetic_model(cache_folder):
 
 class ImprovedAestheticFilter(ImageFilter):
     """
-    AestheticFilter class
+    ImprovedAestheticFilter class
     """
 
     def __init__(
@@ -129,7 +97,7 @@ class ImprovedAestheticFilter(ImageFilter):
         self.aesthetic_model.to(self.device)
         self.clip_model, self.clip_transforms = clip.load("ViT-L/14", device=device)  #RN50x64   
 
-        self.schema = [self.key_column, "improved_aesthetic_score"]
+        self.schema = [self.key_column, "improved_aesthetic_score_ViT-L/14"]
         self.dataloader_kwargs = {
             "num_workers": self.num_workers,
             "batch_size": self.batch_size,
@@ -154,7 +122,7 @@ class ImprovedAestheticFilter(ImageFilter):
             inputs = normalized(inputs.cpu().detach().numpy())
             outputs = self.aesthetic_model(torch.from_numpy(inputs).to(self.device).type(torch.cuda.FloatTensor))
         
-        df_batch_labels["improved_aesthetic_score"].extend(outputs.cpu().reshape(-1).tolist())
+        df_batch_labels["improved_aesthetic_score_ViT-L/14"].extend(outputs.cpu().reshape(-1).tolist())
         df_batch_labels[self.key_column].extend(keys)
 
         return df_batch_labels
