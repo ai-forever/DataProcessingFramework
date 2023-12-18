@@ -16,10 +16,6 @@ class BlipFilter(T2IFilter):
 
     Parameters
     ----------
-    clip_version: str
-        Version of model to use. Check available version here: https://github.com/openai/CLIP"
-    weights_folder: str
-        Path to folder with weights
     templates: List[str] = ['{}']
         List of strings to be used as templates for texts.
         Text embedding will be calculated as a mean value of that templates embeddings
@@ -58,9 +54,10 @@ class BlipFilter(T2IFilter):
         self.templates = templates
 
         self.blip_model, self.vis_processors, self.txt_processors = load_model_and_preprocess(
-            name="blip_feature_extractor", model_type="base", is_eval=True, device=self.device)
+            name="blip2_image_text_matching", model_type="pretrain_vitL", is_eval=True, device=self.device
+        )
 
-        self.schema = [self.key_column, f"blip_similarity"]
+        self.schema = [self.key_column, f"blip2_ViT-L_similarity"]
         self.dataloader_kwargs = {
             "num_workers": self.num_workers,
             "batch_size": self.batch_size,
@@ -73,24 +70,24 @@ class BlipFilter(T2IFilter):
         text = modality2data['text']
         pil_img = read_image_rgb_from_bytes(modality2data['image'])
         img_tensor = self.vis_processors["eval"](pil_img)
-        return key, img_tensor, text
+        text_tensor = self.txt_processors["eval"](text)
+        return key, img_tensor, text_tensor
 
     def process_batch(self, batch) -> dict:
         df_batch_labels = self._generate_dict_from_schema()
-        keys, image_tensors, batch_labels = list(zip(*batch))
+        keys, image_tensors, text_tensors = list(zip(*batch))
            
         sample  = {}
         with torch.no_grad():
             image_tensors = [t.to(self.device) for t in image_tensors]
             sample['image'] = pad_sequence(image_tensors, batch_first=True)
-            sample['text_input'] = [self.txt_processors["eval"](class_label) for class_label in batch_labels]
-            features_multimodal = self.blip_model.extract_features(sample)
+            sample['text_input'] = text_tensors
             features_image = self.blip_model.extract_features(sample, mode="image")
             features_text = self.blip_model.extract_features(sample, mode="text")
             
             batch_similarity = self.get_similarity(features_image, features_text)
 
-        df_batch_labels[f"blip_similarity"].extend(batch_similarity)
+        df_batch_labels[f"blip2_ViT-L_similarity"].extend(batch_similarity)
         df_batch_labels[self.key_column].extend(keys)
 
         return df_batch_labels
