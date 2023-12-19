@@ -90,6 +90,7 @@ class ShardsDataset(IterableDataset):
             tar_bytes = self.filesystem.read_file(tar_path, binary=True)
             tar = tarfile.open(fileobj=tar_bytes, mode="r")
             for data in data_all:
+                is_ok = True
                 data = {self.columns[i]: item for i, item in enumerate(data)}
                 modality2data = {}
                 # read files
@@ -101,6 +102,7 @@ class ShardsDataset(IterableDataset):
                             file_bytes = tar.extractfile(filename).read()
                         except Exception as err:
                             file_bytes = None
+                            is_ok = False
                     else:
                         file_bytes = tar.extractfile(filename).read()
                     modality2data[modality] = file_bytes
@@ -109,5 +111,14 @@ class ShardsDataset(IterableDataset):
                     modality = self.column2modality[col]
                     modality2data[modality] = data[col]
 
-                yield self.preprocess_f(modality2data, data)
+                preprocessed_data = None
+                if self.return_none_on_error and is_ok:
+                    try:
+                        preprocessed_data = self.preprocess_f(modality2data, data)
+                    except Exception:
+                        is_ok = False
+                elif is_ok:
+                    preprocessed_data = self.preprocess_f(modality2data, data)
+
+                yield is_ok, preprocessed_data
             tar.close()

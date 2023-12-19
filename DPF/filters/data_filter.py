@@ -58,7 +58,12 @@ class DataFilter(ABC):
         df_labels = self._generate_dict_from_schema()
 
         for batch in tqdm(dataloader, disable=not self.pbar):
-            df_batch_labels = self.process_batch(batch)
+            # drop Nans
+            batch_filtered = [b[1] for b in batch if b[0]]
+            if len(batch_filtered) == 0:
+                continue
+
+            df_batch_labels = self.process_batch(batch_filtered)
             self._add_values_from_batch(df_labels, df_batch_labels)
 
         return pd.DataFrame(df_labels)
