@@ -18,8 +18,9 @@ class FilesDataset(Dataset):
         df: pd.DataFrame,
         datatypes: List[Union[ShardedDataType, FileDataType, ColumnDataType]],
         meta_columns: Optional[List[str]] = None,
+        # TODO(review) - если это функция, то надо назвать её preprocess_function
         preprocess_f: Callable[[Dict[str, bytes], Dict[str, str]], Any] = default_preprocess,
-        # TODO(review) - на ошибке надо выбрасывать ошибку, а не возвращать None, и в дальнейшем эту ошибку обрабатывать
+        # TODO(review) - на ошибке надо выбрасывать ошибку, а не возвращать None, и в дальнейшем эту ошибку обрабатывать прикладом, использующим этот класс
         return_none_on_error: bool = False
     ):
         """

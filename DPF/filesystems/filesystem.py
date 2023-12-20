@@ -18,6 +18,7 @@ class FileData:
         file_size: Optional[int] = None
     ):
         self.path = path
+        # TODO(review) - на вход, как и ранее, нужно уже подавать чистые пути, желательно избавиться от таких чисток
         self.name = os.path.basename(self.path.rstrip('/'))
         assert type in {'directory', 'file'}, \
             "param 'type' must be one of {'directory', 'file'}, got "+str(type)
@@ -34,6 +35,7 @@ class FileSystem(ABC):
     Abstract class for all filesystems
     """
 
+    # TODO(review) - очень желательно не забывать ключ.слово pass в абстрактных методах (одно из правил чистого кода)
     @abstractmethod
     def read_file(self, filepath: str, binary: bool) -> io.BytesIO:
         """
@@ -51,6 +53,8 @@ class FileSystem(ABC):
         io.BytesIO | str
             io.BytesIO object if binary, string otherwise
         """
+        pass
+
 
     @abstractmethod
     def save_file(
@@ -68,6 +72,7 @@ class FileSystem(ABC):
         binary: bool
             Write file in binary mode or in text mode
         """
+        pass
 
     def read_tar(self, filepath: str):
         """
@@ -105,6 +110,7 @@ class FileSystem(ABC):
         if filetype == "parquet":
             return pd.read_parquet(data, **kwargs)
         else:
+            # TODO(review) - лучше под эту ошибку завести кастомное исключение (UnknownFileFormatException, например)
             raise NotImplementedError(f"Unknown file format: {filetype}")
 
     def save_dataframe(self, df: pd.DataFrame, filepath: str, **kwargs) -> None:
@@ -131,6 +137,8 @@ class FileSystem(ABC):
             raise NotImplementedError(f"Unknown file format: {filetype}")
         self.save_file(data=data, filepath=filepath, binary=True)
 
+    # TODO(review) - нет смысла листить директорию, вернув только имена файлов, это разные операции. На выходе из листинга должны быть абсолютные пути до файлов
+    # Логику с именами файлов (без абсолютного пути) лучше вынести в отдельный метод
     @abstractmethod
     def listdir(self, folder_path: str, filenames_only: bool = False) -> List[str]:
         """
@@ -148,7 +156,9 @@ class FileSystem(ABC):
         List[str]
             List of filepaths (filenames if filenames_only)
         """
+        pass
 
+    # TODO(review) - не совсем понятна логика листинга вместе с расширением файла, оно должно возвращаться всегда, иначе операцию листинга нельза назвать операцией листинга директории
     def listdir_with_ext(
         self, folder_path: str, ext: str, filenames_only: bool = False
     ) -> List[str]:
@@ -176,6 +186,7 @@ class FileSystem(ABC):
             if f.endswith(ext)
         ]
 
+     # TODO(review) - третья логика листинга в классе, нужно это дело совместить в 1 метод, и параметризовать вывод (с помощью bool-значений на входе в метод)
     @abstractmethod
     def listdir_meta(self, folder_path: str) -> List[FileData]:
         """
@@ -192,6 +203,7 @@ class FileSystem(ABC):
             List of FileData objects
         """
 
+    # TODO(review) - метод с постоянным поведением, реализация должна быть одна, единственная и здесь
     @abstractmethod
     def mkdir(self, folder_path: str) -> None:
         """
