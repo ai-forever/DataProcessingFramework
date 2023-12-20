@@ -2,7 +2,6 @@ from typing import Dict, Union, List
 import imageio.v3 as iio
 import io
 
-from DPF.filters.utils import identical_collate_fn
 from .video_filter import VideoFilter
 
 
@@ -26,6 +25,7 @@ def get_video_info(video_bytes, data, key_column):
         is_correct = False
         err_str = str(err)
 
+    # TODO(review) - безопаснее делать такой return в виде именованной структуры (dict, например). Либо использовать dataclass
     return key, is_correct, width, height, fps, duration, err_str
 
 

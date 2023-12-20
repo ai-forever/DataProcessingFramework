@@ -2,6 +2,7 @@ from typing import Dict, List, Union
 import os
 from urllib.request import urlretrieve
 import torch
+# TODO(review) - зависимость отсутствует в requirements.txt
 import clip
 from PIL import Image
 import json

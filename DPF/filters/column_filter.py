@@ -11,6 +11,7 @@ class ColumnFilter(ABC):
     Abstract class for all filters that use only DataFrame.
     """
 
+    # TODO(review) - свойства df_columns и schema выглядят обязательными, их надо отразить в сигнатуре инициализатора как обязательные параметры
     def __init__(self, workers: int, pbar: bool = True):
         self.workers = workers
         self.pbar = pbar

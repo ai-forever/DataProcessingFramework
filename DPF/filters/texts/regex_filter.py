@@ -1,6 +1,7 @@
 from typing import Optional
 
 try:
+    # TODO(review) - зависимость отсутствует в requirements.txt
     import re2 as re
 except ModuleNotFoundError:
     print(

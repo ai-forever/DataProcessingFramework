@@ -2,6 +2,7 @@ from typing import List, Dict, Union, Optional
 import numpy as np
 import torch
 from torch.nn.utils.rnn import pad_sequence
+# TODO(review) - зависимость отсутствует в requirements.txt
 from lavis.models import load_model_and_preprocess
 from PIL import Image
 

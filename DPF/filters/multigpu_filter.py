@@ -7,6 +7,7 @@ import torch
 from DPF.filesystems import FileSystem
 
 
+# TODO(review) - один вызов в MultiGPUFilter, нужно перенести его внутрь класса
 def run_one_process(df, fs, index, results, filter_class, filter_kwargs, device):
     imgfilter = filter_class(**filter_kwargs, device=device)
     res = imgfilter(df, fs)

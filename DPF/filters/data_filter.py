@@ -12,6 +12,7 @@ class DataFilter(ABC):
     Abstract class for all filters that use datalaaders.
     """
 
+    # TODO(review) - параметры schema и dataloader_kwargs выглядят как обязательные, но отсутствуют в сигнатуре инициализатора, добавить как обязательные параметры
     def __init__(self, pbar: bool):
         super().__init__()
         self.pbar = pbar

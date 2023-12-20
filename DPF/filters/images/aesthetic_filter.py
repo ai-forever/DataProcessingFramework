@@ -3,6 +3,7 @@ import os
 from urllib.request import urlretrieve
 import torch
 from torch import nn
+# TODO(review) - зависимость отсутствует в requirements.txt
 import clip
 
 try:
@@ -11,7 +12,6 @@ except ImportError:
     from torch.utils.data import default_collate
 
 from DPF.utils import read_image_rgb_from_bytes
-from DPF.filters.utils import identical_collate_fn
 from .img_filter import ImageFilter
 
 
@@ -38,6 +38,7 @@ def get_aesthetic_model(clip_model, cache_folder):
             + "_linear.pth?raw=true"
         )
         # TODO rework download
+        # TODO(review) - сделать в виде загрузчика моделей с удаленных ресурсов
         urlretrieve(url_model, path_to_model)
 
     s = torch.load(path_to_model)
