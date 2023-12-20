@@ -19,6 +19,7 @@ class FilesDataset(Dataset):
         datatypes: List[Union[ShardedDataType, FileDataType, ColumnDataType]],
         meta_columns: Optional[List[str]] = None,
         preprocess_f: Callable[[Dict[str, bytes], Dict[str, str]], Any] = default_preprocess,
+        # TODO(review) - на ошибке надо выбрасывать ошибку, а не возвращать None, и в дальнейшем эту ошибку обрабатывать
         return_none_on_error: bool = False
     ):
         """
@@ -38,10 +39,12 @@ class FilesDataset(Dataset):
         return_none_on_error: bool = False
             Whether to return None if error during reading file occures
         """
+        # TODO(review) - непонятно, зачем здесь используется свой собственный инициализатор. super().__init__(**params) для класса, от которого наследуемся - можно понять.
         super(FilesDataset).__init__()
         self.filesystem = filesystem
 
         self.datatypes = datatypes
+        # TODO(review) - сделать инициализацию через if, чтобы явно была видна логика выбора (self.meta_columns = meta_columns if meta_columns else [])
         self.meta_columns = meta_columns or []
         self.configure_columns()
 
@@ -49,7 +52,9 @@ class FilesDataset(Dataset):
         self.preprocess_f = preprocess_f
         self.return_none_on_error = return_none_on_error
 
+    # TODO(review) - метод явно private, сделать его приватным
     def configure_columns(self):
+        # TODO(review) - внутри метода определяются свойства класса, лучше их дефолтные значения вынести в дефолтные параметры класса с None, чтобы было очевидно, откуда они берутся
         self.path_column2modality = {}
         self.column2modality = {}
         for d in self.datatypes:

@@ -4,6 +4,7 @@ from abc import abstractmethod
 from DPF.datatypes import DataType
 
 
+# TODO(review) - отнаследовать класс от ABC, чтобы класс был абстрактным 
 class DatasetConfig:
     """Config for a dataset"""
 
@@ -22,6 +23,7 @@ class DatasetConfig:
         """
         assert len(set([d.modality.key for d in datatypes])) == len(datatypes)
         self.datatypes = datatypes
+        # TODO(review) - обрезание пути справа, надо сделать проверку на корректность пути, либо его парсить и его собирать заново
         self.path = path.rstrip('/')
 
     @property
