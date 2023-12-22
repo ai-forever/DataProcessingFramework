@@ -286,7 +286,7 @@ class DatasetProcessor(ABC):
 
         with writer as writer:
             for batch in tqdm(dataloader, disable=not pbar):
-                modality2bytes, metadata = batch[0]
+                modality2bytes, metadata = batch[0][1]
 
                 modality2sample_data = {}
                 for modality, bytes_data in modality2bytes.items():

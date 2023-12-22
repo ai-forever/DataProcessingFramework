@@ -12,9 +12,9 @@ from DPF.filters.utils import identical_collate_fn
 from .img_filter import ImageFilter
 
 
-class BLIPFilter(ImageFilter):
+class BLIPCaptioningFilter(ImageFilter):
     """
-    BLIPFilter class
+    BLIPCaptioningFilter class
     """
 
     def __init__(self, workers=16, batch_size=64, device="cuda:0", pbar=True):
