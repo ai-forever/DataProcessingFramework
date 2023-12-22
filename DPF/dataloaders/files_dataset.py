@@ -71,15 +71,16 @@ class FilesDataset(Dataset):
             self.columns[c]: item for c, item in enumerate(self.data_to_iterate[idx])
         }
         modality2data = {}
-
+        is_ok = True
         # read files
         for col in self.path_column2modality.keys():
             modality = self.path_column2modality[col]
             if self.return_none_on_error:
                 try:
                     file_bytes = self.filesystem.read_file(data[col], binary=True).getvalue()
-                except Exception as err:
+                except Exception:
                     file_bytes = None
+                    is_ok = False
             else:
                 file_bytes = self.filesystem.read_file(data[col], binary=True).getvalue()
             modality2data[modality] = file_bytes
@@ -89,4 +90,12 @@ class FilesDataset(Dataset):
             modality = self.column2modality[col]
             modality2data[modality] = data[col]
 
-        return self.preprocess_f(modality2data, data)
+        preprocessed_data = None
+        if self.return_none_on_error and is_ok:
+            try:
+                preprocessed_data = self.preprocess_f(modality2data, data)
+            except Exception:
+                is_ok = False
+        elif is_ok:
+            preprocessed_data = self.preprocess_f(modality2data, data)
+        return is_ok, preprocessed_data

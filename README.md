@@ -1,52 +1,57 @@
 # DataProcessingFramework
 
 Фреймворк для работы с датасетами
-  
-## Contents
 
-- [Installation](#installation)
-- [Overview](#overview)
-- [Basic usage](#basic-usage)
+## Содержание
 
-## Installation
+- [Установка](#installation)
+- [О фреймворке](#overview)
+- [Базовое использование](#basic-usage)
 
+## Установка
+
+Установить с помощью pip:
 ```bash
 pip install git+https://github.com/ai-forever/DataProcessingFramework
 ```
-Or you can install from sources:
+Установка из исходников:
 ```bash
 git clone https://github.com/ai-forever/DataProcessingFramework
 cd DataProcessingFramework
 pip install -r requirements.txt
 ```
 
-## Overview
+## О фреймворке
 
-The framework supports next operations:
-1. Reading a dataset
-2. Filtering datasets with variety of filters
-3. Converting datasets to other formats
-4. Validating datasets
+Фреймворк ориентирован на работу с мультимодальными данными и поддерживает следующие возможности:
+1. Чтение датасетов
+2. Фильтрация датасетов с помощью различных моделей
+3. Конвертация датасетов в другие форматы хранения
+4. Валидация датасетов
 
-## Supported modalities
+## Поддерживаемые модальности
 
-- Texts
-- Images
-- Videos
+- Тексты
+- Изображения
+- Видео
 
-Also framework supports any combination of the modalities list above. For example, text-image or text-video datasets.
+Фреймворк поддерживает работу с комбинацией перечисленных выше модальностей, например, текст-изображение или текст-видео.
 
-## Supported data formats
+## Поддерживаемые форматы данных
 
 - Files
 - Shards
 - ShardedFiles
 
-### Files format
+### Формат files
 
-Simply a csv table with paths to image, videos and other columns.
+Формат files это csv файл с метаданными и путями к изображениям, видео и др. CSV файл может выглядеть примерно так:
+```csv
+image_path,text,width,height
+images/1.jpg,caption,512,512
+```
 
-Reading a dataset from _files_ format:
+Чтение датасета из формата _files_:
 ```python
 from DPF.configs import FilesDatasetConfig
 from DPF.dataset_reader import DatasetReader
@@ -61,13 +66,13 @@ reader = DatasetReader()
 processor = reader.from_config(config)
 ```
 
-### Shards format
+### Формат shards
 
-In this format, the dataset is divided into shards of N samples each. 
-The files of each shard are collected in a tar archive, and the metainformation is collected in a csv file. 
-The tar archive and the csv file of the corresponding shard must have the same file names (shard index).
+В этом формате датасет разделяется на шарды по `N` сэмплов в каждом.
+Файлы в каждом шарде лежат в tar архиве, а метаинформация лежит в csv файле.
+tar архив и csv файл каждого шарда должны иметь одинаковые имена (индекс шарда).
 
-Structure example: 
+Пример структуры: 
 ```
 0.tar
 0.csv
@@ -76,7 +81,7 @@ Structure example:
 ...
 ```
 
-Contents of a `0.csv`:
+Файл `0.csv`:
 ```csv
 image_name, caption
 0.jpg, caption for image 1
@@ -84,7 +89,7 @@ image_name, caption
 ...
 ```
 
-Reading a dataset from _shards_ format:
+Чтение датасета из формата _shards_:
 ```python
 from DPF.configs import ShardsDatasetConfig
 from DPF.dataset_reader import DatasetReader
@@ -99,11 +104,11 @@ reader = DatasetReader()
 processor = reader.from_config(config)
 ```
 
-### Sharded files format
+### Формат sharded files
 
-This format is similar to the _shards_, but instead of tar archives, the files are simply stored in folders.
+Этот формат похож на формат _sharsd_, но вместо tar архивов файлы лежат в папках.
 
-Structure example: 
+Пример структуры: 
 ```
 .
 ├── 0/
@@ -119,7 +124,7 @@ Structure example:
 └── ...
 ```
 
-Reading a dataset from _sharded files_ format:
+Чтение датасета из формата _sharded files_:
 ```python
 from DPF.configs import ShardedFilesDatasetConfig
 from DPF.dataset_reader import DatasetReader
@@ -134,9 +139,24 @@ reader = DatasetReader()
 processor = reader.from_config(config)
 ```
 
-## Basic usage
+## Базовое использование
 
-Reading a dataset:
+#### Конфиги
+Чтобы начать работу с датасетом, нужно сначала создать конфиг `DatasetConfig`, описывающий датасет и его модальности.
+Для каждого формата данных нужно использовать соответствующий конфиг. Пример для формата _shards_:
+```python
+from DPF.configs import ShardsDatasetConfig
+
+config = ShardsDatasetConfig.from_modalities(
+    'examples/example_dataset/',  # путь к датасету
+    image_name_col='image_name',  # название колонки в csv с названием изображения
+    video_name_col='video_name',  # название колонки в csv с названием видео
+    caption_col='caption'         # название колонки в csv с кэпшенами
+)
+```
+
+#### Чтение датасета
+Считать датасет можно с помощью класса `DatasetReader`, передав конфиг в метод `from_config`:
 ```python
 from DPF.configs import ShardsDatasetConfig
 from DPF.dataset_reader import DatasetReader
@@ -150,17 +170,79 @@ config = ShardsDatasetConfig.from_modalities(
 reader = DatasetReader()
 processor = reader.from_config(config)
 ```
-
-Read a video dataset:
+Пример чтения датасета с видео в формате _sharded files_:
 ```python
-config = ShardsDatasetConfig.from_modalities(
+from DPF.configs import ShardedFilesDatasetConfig
+config = ShardedFilesDatasetConfig.from_modalities(
     'examples/example_video_dataset/',
     video_name_col='image_name',
     caption_col='caption'
 )
+
+reader = DatasetReader()
+processor = reader.from_config(config)
+```
+Взаимодействие с датасетом происходит через интерфейс `DatasetProcessor`. 
+`DatasetProcessor` дает возможность валидировать, просматривать, фильтровать датасеты.  
+
+#### Просмотр и изменение датасета
+
+Обработчик датасета (интерфейс `DatasetProcessor`) даёт возможность посмотреть статистику и информацию по датасету, а также посмотреть рандомные семплы данных.
+
+Получить датафрейм датасета можно, обратившись к атрибуту `df`:
+```python
+processor.df
+```
+Вывести саммари о датасете:
+```python
+processor.summary()
+```
+Обновить существующие или добавить новые колонки:
+```python
+processor.update_columns(['column_to_update', 'new_column'])
+```
+Переименовать колонки:
+```python
+processor.rename_columns({'old_column': 'new_columns'})
+```
+Удалить колонки:
+```python
+processor.delete_columns(['column_to_delete'])
+```
+Получить рандомный семпл из датасета:
+```python
+modality2bytes, metadata = processor.get_random_sample()
 ```
 
-Applying a filter:
+#### Фильтрация
+
+Фильтры - это модели или алгоритмы, которые позволяют посчитать некоторый набор метрик для датасета.
+Фильтры обрабатывают данные и добавляют новые колонки с посчитанными метриками.
+
+Список фильтров:
+- `images`:
+  - [ImageInfoFilter](DPF/filters/images/info_filter.py) - получение базовой информации (высота, ширина) об изображениях
+  - [PHashFilter](DPF/filters/images/hash_filters.py) - подсчет PHash изображений
+  - [ImprovedAestheticFilter](DPF/filters/images/aesthetic_improved_filter.py) - модель определения эстетичности изображений
+  - [BLIPCaptioningFilter](DPF/filters/images/blip_captioning_filter.py) - кэпшенинг моделью BLIP
+  - [CLIPLabelsFilter](DPF/filters/images/cliplabels_filter.py) - определение близости изображения с набором текстов с помощью модели CLIP
+  - [LLaVaCaptioningFilter](DPF/filters/images/llava_captioning_filter.py) - кэпшенинг моделью LLaVA-13b
+  - [NSFWFilter](DPF/filters/images/nsfw_filter.py) - детекция NSFW изображений
+  - [CRAFTFilter](DPF/filters/images/text_detection_filter.py) - детекция текста
+  - [OCRFilter](DPF/filters/images/ocr_filter.py) - распознавание текста
+  - [WatermarksFilter](DPF/filters/images/watermarks_filter.py) - детекция водяных знаков на изображении
+- `text-image`:
+  - [BlipFilter](DPF/filters/text2image/blip_filter.py) - определение близости между картинкой и кэпшеном моделью BLIP-2
+  - [CLIPFilter](DPF/filters/text2image/clip_filter.py) - определение близости между картинкой и кэпшеном моделью CLIP
+  - [RuCLIPFilter](DPF/filters/text2image/ruclip_filter.py) - определение близости между картинкой и кэпшеном моделью ru-clip
+- `texts`:
+  - [LangFilter](DPF/filters/texts/lang_filter.py) - определение языка текста
+  - [RegexFilter](DPF/filters/texts/regex_filter.py) - фильтрация регулярными выражениями
+- `videos`:
+  - [VideoInfoFilter](DPF/filters/videos/info_filter.py) - получение информации о видео (ширина, высота, fps, длительность)
+  - [ImageFilterAdapter](DPF/filters/videos/image_filter_adapter.py) - адаптер картиночных фильтров к одному кадру видео
+
+Применение фильтра:
 ```python
 from DPF.filters.images.base_images_info_filter import ImageInfoGatherer
 datafilter = ImageInfoGatherer(workers=8)
@@ -168,7 +250,9 @@ processor.apply_data_filter(datafilter)
 processor.df # new columns ['width', 'height', 'is_correct'] are added
 ```
 
-Converting to other formats:
+#### Конвертация между форматами
+
+Конвертация в формат _shards_:
 ```python
 processor.to_shards(
   'destination/dir/',
@@ -178,6 +262,7 @@ processor.to_shards(
 )
 ```
 
+Конвертация в формат _sharded files_
 ```python
 processor.to_sharded_files(
   'destination/dir/',

@@ -132,15 +132,20 @@ class DatasetProcessor(ABC):
 
     @abstractmethod
     def get_torch_dataset(
-        self,
-        modalities: List[str],
-        meta_columns: Optional[List[str]] = None,
-        preprocess_f: Callable[[dict, dict], Any] = default_preprocess,
-        return_none_on_error: bool = False
+    self,
+    modalities: List[str],
+    meta_columns: Optional[List[str]] = None,
+    preprocess_f: Callable[[dict, dict], Any] = default_preprocess,
+    return_none_on_error: bool = False
     ) -> Dataset:
         pass
 
-    def apply_data_filter(self, datafilter: DataFilter, validate_filter_result: bool = True):
+    def apply_data_filter(
+    self,
+    datafilter: DataFilter,
+    validate_filter_result: bool = True,
+        return_none_on_error: bool = False
+    ):
         """Applies a data filter to dataset
 
         Parameters
@@ -148,12 +153,15 @@ class DatasetProcessor(ABC):
         datafilter: DataFilter
             Instance of a DataFilter
         validate_filter_result: bool = True
-            Whether or not to check the correctness of datafilter result (data integrity)
+            Whether to check the correctness of datafilter result (data integrity)
+        return_none_on_error: bool = False
+            Whether to return None on sample if there is error in dataloader
         """
         dataset = self.get_torch_dataset(
             modalities=datafilter.modalities,
             meta_columns=datafilter.metadata_columns+[datafilter.key_column],
-            preprocess_f=datafilter.preprocess
+            preprocess_f=datafilter.preprocess,
+            return_none_on_error=return_none_on_error
         )
         df_result = datafilter.run(dataset)
 
@@ -163,7 +171,7 @@ class DatasetProcessor(ABC):
             assert len(df_result) == len(self._df), \
                 f"Length of resulted dataframe changed after filtering. Old length = {len(self._df)}, new = {len(df_result)}"
 
-        self._df = pd.merge(self._df, df_result, on=datafilter.key_column)
+        self._df = pd.merge(self._df, df_result, on=datafilter.key_column, how='left')
 
     def apply_column_filter(self, column_filter: ColumnFilter, validate_filter_result: bool = True):
         """Applies a column filter to dataset
@@ -278,7 +286,7 @@ class DatasetProcessor(ABC):
 
         with writer as writer:
             for batch in tqdm(dataloader, disable=not pbar):
-                modality2bytes, metadata = batch[0]
+                modality2bytes, metadata = batch[0][1]
 
                 modality2sample_data = {}
                 for modality, bytes_data in modality2bytes.items():
