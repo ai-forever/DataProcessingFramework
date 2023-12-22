@@ -49,7 +49,8 @@ class LLaVaCaptioningFilter(ImageFilter):
         prompts = {
             'detailed-long': 'Please provide a caption for this image. Speak confidently and describe everything clearly. Do not lie and describe only what you can see',
             'pixart': 'Describe this image and its style in a very detailed manner',
-            'short': 'Describe this image very shortly in 1-2 short sentences'
+            'short': 'Describe this image very shortly in 1-2 short sentences',
+            'short-video': 'Describe this video very shortly in 1-2 short sentences. Describe what is happening in this video.'
         }
         self.prompt = prompts[self.prompt_to_use]
         print(self.prompt)
