@@ -12,7 +12,7 @@ except ImportError:
 from torchvision import models, transforms
 from huggingface_hub import hf_hub_url, cached_download
 
-from DPF.filters.utils import FP16Module, identical_collate_fn
+from DPF.filters.utils import FP16Module
 from DPF.utils import read_image_rgb_from_bytes
 from .img_filter import ImageFilter
 

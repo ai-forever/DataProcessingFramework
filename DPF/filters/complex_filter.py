@@ -4,7 +4,7 @@ from tqdm import tqdm
 
 from DPF.filters.images.img_filter import ImageFilter
 from DPF.filters.text2image.t2i_filter import T2IFilter
-from DPF.filters.utils import identical_collate_fn
+from DPF.dataloaders.dataloader_utils import identical_collate_fn
 from DPF.filesystems.filesystem import FileSystem
 
 

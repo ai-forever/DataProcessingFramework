@@ -1,9 +1,8 @@
-from typing import Dict, Union, List
+from typing import Dict, Union
 from io import BytesIO
 from PIL import Image
 import numpy as np
 
-from DPF.filters.utils import identical_collate_fn
 from .img_filter import ImageFilter
 
 

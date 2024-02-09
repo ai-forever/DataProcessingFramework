@@ -63,7 +63,7 @@ class ShardsDatasetProcessor(ShardedDatasetProcessor):
             split2archive_path,
             datatypes_to_load,
             meta_columns=meta_columns,
-            preprocess_f=preprocess_f,
+            preprocess_function=preprocess_f,
             return_none_on_error=return_none_on_error
         )
 

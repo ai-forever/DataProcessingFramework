@@ -8,7 +8,6 @@ except ImportError:
     from torch.utils.data import default_collate
 
 from DPF.utils import read_image_rgb_from_bytes
-from DPF.filters.utils import identical_collate_fn
 from .img_filter import ImageFilter
 
 

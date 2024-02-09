@@ -4,7 +4,7 @@ import pandas as pd
 from tqdm import tqdm
 from torch.utils.data import Dataset, DataLoader
 
-from DPF.filters.utils import identical_collate_fn
+from DPF.dataloaders.dataloader_utils import identical_collate_fn
 
 
 class DataFilter(ABC):

@@ -7,7 +7,7 @@ from lavis.models import load_model_and_preprocess
 from PIL import Image
 
 from DPF.utils import read_image_rgb_from_bytes
-from DPF.filters.utils import identical_collate_fn
+from ...dataloaders.dataloader_utils import identical_collate_fn
 from .t2i_filter import T2IFilter
 
 

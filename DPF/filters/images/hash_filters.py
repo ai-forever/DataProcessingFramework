@@ -5,7 +5,6 @@ import numpy as np
 from scipy.fftpack import dct
 
 from DPF.utils import read_image_rgb_from_bytes
-from DPF.filters.utils import identical_collate_fn
 from .img_filter import ImageFilter
 
 

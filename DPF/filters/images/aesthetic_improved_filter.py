@@ -4,12 +4,8 @@ from urllib.request import urlretrieve
 import torch
 # TODO(review) - зависимость отсутствует в requirements.txt
 import clip
-from PIL import Image
-import json
 import numpy as np
 import torch.nn as nn
-import tqdm
-import pandas as pd
 
 try:
     from torch.utils.data.dataloader import default_collate
@@ -17,7 +13,6 @@ except ImportError:
     from torch.utils.data import default_collate
 
 from DPF.utils import read_image_rgb_from_bytes
-from DPF.filters.utils import identical_collate_fn
 from .img_filter import ImageFilter
 
 

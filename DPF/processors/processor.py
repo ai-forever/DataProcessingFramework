@@ -8,7 +8,7 @@ from tqdm import tqdm
 from DPF.filesystems import FileSystem, LocalFileSystem
 from DPF.filters import DataFilter, ColumnFilter
 from DPF.processors.writers import ABSWriter, ShardedFilesWriter, ShardsWriter
-from DPF.dataloaders.utils import default_preprocess, default_collate
+from DPF.dataloaders.dataloader_utils import default_preprocess, identical_collate_fn
 from DPF.datatypes import ColumnDataType
 from DPF.modalities import MODALITIES
 from DPF.configs import DatasetConfig, config2format
@@ -272,7 +272,7 @@ class DatasetProcessor(ABC):
         new_dataloader_kwargs = {
             'num_workers': 8,
             'batch_size': 1,
-            'collate_fn': default_collate,
+            'collate_fn': identical_collate_fn,
             'drop_last': False,
         }
         new_dataloader_kwargs.update(dataloader_kwargs)

@@ -14,7 +14,6 @@ import autokeras as ak
 from tensorflow.keras.models import load_model
 
 from DPF.utils import read_image_rgb_from_bytes
-from DPF.filters.utils import identical_collate_fn
 from .img_filter import ImageFilter
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
