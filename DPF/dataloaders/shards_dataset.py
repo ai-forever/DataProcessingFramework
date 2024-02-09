@@ -7,7 +7,7 @@ import torch
 from torch.utils.data import IterableDataset
 
 from DPF.filesystems.filesystem import FileSystem
-from DPF.dataloaders.utils import default_preprocess
+from DPF.dataloaders.dataloader_utils import default_preprocess
 from DPF.datatypes import ShardedDataType, ColumnDataType
 
 
@@ -23,7 +23,7 @@ class ShardsDataset(IterableDataset):
         split2archive_path: Dict[str, str],
         datatypes: List[Union[ShardedDataType, ColumnDataType]],
         meta_columns: Optional[List[str]] = None,
-        preprocess_f: Callable[[Dict[str, bytes], Dict[str, str]], Any] = default_preprocess,
+        preprocess_function: Callable[[Dict[str, bytes], Dict[str, str]], Any] = default_preprocess,
         return_none_on_error: bool = False
     ):
         """
@@ -39,7 +39,7 @@ class ShardsDataset(IterableDataset):
             List of datatypes to read
         meta_columns: Optional[List[str]] = None
             List of dataframe columns to return from dataloader
-        preprocess_f: Callable[[Dict[str, bytes], Dict[str, str]], Any] = default_preprocess
+        preprocess_function: Callable[[Dict[str, bytes], Dict[str, str]], Any] = default_preprocess
             Preprocessing function for data. First argument of the preprocess_f is mapping from modality name to bytes
             and the second argument is mapping from meta_column name to its value.
         return_none_on_error: bool = False
@@ -50,18 +50,8 @@ class ShardsDataset(IterableDataset):
 
         self.datatypes = datatypes
         self.meta_columns = meta_columns or []
-        self.configure_columns()
 
-        self.tar_to_data = df.groupby("split_name").apply(
-            lambda x: [tuple(v.values()) for v in x[self.columns].to_dict("records")]
-        )
-        self.tar_to_data.index = [split2archive_path[i] for i in self.tar_to_data.index]
-
-        self.total_samples = len(df)
-        self.preprocess_f = preprocess_f
-        self.return_none_on_error = return_none_on_error
-
-    def configure_columns(self):
+        # configuring columns
         self.path_column2modality = {}
         self.column2modality = {}
         for d in self.datatypes:
@@ -74,6 +64,16 @@ class ShardsDataset(IterableDataset):
         self.columns = list(set(
             list(self.path_column2modality.keys()) + list(self.column2modality.keys()) + self.meta_columns
         ))
+
+        #
+        self.tar_to_data = df.groupby("split_name").apply(
+            lambda x: [tuple(v.values()) for v in x[self.columns].to_dict("records")]
+        )
+        self.tar_to_data.index = [split2archive_path[i] for i in self.tar_to_data.index]
+
+        self.total_samples = len(df)
+        self.preprocess_f = preprocess_function
+        self.return_none_on_error = return_none_on_error
 
     def __len__(self):
         return self.total_samples

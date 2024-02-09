@@ -3,7 +3,7 @@ import pandas as pd
 from torch.utils.data import Dataset
 
 from DPF.filesystems.filesystem import FileSystem
-from DPF.dataloaders.utils import default_preprocess
+from DPF.dataloaders.dataloader_utils import default_preprocess
 from DPF.datatypes import ShardedDataType, ColumnDataType, FileDataType
 
 
@@ -18,8 +18,7 @@ class FilesDataset(Dataset):
         df: pd.DataFrame,
         datatypes: List[Union[ShardedDataType, FileDataType, ColumnDataType]],
         meta_columns: Optional[List[str]] = None,
-        # TODO(review) - если это функция, то надо назвать её preprocess_function
-        preprocess_f: Callable[[Dict[str, bytes], Dict[str, str]], Any] = default_preprocess,
+        preprocess_function: Callable[[Dict[str, bytes], Dict[str, str]], Any] = default_preprocess,
         # TODO(review) - на ошибке надо выбрасывать ошибку, а не возвращать None, и в дальнейшем эту ошибку обрабатывать прикладом, использующим этот класс
         return_none_on_error: bool = False
     ):
@@ -34,7 +33,7 @@ class FilesDataset(Dataset):
             List of datatypes to read
         meta_columns: Optional[List[str]] = None
             List of dataframe columns to return from dataloader
-        preprocess_f: Callable[[Dict[str, bytes], Dict[str, str]], Any] = default_preprocess
+        preprocess_function: Callable[[Dict[str, bytes], Dict[str, str]], Any] = default_preprocess
             Preprocessing function for data. First argument of the preprocess_f is mapping from modality name to bytes
             and the second argument is mapping from meta_column name to its value.
         return_none_on_error: bool = False
@@ -45,17 +44,9 @@ class FilesDataset(Dataset):
         self.filesystem = filesystem
 
         self.datatypes = datatypes
-        # TODO(review) - сделать инициализацию через if, чтобы явно была видна логика выбора (self.meta_columns = meta_columns if meta_columns else [])
-        self.meta_columns = meta_columns or []
-        self.configure_columns()
+        self.meta_columns = meta_columns if meta_columns else []
 
-        self.data_to_iterate = df[self.columns].values
-        self.preprocess_f = preprocess_f
-        self.return_none_on_error = return_none_on_error
-
-    # TODO(review) - метод явно private, сделать его приватным
-    def configure_columns(self):
-        # TODO(review) - внутри метода определяются свойства класса, лучше их дефолтные значения вынести в дефолтные параметры класса с None, чтобы было очевидно, откуда они берутся
+        # configuring columns
         self.path_column2modality = {}
         self.column2modality = {}
         for d in self.datatypes:
@@ -68,6 +59,11 @@ class FilesDataset(Dataset):
         self.columns = list(set(
             list(self.path_column2modality.keys()) + list(self.column2modality.keys()) + self.meta_columns
         ))
+
+        #
+        self.data_to_iterate = df[self.columns].values
+        self.preprocess_f = preprocess_function
+        self.return_none_on_error = return_none_on_error
 
     def __len__(self):
         return len(self.data_to_iterate)
