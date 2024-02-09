@@ -1,11 +1,23 @@
 from typing import Dict, Union, List
 import imageio.v3 as iio
 import io
+from dataclasses import dataclass
 
 from .video_filter import VideoFilter
 
 
-def get_video_info(video_bytes, data, key_column):
+@dataclass
+class VideoInfo:
+    key: str
+    is_correct: bool
+    width: int
+    height: int
+    fps: float
+    duration: float
+    error: str
+
+
+def get_video_info(video_bytes, data, key_column) -> VideoInfo:
     """
     Get image path, read status, width, height, num channels, read error
     """
@@ -25,8 +37,7 @@ def get_video_info(video_bytes, data, key_column):
         is_correct = False
         err_str = str(err)
 
-    # TODO(review) - безопаснее делать такой return в виде именованной структуры (dict, например). Либо использовать dataclass
-    return key, is_correct, width, height, fps, duration, err_str
+    return VideoInfo(key, is_correct, width, height, fps, duration, err_str)
 
 
 class VideoInfoFilter(VideoFilter):
@@ -60,13 +71,12 @@ class VideoInfoFilter(VideoFilter):
     def process_batch(self, batch) -> dict:
         df_batch_labels = self._generate_dict_from_schema()
 
-        for data in batch:
-            key, is_correct, width, height, fps, duration, error = data
-            df_batch_labels[self.key_column].append(key)
-            df_batch_labels["is_correct"].append(is_correct)
-            df_batch_labels["error"].append(error)
-            df_batch_labels["width"].append(width)
-            df_batch_labels["height"].append(height)
-            df_batch_labels["fps"].append(fps)
-            df_batch_labels["duration"].append(duration)
+        for video_info in batch:
+            df_batch_labels[self.key_column].append(video_info.key)
+            df_batch_labels["is_correct"].append(video_info.is_correct)
+            df_batch_labels["error"].append(video_info.error)
+            df_batch_labels["width"].append(video_info.width)
+            df_batch_labels["height"].append(video_info.height)
+            df_batch_labels["fps"].append(video_info.fps)
+            df_batch_labels["duration"].append(video_info.duration)
         return df_batch_labels
