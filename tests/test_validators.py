@@ -6,7 +6,7 @@ from DPF.validators.format_validators import (
 
 
 def test_shards_reader():
-    path = 'tests/datasets/shards_correct/'
+    path = 'tests/datasets/shards_correct'
     config = ShardsDatasetConfig.from_modalities(
         path,
         image_name_col="image_name",
@@ -21,7 +21,7 @@ def test_shards_reader():
 
 
 def test_shards_wrong_columns():
-    path = 'tests/datasets/shards_wrong_columns/'
+    path = 'tests/datasets/shards_wrong_columns'
     config = ShardsDatasetConfig.from_modalities(
         path,
         image_name_col="image_name",
@@ -38,13 +38,13 @@ def test_shards_wrong_columns():
 
     result = processor.validate(columns_to_check=['image_name', 'caption', 'test'])
     assert len(result.dataframe_errors) == 1
-    assert isinstance(result.dataframe_errors[path+'0.csv'][0], MissedColumnsError)
+    assert isinstance(result.dataframe_errors[path+'/0.csv'][0], MissedColumnsError)
     assert len(result.filestructure_errors) == 1
     assert isinstance(result.filestructure_errors[0], IsNotKeyError)
 
 
 def test_shards_wrong_tar():
-    path = 'tests/datasets/shards_wrong_tar/'
+    path = 'tests/datasets/shards_wrong_tar'
     config = ShardsDatasetConfig.from_modalities(
         path,
         image_name_col="image_name",
@@ -57,12 +57,12 @@ def test_shards_wrong_tar():
 
     print(result)
     assert len(result.dataframe_errors) == 1
-    assert isinstance(result.dataframe_errors[path + '0.csv'][0], MissingValueError)
+    assert isinstance(result.dataframe_errors[path + '/0.csv'][0], MissingValueError)
     assert len(result.filestructure_errors) == 0
 
 
 def test_sharded_files_reader():
-    path = 'tests/datasets/sharded_files_correct/'
+    path = 'tests/datasets/sharded_files_correct'
     config = ShardedFilesDatasetConfig.from_modalities(
         path,
         image_name_col="image_name",
@@ -77,7 +77,7 @@ def test_sharded_files_reader():
 
 
 def test_sharded_files_wrong_columns():
-    path = 'tests/datasets/sharded_files_wrong_columns/'
+    path = 'tests/datasets/sharded_files_wrong_columns'
     config = ShardedFilesDatasetConfig.from_modalities(
         path,
         image_name_col="image_name",
@@ -94,13 +94,13 @@ def test_sharded_files_wrong_columns():
 
     result = processor.validate(columns_to_check=['image_name', 'caption', 'test'])
     assert len(result.dataframe_errors) == 1
-    assert isinstance(result.dataframe_errors[path+'0.csv'][0], MissedColumnsError)
+    assert isinstance(result.dataframe_errors[path+'/0.csv'][0], MissedColumnsError)
     assert len(result.filestructure_errors) == 1
     assert isinstance(result.filestructure_errors[0], IsNotKeyError)
 
 
 def test_sharded_files_wrong_tar():
-    path = 'tests/datasets/sharded_files_wrong_folder/'
+    path = 'tests/datasets/sharded_files_wrong_folder'
     config = ShardedFilesDatasetConfig.from_modalities(
         path,
         image_name_col="image_name",
@@ -113,7 +113,7 @@ def test_sharded_files_wrong_tar():
 
     print(result)
     assert len(result.dataframe_errors) == 1
-    assert isinstance(result.dataframe_errors[path + '0.csv'][0], MissingValueError)
+    assert isinstance(result.dataframe_errors[path + '/0.csv'][0], MissingValueError)
     assert len(result.filestructure_errors) == 0
 
 

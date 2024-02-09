@@ -16,9 +16,9 @@ class ShardedDatasetConfig(DatasetConfig):
         self.datatypes = datatypes
         self.datafiles_ext = datafiles_ext.lstrip('.')
         self._modality2datatype = {d.modality.key: d for d in datatypes}
-        self.validate_datatypes()
+        self.__validate_datatypes()
 
-    def validate_datatypes(self):
+    def __validate_datatypes(self):
         for data in self.datatypes:
             assert isinstance(data, (ColumnDataType, ShardedDataType))
 

@@ -9,25 +9,21 @@ from ..modalities import MODALITIES
 class FilesDatasetConfig(DatasetConfig):
 
     def __init__(
-            self,
-            # TODO(review) - если наследоваться от абстрактного класса, то использовать его сигнатуру, здесь похоже
-            # что table_path переопределяет path
-            table_path: str,
-            datatypes: List[Union[FileDataType, ColumnDataType]],
+        self,
+        path: str,
+        datatypes: List[Union[FileDataType, ColumnDataType]],
     ):
-        super().__init__(table_path, datatypes)
-        self.table_path = table_path.rstrip('/')
+        super().__init__(path, datatypes)
+        self.table_path = path.rstrip('/')
         self.base_path = os.path.dirname(self.table_path)
         self.datatypes = datatypes
         self._modality2datatype = {d.modality.key: d for d in datatypes}
-        self.validate_datatypes()
+        self.__validate_datatypes()
 
-    # TODO(review) - метод явно private, сделать его приватным
-    def validate_datatypes(self):
+    def __validate_datatypes(self):
         for data in self.datatypes:
             assert isinstance(data, (ColumnDataType, FileDataType))
 
-    # TODO(review) - getter для приватного свойства. Не совсем понятно зачем, если можно просто вернуть свойство класса
     @property
     def modality2datatype(self) -> Dict[str, DataType]:
         return self._modality2datatype
@@ -44,11 +40,11 @@ class FilesDatasetConfig(DatasetConfig):
 
     @classmethod
     def from_modalities(
-            cls,
-            path: str,
-            image_path_col: Optional[str] = None,
-            video_path_col: Optional[str] = None,
-            caption_col: Optional[str] = None,
+        cls,
+        path: str,
+        image_path_col: Optional[str] = None,
+        video_path_col: Optional[str] = None,
+        caption_col: Optional[str] = None,
     ):
         datatypes = []
         if image_path_col:
