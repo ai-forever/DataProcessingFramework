@@ -1,13 +1,14 @@
+from typing import List, Optional, Dict, Union
 import torch
-from transformers import TextStreamer
+from videollava.constants import DEFAULT_IMAGE_TOKEN, IMAGE_TOKEN_INDEX
+from videollava.conversation import SeparatorStyle, conv_templates
+from videollava.mm_utils import (KeywordsStoppingCriteria,
+                                 get_model_name_from_path,
+                                 tokenizer_image_token)
+from videollava.model.builder import load_pretrained_model
+from videollava.utils import disable_torch_init
 
-from .constants import (DEFAULT_IM_END_TOKEN, DEFAULT_IM_START_TOKEN,
-                        DEFAULT_IMAGE_TOKEN, DEFAULT_VIDEO_TOKEN,
-                        IMAGE_TOKEN_INDEX)
-from .conversation import SeparatorStyle, conv_templates
-from .mm_utils import (KeywordsStoppingCriteria, get_model_name_from_path,
-                       process_images, tokenizer_image_token)
-from .model.builder import load_pretrained_model
+from .video_filter import VideoFilter
 
 
 def disable_torch_init():
@@ -25,13 +26,13 @@ class VideoLLaVAFilter(VideoFilter):
     """ 
     def init(self,
              model_name: str = "Video-LLaVA-7B",
-             weights_path: str, 
+             weights_path: str = None, 
              model_base: str = None,
              cache_path: str = "cache_dir",
              conv_mode: str = "llava_v1",
              prompt_templates: Optional[List[str]] = None,
              temperature: float = 0.2,
-             max_new_tokens: int = 512,
+             max_new_tokens: int = 1024,
              load_4bit: bool = True,
              load_8bit: bool = False,
              device: str = "cuda:0",
@@ -109,14 +110,14 @@ class VideoLLaVAFilter(VideoFilter):
         stop_str = self.conv.sep if self.conv.sep_style != SeparatorStyle.TWO else sef.conv.sep2
         keywords = [stop_str]
         stopping_criteria = KeywordsStoppingCriteria(keywords, self.tokenizer, input_ids)
-        streamer = TextStreamer(self.tokenizer, skip_prompt=True, skip_special_tokens=True)
-        return key, video_tensor, input_ids, streamer, stopping_criteria
+        # streamer = TextStreamer(self.tokenizer, skip_prompt=True, skip_special_tokens=True)
+        return key, video_tensor, input_ids, stopping_criteria
     
     def process(self, batch) -> dict:
         df_batch_labels = self._generate_dict_from_schema()
         
         for data in batch:
-            key, video_tensor, input_ids, streamer, stopping_criteria = data
+            key, video_tensor, input_ids, stopping_criteria = data
             with torch.inference_mode():
                 output_ids = model.generate(
                     input_ids,
@@ -124,7 +125,6 @@ class VideoLLaVAFilter(VideoFilter):
                     do_sample=True if self.temperature > 0 else False,
                     temperature=self.temperature,
                     max_new_tokens=self.max_new_tokens,
-                    streamer=streamer,
                     use_cache=True,
                     stopping_criteria=[stopping_criteria])
             caption = self.tokenizer.decode(output_ids[0, input_ids.shape[1]:]).strip()
