@@ -30,7 +30,7 @@ class VideoLLaVAFilter(VideoFilter):
              model_base: str = None,
              cache_path: str = "cache_dir",
              conv_mode: str = "llava_v1",
-             prompt_templates: Optional[List[str]] = None,
+             prompt: str = "detailed_video",
              temperature: float = 0.2,
              max_new_tokens: int = 1024,
              load_4bit: bool = True,
@@ -42,14 +42,17 @@ class VideoLLaVAFilter(VideoFilter):
             ):
         super().__init__(pbar)
         
-        if prompt_templates is None:
-            prompt_templates = ["Describe this video in details"]
+        self.prompt_to_use = prompt
+        prompt_templates = {
+            'detailed_video': 'Describe this video in details.'
+            'short_video': 'Describe this video very shortly in 1-2 short sentences. Describe what is happening in this video.'
+        }
             
         self.num_workers = workers
         self.batch_size = batch_size
         self.device = device
         
-        self.user_prompt = prompt_templates
+        self.user_prompt = prompt_templates[self.prompt_to_use]
         self.temperature = temperature
         self.max_new_tokens = max_new_tokens
         
@@ -76,10 +79,7 @@ class VideoLLaVAFilter(VideoFilter):
         else:
             self.roles = self.conv.roles
             
-        self.schema = [
-            self.key_column,
-            "caption",
-        ]
+        self.schema = [self.key_column, f"caption {self.model_path} prompt {self.prompt_to_use}"]
             
         self.dataloader_kwargs = {
             "num_workers": self.num_workers,
@@ -98,9 +98,9 @@ class VideoLLaVAFilter(VideoFilter):
         
         if getattr(self.model.config, "mm_use_im_start_end", False):
             self.user_prompt = ''.join([DEFAULT_IM_START_TOKEN + i + DEFAULT_IM_END_TOKEN
-                                        for i in special_token]) + '\n' + self.user_prompt[0]
+                                        for i in special_token]) + '\n' + self.user_prompt
         else:
-            self.user_prompt = ''.join(special_token) + '\n' + self.user_prompt[0]
+            self.user_prompt = ''.join(special_token) + '\n' + self.user_prompt
         self.conv.append_message(self.conv.roles[0], self.user_prompt)
         self.conv.append_message(self.conv.roles[1], None)
         self.user_prompt = self.conv.get_prompt()
@@ -110,7 +110,6 @@ class VideoLLaVAFilter(VideoFilter):
         stop_str = self.conv.sep if self.conv.sep_style != SeparatorStyle.TWO else sef.conv.sep2
         keywords = [stop_str]
         stopping_criteria = KeywordsStoppingCriteria(keywords, self.tokenizer, input_ids)
-        # streamer = TextStreamer(self.tokenizer, skip_prompt=True, skip_special_tokens=True)
         return key, video_tensor, input_ids, stopping_criteria
     
     def process(self, batch) -> dict:
