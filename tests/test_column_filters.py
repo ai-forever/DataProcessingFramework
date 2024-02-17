@@ -1,7 +1,7 @@
 from DPF import DatasetReader
-from DPF.configs import ShardsDatasetConfig, ShardedFilesDatasetConfig, FilesDatasetConfig
+from DPF.configs import ShardsDatasetConfig, FilesDatasetConfig
 from DPF.filters.texts.regex_filter import RegexFilter
-from DPF.filters.texts.regexs import eng_regexs, special_regexs
+from DPF.filters.texts.regexs import ENG_REGEXS, SPECIAL_REGEXS
 from DPF.filters.texts.lang_filter import LangFilter
 
 
@@ -33,7 +33,7 @@ def test_shards_regex_filter():
 
     reader = DatasetReader()
     dataset = reader.from_config(config)
-    columnfilter = RegexFilter(eng_regexs+special_regexs, workers=1)
+    columnfilter = RegexFilter(ENG_REGEXS + SPECIAL_REGEXS, workers=1)
     dataset.apply_column_filter(columnfilter)
 
     assert 'clean_caption' in dataset.columns
@@ -68,7 +68,7 @@ def test_files_regex_filter():
 
     reader = DatasetReader()
     dataset = reader.from_config(config)
-    columnfilter = RegexFilter(eng_regexs + special_regexs, workers=1)
+    columnfilter = RegexFilter(ENG_REGEXS + SPECIAL_REGEXS, workers=1)
     dataset.apply_column_filter(columnfilter)
 
     assert 'clean_caption' in dataset.columns

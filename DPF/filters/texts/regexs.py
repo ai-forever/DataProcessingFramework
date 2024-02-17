@@ -1,5 +1,4 @@
-# TODO(review) - значения похожи на константы, константы лучше именовать капсом (RU_REGEXS, ENG_REGEXS и т.д)
-ru_regexs = [
+RU_REGEXS = [
     (r"&quot;?", ""),
     (r"\d*&#\d*;\d*", ""),
     (r"\.? купить за \d+ руб\.?", ""),
@@ -108,7 +107,7 @@ ru_regexs = [
     (r"[-№#]?\s?заказать", ""),
 ]
 
-eng_regexs = [
+ENG_REGEXS = [
     (r"\b\w*[\-|/]?\d+[\-|/]\w*\b", ""),
     (r"\b[\w]+\.ру", ""),
     (
@@ -217,7 +216,7 @@ eng_regexs = [
     (r"[\"']{2,}", ""),
 ]
 
-emoji_regexs = [
+EMOJI_REGEXS = [
     (
         "["
         "\U0001F600-\U0001F64F"
@@ -231,7 +230,7 @@ emoji_regexs = [
     )
 ]
 
-special_regexs = [
+SPECIAL_REGEXS = [
     (r"\n", " "),
     (r"\#\d+", " "),
     (r"\b\d{3,}[a-zA-z]+\d*\b", " "),
