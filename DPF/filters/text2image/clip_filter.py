@@ -1,8 +1,7 @@
-from typing import List, Dict, Union, Optional
+from typing import List, Dict, Union, Optional, Any
 import numpy as np
 import torch
 from torch.nn.utils.rnn import pad_sequence
-# TODO(review) - зависимость отсутствует в requirements.txt
 import clip
 
 from DPF.utils import read_image_rgb_from_bytes
@@ -65,8 +64,13 @@ class CLIPFilter(T2IFilter):
             clip_version, device=self.device, download_root=self.weights_folder
         )
 
-        self.schema = [self.key_column, f"clip_{self.clip_version}_similarity"]
-        self.dataloader_kwargs = {
+    @property
+    def schema(self) -> List[str]:
+        return [self.key_column, f"clip_{self.clip_version}_similarity"]
+
+    @property
+    def dataloader_kwargs(self) -> Dict[str, Any]:
+        return {
             "num_workers": self.num_workers,
             "batch_size": self.batch_size,
             "drop_last": False

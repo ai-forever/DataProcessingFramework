@@ -1,4 +1,5 @@
 import os
+from typing import List, Dict, Any
 from urllib.request import urlretrieve
 import zipfile
 import numpy as np
@@ -90,8 +91,13 @@ class NSFWFilter(ImageFilter):
             device=self.device.lower().replace("cuda", "gpu"),
         )
 
-        self.schema = ["image_path", "nsfw"]
-        self.dataloader_kwargs = {
+    @property
+    def schema(self) -> List[str]:
+        return ["image_path", "nsfw_score"]
+
+    @property
+    def dataloader_kwargs(self) -> Dict[str, Any]:
+        return {
             "num_workers": self.num_workers,
             "batch_size": self.batch_size,
             "preprocess_f": self.preprocess,
@@ -118,7 +124,7 @@ class NSFWFilter(ImageFilter):
             .reshape(-1)
             .tolist()
         )
-        df_batch_labels["nsfw"].extend(nsfw_values)
+        df_batch_labels["nsfw_score"].extend(nsfw_values)
         df_batch_labels["image_path"].extend(image_paths)
 
         return df_batch_labels

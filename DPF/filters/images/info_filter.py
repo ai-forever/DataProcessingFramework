@@ -1,12 +1,23 @@
-from typing import Dict, Union
+from typing import Dict, Union, List, Any, Optional
 from io import BytesIO
 from PIL import Image
 import numpy as np
+from dataclasses import dataclass
 
 from .img_filter import ImageFilter
 
 
-def get_image_info(img_bytes, data, key_column):
+@dataclass
+class ImageInfo:
+    key: str
+    is_correct: bool
+    width: int
+    height: int
+    channels: int
+    error: Optional[str]
+
+
+def get_image_info(img_bytes, data, key_column) -> ImageInfo:
     """
     Get image path, read status, width, height, num channels, read error
     """
@@ -32,7 +43,7 @@ def get_image_info(img_bytes, data, key_column):
         is_correct = False
         err_str = str(err)
 
-    return key, is_correct, width, height, channels, err_str
+    return ImageInfo(key, is_correct, width, height, channels, err_str)
 
 
 class ImageInfoFilter(ImageFilter):
@@ -45,32 +56,33 @@ class ImageInfoFilter(ImageFilter):
 
         self.num_workers = workers
 
-        self.schema = [
+    @property
+    def schema(self) -> List[str]:
+        return [
             self.key_column,
-            "is_correct",
-            "width",
-            "height",
-            "channels",
-            "error",
+            "is_correct", "width", "height",
+            "channels", "error",
         ]
-        self.dataloader_kwargs = {
+
+    @property
+    def dataloader_kwargs(self) -> Dict[str, Any]:
+        return {
             "num_workers": self.num_workers,
             "batch_size": 1,
             "drop_last": False,
         }
 
-    def preprocess(self, modality2data: Dict[str, Union[bytes, str]], metadata: dict):
+    def preprocess(self, modality2data: Dict[str, Union[bytes, str]], metadata: dict) -> ImageInfo:
         return get_image_info(modality2data['image'], metadata, self.key_column)
 
     def process_batch(self, batch) -> dict:
         df_batch_labels = self._generate_dict_from_schema()
 
-        for data in batch:
-            key, is_correct, width, height, channels, error = data
-            df_batch_labels[self.key_column].append(key)
-            df_batch_labels["is_correct"].append(is_correct)
-            df_batch_labels["width"].append(width)
-            df_batch_labels["height"].append(height)
-            df_batch_labels["channels"].append(channels)
-            df_batch_labels["error"].append(error)
+        for image_info in batch:
+            df_batch_labels[self.key_column].append(image_info.key)
+            df_batch_labels["is_correct"].append(image_info.is_correct)
+            df_batch_labels["width"].append(image_info.width)
+            df_batch_labels["height"].append(image_info.height)
+            df_batch_labels["channels"].append(image_info.channels)
+            df_batch_labels["error"].append(image_info.error)
         return df_batch_labels

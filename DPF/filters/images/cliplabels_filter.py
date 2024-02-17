@@ -1,4 +1,4 @@
-from typing import List, Optional, Dict, Union
+from typing import List, Optional, Dict, Union, Any
 import torch
 import clip
 
@@ -76,9 +76,14 @@ class CLIPLabelsFilter(ImageFilter):
         self.label2column = {
             l: f'{self.clip_version} clip score "{l}"' for l in self.labels
         }
-        self.schema = [self.key_column] + [self.label2column[l] for l in self.labels]
-        #
-        self.dataloader_kwargs = {
+
+    @property
+    def schema(self) -> List[str]:
+        return [self.key_column] + [self.label2column[l] for l in self.labels]
+
+    @property
+    def dataloader_kwargs(self) -> Dict[str, Any]:
+        return {
             "num_workers": self.num_workers,
             "batch_size": self.batch_size,
             "drop_last": False,

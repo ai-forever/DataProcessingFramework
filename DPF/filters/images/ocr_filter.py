@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List, Dict, Any
 import os
 import torch
 from torch import nn
@@ -82,9 +82,14 @@ class OCRFilter(ImageFilter):
         #
         self.text_box_col = "text_boxes"
         self.ocr_col = f"OCR_{self.model_name}"
-        
-        self.schema = ["image_path", self.ocr_col]
-        self.dataloader_kwargs = {
+
+    @property
+    def schema(self) -> List[str]:
+        return ["image_path", self.ocr_col]
+
+    @property
+    def dataloader_kwargs(self) -> Dict[str, Any]:
+        return {
             "num_workers": self.num_workers,
             "batch_size": self.batch_size,
             "preprocess_f": self.preprocess,

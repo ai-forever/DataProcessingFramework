@@ -1,4 +1,4 @@
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Any
 import os
 from urllib.request import urlretrieve
 import torch
@@ -74,8 +74,13 @@ class AestheticFilter(ImageFilter):
         self.aesthetic_model = get_aesthetic_model(clip_model, weights_folder)
         self.aesthetic_model.to(self.device)
 
-        self.schema = [self.key_column, "aesthetic_score"]
-        self.dataloader_kwargs = {
+    @property
+    def schema(self) -> List[str]:
+        return [self.key_column, "aesthetic_score"]
+
+    @property
+    def dataloader_kwargs(self) -> Dict[str, Any]:
+        return {
             "num_workers": self.num_workers,
             "batch_size": self.batch_size,
             "drop_last": False,

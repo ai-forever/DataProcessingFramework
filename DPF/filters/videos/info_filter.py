@@ -1,4 +1,4 @@
-from typing import Dict, Union, List
+from typing import Dict, Union, List, Any, Optional
 import imageio.v3 as iio
 import io
 from dataclasses import dataclass
@@ -14,7 +14,7 @@ class VideoInfo:
     height: int
     fps: float
     duration: float
-    error: str
+    error: Optional[str]
 
 
 def get_video_info(video_bytes, data, key_column) -> VideoInfo:
@@ -47,25 +47,24 @@ class VideoInfoFilter(VideoFilter):
 
     def __init__(self, workers: int = 16, pbar: bool = True):
         super().__init__(pbar)
-
         self.num_workers = workers
 
-        self.schema = [
-            self.key_column,
-            "is_correct",
-            "error",
-            "width",
-            "height",
-            "fps",
-            "duration"
+    @property
+    def schema(self) -> List[str]:
+        return [
+            self.key_column, "is_correct", "error",
+            "width", "height", "fps", "duration"
         ]
-        self.dataloader_kwargs = {
+
+    @property
+    def dataloader_kwargs(self) -> Dict[str, Any]:
+        return {
             "num_workers": self.num_workers,
             "batch_size": 1,
             "drop_last": False,
         }
 
-    def preprocess(self, modality2data: Dict[str, Union[bytes, str]], metadata: dict):
+    def preprocess(self, modality2data: Dict[str, Union[bytes, str]], metadata: dict) -> VideoInfo:
         return get_video_info(modality2data['video'], metadata, self.key_column)
 
     def process_batch(self, batch) -> dict:

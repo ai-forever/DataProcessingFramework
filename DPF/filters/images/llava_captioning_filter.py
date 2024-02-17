@@ -1,4 +1,4 @@
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Any
 
 from transformers import AutoTokenizer, BitsAndBytesConfig
 from llava.model import LlavaLlamaForCausalLM
@@ -75,10 +75,15 @@ class LLaVaCaptioningFilter(ImageFilter):
         keywords = [stop_str]
         self.stopping_criteria = KeywordsStoppingCriteria(keywords, self.tokenizer, self.input_ids)
 
-        self.schema = [self.key_column, f"caption {self.model_path} prompt {self.prompt_to_use}"]
-        self.dataloader_kwargs = {
+    @property
+    def schema(self) -> List[str]:
+        return [self.key_column, f"caption {self.model_path} prompt {self.prompt_to_use}"]
+
+    @property
+    def dataloader_kwargs(self) -> Dict[str, Any]:
+        return {
             "num_workers": self.num_workers,
-            "batch_size": batch_size,
+            "batch_size": self.batch_size,
             "drop_last": False,
         }
 

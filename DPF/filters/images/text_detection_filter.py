@@ -1,4 +1,4 @@
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Any
 import numpy as np
 
 try:
@@ -31,8 +31,13 @@ class CRAFTFilter(ImageFilter):
         self.weights_folder = weights_folder
         self.model = CRAFTModel(weights_folder, device, use_refiner=False, fp16=True)
 
-        self.schema = [self.key_column, f"text_boxes", "num_text_boxes", "text_area"]
-        self.dataloader_kwargs = {
+    @property
+    def schema(self) -> List[str]:
+        return [self.key_column, f"text_boxes", "num_text_boxes", "text_area"]
+
+    @property
+    def dataloader_kwargs(self) -> Dict[str, Any]:
+        return {
             "num_workers": self.num_workers,
             "batch_size": self.batch_size,
             "drop_last": False,

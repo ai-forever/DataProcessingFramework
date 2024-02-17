@@ -11,15 +11,6 @@ class VideoFilter(DataFilter, ABC):
     Abstract class for all image filters.
     """
 
-    # TODO(review) - дубль инициализации, она повторяет инициализацию класса-родителя
-    def __init__(self, pbar: bool):
-        super().__init__(pbar)
-
-        self.pbar = pbar
-
-        self.schema = []  # fill with your columns
-        self.dataloader_kwargs = {}  # Insert your params
-
     @property
     def modalities(self) -> List[str]:
         return ['video']

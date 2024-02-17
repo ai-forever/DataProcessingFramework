@@ -12,13 +12,21 @@ class DataFilter(ABC):
     Abstract class for all filters that use datalaaders.
     """
 
-    # TODO(review) - параметры schema и dataloader_kwargs выглядят как обязательные, но отсутствуют в сигнатуре инициализатора, добавить как обязательные параметры
     def __init__(self, pbar: bool):
         super().__init__()
         self.pbar = pbar
 
-        self.schema = []
-        self.dataloader_kwargs = {}  # Insert your params
+    @property
+    @abstractmethod
+    def schema(self) -> List[str]:
+        """List of result columns that filter adds to a DataFrame"""
+        pass
+
+    @property
+    @abstractmethod
+    def dataloader_kwargs(self) -> Dict[str, Any]:
+        """Parameters for dataloader"""
+        pass
 
     @property
     @abstractmethod

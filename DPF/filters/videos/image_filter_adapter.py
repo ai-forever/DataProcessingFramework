@@ -1,4 +1,4 @@
-from typing import Dict, Union, List
+from typing import Dict, Union, List, Any
 import imageio.v3 as iio
 import io
 from PIL import Image
@@ -24,11 +24,16 @@ class ImageFilterAdapter(VideoFilter):
         self.video_frame = video_frame
         self.num_workers = workers
 
-        self.schema = [
+    @property
+    def schema(self) -> List[str]:
+        return [
             self.key_column,
             *self.image_filter.schema[1:]
         ]
-        self.dataloader_kwargs = {
+
+    @property
+    def dataloader_kwargs(self) -> Dict[str, Any]:
+        return {
             "num_workers": self.num_workers,
             "batch_size": 1,
             "drop_last": False,

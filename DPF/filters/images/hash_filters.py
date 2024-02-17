@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Union
+from typing import Optional, Dict, Union, List, Any
 import hashlib
 from PIL import Image
 import numpy as np
@@ -41,8 +41,13 @@ class PHashFilter(ImageFilter):
         self.num_workers = workers
         self.sim_hash_size = sim_hash_size
 
-        self.schema = [self.key_column, f"image_phash_{self.sim_hash_size}"]
-        self.dataloader_kwargs = {
+    @property
+    def schema(self) -> List[str]:
+        return [self.key_column, f"image_phash_{self.sim_hash_size}"]
+
+    @property
+    def dataloader_kwargs(self) -> Dict[str, Any]:
+        return {
             "num_workers": self.num_workers,
             "batch_size": 1,
             "drop_last": False,

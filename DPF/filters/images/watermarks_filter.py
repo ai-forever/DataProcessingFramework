@@ -1,4 +1,4 @@
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Any
 import os
 import torch
 from torch import nn
@@ -112,8 +112,13 @@ class WatermarksFilter(ImageFilter):
             ]
         )
 
-        self.schema = [self.key_column, f"watermark_{self.watermarks_model}"]
-        self.dataloader_kwargs = {
+    @property
+    def schema(self) -> List[str]:
+        return [self.key_column, f"watermark_{self.watermarks_model}"]
+
+    @property
+    def dataloader_kwargs(self) -> Dict[str, Any]:
+        return {
             "num_workers": self.num_workers,
             "batch_size": self.batch_size,
             "drop_last": False,
