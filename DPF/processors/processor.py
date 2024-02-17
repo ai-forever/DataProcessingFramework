@@ -189,7 +189,10 @@ class DatasetProcessor(ABC):
             assert len(filter_res) == len(self._df), \
                 f"Length of resulted dataframe changed after filtering. Old length = {len(self._df)}, new = {len(filter_res)}"
 
-        self._df[column_filter.schema] = filter_res
+        if len(column_filter.schema) == 1:
+            self._df[column_filter.schema[0]] = filter_res
+        else:
+            self._df[column_filter.schema] = filter_res
 
     @abstractmethod
     def validate(
