@@ -8,7 +8,7 @@ from tqdm import tqdm
 from DPF.filesystems import FileSystem, LocalFileSystem
 from DPF.filters import DataFilter, ColumnFilter
 from DPF.processors.writers import ABSWriter, ShardedFilesWriter, ShardsWriter
-from DPF.dataloaders.dataloader_utils import default_preprocess, identical_collate_fn
+from DPF.dataloaders.dataloader_utils import identical_preprocess_function, identical_collate_fn
 from DPF.datatypes import ColumnDataType
 from DPF.modalities import MODALITIES
 from DPF.configs import DatasetConfig, config2format
@@ -135,7 +135,7 @@ class DatasetProcessor(ABC):
     self,
     modalities: List[str],
     meta_columns: Optional[List[str]] = None,
-    preprocess_f: Callable[[dict, dict], Any] = default_preprocess,
+    preprocess_f: Callable[[dict, dict], Any] = identical_preprocess_function,
     return_none_on_error: bool = False
     ) -> Dataset:
         pass
@@ -279,7 +279,7 @@ class DatasetProcessor(ABC):
 
         dataset = self.get_torch_dataset(
             list(self.config.modality2datatype.keys()),
-            preprocess_f=default_preprocess,
+            preprocess_f=identical_preprocess_function,
             meta_columns=meta_columns
         )
         dataloader = DataLoader(dataset, **new_dataloader_kwargs)

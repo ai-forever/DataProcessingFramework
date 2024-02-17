@@ -55,7 +55,6 @@ class FileSystem(ABC):
         """
         pass
 
-
     @abstractmethod
     def save_file(
         self, data: Union[str, bytes, io.BytesIO], filepath: str, binary: bool
@@ -170,7 +169,7 @@ class FileSystem(ABC):
         folder_path: str
             Path to folder
         ext: str
-            extinsion of files
+            Extension of files
         filenames_only: bool = False
             Returns only filenames if True
 
@@ -202,6 +201,7 @@ class FileSystem(ABC):
         List[FileData]
             List of FileData objects
         """
+        pass
 
     # TODO(review) - метод с постоянным поведением, реализация должна быть одна, единственная и здесь
     @abstractmethod
@@ -214,6 +214,7 @@ class FileSystem(ABC):
         folder_path: str
             Path to folder to create
         """
+        pass
 
     @abstractmethod
     def walk(self, folder_path: str) -> Iterable[Tuple[str, List[str], List[str]]]:
@@ -228,8 +229,9 @@ class FileSystem(ABC):
         Returns
         -------
         Iterable[Tuple[str, List[str], List[str]]]
-            Iterable of tuples with 3 elements: root, dirs, files
+            Iterable oТf tuples with 3 elements: root, dirs, files
         """
+        pass
 
     @abstractmethod
     def join(self, *args) -> str:
@@ -246,3 +248,4 @@ class FileSystem(ABC):
         str
             Joined full path
         """
+        pass

@@ -10,7 +10,7 @@ from DPF.processors.helpers import DataFramesChanger
 from DPF.filters.data_filter import DataFilter
 from DPF.processors.writers import ABSWriter
 from .processor import DatasetProcessor
-from DPF.dataloaders import default_preprocess, FilesDataset
+from DPF.dataloaders import identical_preprocess_function, FilesDataset
 from DPF.validators.format_validators import FilesValidator, FilesValidationResult
 
 
@@ -103,7 +103,7 @@ class FilesDatasetProcessor(DatasetProcessor):
         self,
         modalities: List[str],
         meta_columns: Optional[List[str]] = None,
-        preprocess_f: Callable[[dict, dict], Any] = default_preprocess,
+        preprocess_f: Callable[[dict, dict], Any] = identical_preprocess_function,
         return_none_on_error: bool = False
     ) -> FilesDataset:
         assert len(set(modalities)) == len(list(modalities))

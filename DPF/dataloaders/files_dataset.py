@@ -3,7 +3,7 @@ import pandas as pd
 from torch.utils.data import Dataset
 
 from DPF.filesystems.filesystem import FileSystem
-from DPF.dataloaders.dataloader_utils import default_preprocess
+from DPF.dataloaders.dataloader_utils import identical_preprocess_function
 from DPF.datatypes import ShardedDataType, ColumnDataType, FileDataType
 
 
@@ -18,7 +18,7 @@ class FilesDataset(Dataset):
         df: pd.DataFrame,
         datatypes: List[Union[ShardedDataType, FileDataType, ColumnDataType]],
         meta_columns: Optional[List[str]] = None,
-        preprocess_function: Callable[[Dict[str, bytes], Dict[str, str]], Any] = default_preprocess,
+        preprocess_function: Callable[[Dict[str, bytes], Dict[str, str]], Any] = identical_preprocess_function,
         # TODO(review) - на ошибке надо выбрасывать ошибку, а не возвращать None, и в дальнейшем эту ошибку обрабатывать прикладом, использующим этот класс
         return_none_on_error: bool = False
     ):
@@ -39,8 +39,6 @@ class FilesDataset(Dataset):
         return_none_on_error: bool = False
             Whether to return None if error during reading file occures
         """
-        # TODO(review) - непонятно, зачем здесь используется свой собственный инициализатор. super().__init__(**params) для класса, от которого наследуемся - можно понять.
-        super(FilesDataset).__init__()
         self.filesystem = filesystem
 
         self.datatypes = datatypes

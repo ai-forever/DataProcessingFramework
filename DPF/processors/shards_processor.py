@@ -5,7 +5,7 @@ import pandas as pd
 
 from DPF.filesystems import FileSystem
 from DPF.configs import DatasetConfig, ShardedDatasetConfig
-from DPF.dataloaders import ShardsDataset, default_preprocess
+from DPF.dataloaders import ShardsDataset, identical_preprocess_function
 from DPF.datatypes import ColumnDataType, ShardedDataType
 from .sharded_processor import ShardedDatasetProcessor
 from DPF.validators.format_validators import ShardedValidationResult, ShardsValidator
@@ -49,7 +49,7 @@ class ShardsDatasetProcessor(ShardedDatasetProcessor):
         self,
         modalities: List[str],
         meta_columns: Optional[List[str]] = None,
-        preprocess_f: Callable[[dict, dict], Any] = default_preprocess,
+        preprocess_f: Callable[[dict, dict], Any] = identical_preprocess_function,
         return_none_on_error: bool = False
     ) -> ShardsDataset:
         assert len(set(modalities)) == len(list(modalities))

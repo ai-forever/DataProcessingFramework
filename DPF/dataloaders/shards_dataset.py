@@ -7,7 +7,7 @@ import torch
 from torch.utils.data import IterableDataset
 
 from DPF.filesystems.filesystem import FileSystem
-from DPF.dataloaders.dataloader_utils import default_preprocess
+from DPF.dataloaders.dataloader_utils import identical_preprocess_function
 from DPF.datatypes import ShardedDataType, ColumnDataType
 
 
@@ -23,7 +23,7 @@ class ShardsDataset(IterableDataset):
         split2archive_path: Dict[str, str],
         datatypes: List[Union[ShardedDataType, ColumnDataType]],
         meta_columns: Optional[List[str]] = None,
-        preprocess_function: Callable[[Dict[str, bytes], Dict[str, str]], Any] = default_preprocess,
+        preprocess_function: Callable[[Dict[str, bytes], Dict[str, str]], Any] = identical_preprocess_function,
         return_none_on_error: bool = False
     ):
         """
