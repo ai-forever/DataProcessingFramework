@@ -1,7 +1,5 @@
-import os
 from DPF import DatasetReader
 from DPF.configs import ShardsDatasetConfig, ShardedFilesDatasetConfig, FilesDatasetConfig
-from DPF.processors import ShardsDatasetProcessor, ShardedFilesDatasetProcessor, FilesDatasetProcessor
 from DPF.filters.images.info_filter import ImageInfoFilter
 from DPF.filters.images.hash_filters import PHashFilter
 
