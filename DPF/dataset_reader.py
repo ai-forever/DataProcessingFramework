@@ -301,12 +301,13 @@ class DatasetReader:
         for k, v in config.columns_mapping.items():
             if k != v:
                 column_mapping[k] = v
+
         if len(column_mapping) > 0:
             df.rename(columns=column_mapping, inplace=True)
 
         for datatype in config.datatypes:
             if isinstance(datatype, FileDataType):
-                path_col = datatype.user_path_column_name
+                path_col = datatype.modality.path_column
                 df[path_col] = df[path_col].apply(lambda x: self.filesystem.join(config.base_path, x))
 
         return FilesDatasetProcessor(
