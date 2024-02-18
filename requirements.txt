@@ -1,5 +1,6 @@
 torch
 numpy
+scipy
 pillow
 tqdm
 pandas
