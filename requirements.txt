@@ -10,3 +10,4 @@ py3langid
 huggingface_hub
 imageio
 imageio[pyav]
+deep_translator
