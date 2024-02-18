@@ -29,7 +29,10 @@ class RegexFilter(ColumnFilter):
         if regex_replacement_list is None:
             regex_replacement_list = []
         self.compiled_regexs = []
-        self.compile_regexs(regex_replacement_list)
+
+        # compiling regexs
+        for regex, replacement in regex_replacement_list:
+            self.add_regex(regex, replacement)
 
         self.text_column_name = text_column_name
 
@@ -43,10 +46,6 @@ class RegexFilter(ColumnFilter):
 
     def add_regex(self, regex, replacement):
         self.compiled_regexs.append((re.compile(regex), replacement))
-
-    def compile_regexs(self, regex_replacement_list):
-        for regex, replacement in regex_replacement_list:
-            self.add_regex(regex, replacement)
 
     def process(self, row: dict) -> tuple:
         caption = row[self.text_column_name]
