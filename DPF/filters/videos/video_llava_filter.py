@@ -24,27 +24,27 @@ class VideoLLaVAFilter(VideoFilter):
     Video-LLaVA inference class to get captions for auto-labeling videos.
     More info about the model here: https://github.com/PKU-YuanGroup/Video-LLaVA
     """ 
-    def init(self,
-             model_name: str = "Video-LLaVA-7B",
-             weights_path: str = None, 
-             model_base: str = None,
-             cache_path: str = "cache_dir",
-             conv_mode: str = "llava_v1",
-             prompt: str = "detailed_video",
-             temperature: float = 0.2,
-             max_new_tokens: int = 1024,
-             load_4bit: bool = True,
-             load_8bit: bool = False,
-             device: str = "cuda:0",
-             workers: int = 16,
-             batch_size: int = 64,
-             pbar: bool = True,
-            ):
+    def init(
+        self,
+        model_name: str = "Video-LLaVA-7B",
+        weights_path: str = None,
+        model_base: str = None,
+        cache_path: str = "cache_dir",
+        prompt: str = "detailed_video",
+        temperature: float = 0.2,
+        max_new_tokens: int = 1024,
+        load_4bit: bool = True,
+        load_8bit: bool = False,
+        device: str = "cuda:0",
+        workers: int = 16,
+        batch_size: int = 64,
+        pbar: bool = True,
+    ):
         super().__init__(pbar)
         
         self.prompt_to_use = prompt
         prompt_templates = {
-            'detailed_video': 'Describe this video in details.'
+            'detailed_video': 'Describe this video in details.',
             'short_video': 'Describe this video very shortly in 1-2 short sentences. Describe what is happening in this video.'
         }
             
@@ -91,8 +91,7 @@ class VideoLLaVAFilter(VideoFilter):
         key = metadata[self.key_column]
         video_tensor, special_token = [], []
         video_file = [modality2data['video']]
-        video_file = video_processor(video_file, return_tensors='pt')['pixel_values'][0].to(self.model.device,
-                                                                                            dtype=torch.float16)
+        video_file = self.video_processor(video_file, return_tensors='pt')['pixel_values'][0].to(self.model.device, dtype=torch.float16)
         special_token += [DEFAULT_IMAGE_TOKEN] * self.model.get_video_tower().config.num_frames
         video_tensor.append(video_file)
         
@@ -105,9 +104,10 @@ class VideoLLaVAFilter(VideoFilter):
         self.conv.append_message(self.conv.roles[1], None)
         self.user_prompt = self.conv.get_prompt()
         
-        input_ids = tokenizer_image_token(self.user_prompt, self.tokenizer,
-                                          IMAGE_TOKEN_INDEX, return_tensors='pt').unsqueeze(0).to(self.model.device)
-        stop_str = self.conv.sep if self.conv.sep_style != SeparatorStyle.TWO else sef.conv.sep2
+        input_ids = tokenizer_image_token(
+            self.user_prompt, self.tokenizer, IMAGE_TOKEN_INDEX, return_tensors='pt'
+        ).unsqueeze(0).to(self.model.device)
+        stop_str = self.conv.sep if self.conv.sep_style != SeparatorStyle.TWO else self.conv.sep2
         keywords = [stop_str]
         stopping_criteria = KeywordsStoppingCriteria(keywords, self.tokenizer, input_ids)
         return key, video_tensor, input_ids, stopping_criteria
@@ -118,7 +118,7 @@ class VideoLLaVAFilter(VideoFilter):
         for data in batch:
             key, video_tensor, input_ids, stopping_criteria = data
             with torch.inference_mode():
-                output_ids = model.generate(
+                output_ids = self.model.generate(
                     input_ids,
                     images=video_tensor,  # video as fake images
                     do_sample=True if self.temperature > 0 else False,
