@@ -71,7 +71,6 @@ class GunnarFarnebackFilter(VideoFilter):
                 
                 df_batch_labels[self.key_column].append(key)
                 df_batch_labels['mean_optical_flow_farneback'].append(round(mean_optical_flow, 3))
-        print(df_batch_labels)
         return df_batch_labels
          
             
