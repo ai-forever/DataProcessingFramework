@@ -1,5 +1,7 @@
 from typing import List, Optional, Dict, Union
+from io import BytesIO
 import torch
+
 from videollava.constants import DEFAULT_IMAGE_TOKEN, IMAGE_TOKEN_INDEX
 from videollava.conversation import SeparatorStyle, conv_templates
 from videollava.mm_utils import (KeywordsStoppingCriteria,
@@ -24,10 +26,10 @@ class VideoLLaVAFilter(VideoFilter):
     Video-LLaVA inference class to get captions for auto-labeling videos.
     More info about the model here: https://github.com/PKU-YuanGroup/Video-LLaVA
     """ 
-    def init(
+    def __init__(
         self,
+        model_path: str = "LanguageBind/Video-LLaVA-7B",
         model_name: str = "Video-LLaVA-7B",
-        weights_path: str = None,
         model_base: str = None,
         cache_path: str = "cache_dir",
         prompt: str = "detailed_video",
@@ -58,11 +60,12 @@ class VideoLLaVAFilter(VideoFilter):
         
         disable_torch_init()
         
-        pretrainers = load_pretrained_model(weights_path, model_base, model_name,
+        pretrainers = load_pretrained_model(model_path, model_base, model_name,
                                             load_8bit, load_4bit,
                                             device=self.device, cache_dir=cache_path)
         self.tokenizer, self.model, self.processor, self.context_len = pretrainers
         self.video_processor = self.processor['video']
+        
         
         if 'llama-2' in model_name.lower():
             conv_mode = "llava_llama_2"
@@ -79,7 +82,7 @@ class VideoLLaVAFilter(VideoFilter):
         else:
             self.roles = self.conv.roles
             
-        self.schema = [self.key_column, f"caption {self.model_path} prompt {self.prompt_to_use}"]
+        self.schema = [self.key_column, f"caption {model_name} prompt {self.prompt_to_use}"]
             
         self.dataloader_kwargs = {
             "num_workers": self.num_workers,
@@ -90,8 +93,8 @@ class VideoLLaVAFilter(VideoFilter):
     def preprocess(self, modality2data: Dict[str, Union[bytes, str]], metadata: dict):
         key = metadata[self.key_column]
         video_tensor, special_token = [], []
-        video_file = [modality2data['video']]
-        video_file = self.video_processor(video_file, return_tensors='pt')['pixel_values'][0].to(self.model.device, dtype=torch.float16)
+        video_file = BytesIO(modality2data['video'])
+        video_file = self.video_processor(video_file, return_tensors='pt')['pixel_values'][0]
         special_token += [DEFAULT_IMAGE_TOKEN] * self.model.get_video_tower().config.num_frames
         video_tensor.append(video_file)
         
@@ -106,13 +109,13 @@ class VideoLLaVAFilter(VideoFilter):
         
         input_ids = tokenizer_image_token(
             self.user_prompt, self.tokenizer, IMAGE_TOKEN_INDEX, return_tensors='pt'
-        ).unsqueeze(0).to(self.model.device)
+        ).unsqueeze(0)
         stop_str = self.conv.sep if self.conv.sep_style != SeparatorStyle.TWO else self.conv.sep2
         keywords = [stop_str]
         stopping_criteria = KeywordsStoppingCriteria(keywords, self.tokenizer, input_ids)
         return key, video_tensor, input_ids, stopping_criteria
     
-    def process(self, batch) -> dict:
+    def process_batch(self, batch) -> dict:
         df_batch_labels = self._generate_dict_from_schema()
         
         for data in batch:
