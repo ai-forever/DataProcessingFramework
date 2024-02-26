@@ -56,7 +56,7 @@ class RAFTOpticalFlowFilter(VideoFilter):
         
         self.schema = [
             self.key_column,
-            "mean_optical_flow"
+            "mean_optical_flow_raft"
         ]
             
         self.dataloader_kwargs = {
@@ -81,17 +81,23 @@ class RAFTOpticalFlowFilter(VideoFilter):
     def process(self, batch) -> dict:
         df_batch_labels = self._generate_dict_from_schema()
         
-        key, frames = list(zip(batch*))
         optical_flows = []
         with torch.no_grad():
-            for current_frame, next_frame in zip(frames[:-1], frames[1:]):
-                current_frame = self.load_image(current_frame)
-                next_frame = self.load_image(next_frame)
+            for data in batch:
+                key, frames = data
+                for current_frame, next_frame in zip(frames[:-1], frames[1:]):
+                    current_frame = self.load_image(current_frame)
+                    next_frame = self.load_image(next_frame)
 
-                padder = InputPadder(current_frame.shape)
-                current_frame, next_frame = padder.pad(current_frame, next_frame)
+                    padder = InputPadder(current_frame.shape)
+                    current_frame, next_frame = padder.pad(current_frame, next_frame)
 
-                flow_low, flow_up = self.model(current_frame, next_frame, iters=20, test_mode=True)
-                optical_flows.append(flow_up)
-        mean_optical_flow = np.mean(optical_flows)
+                    flow_low, flow_up = self.model(current_frame, next_frame, iters=20, test_mode=True)
+                    optical_flows.append(flow_up)
+                mean_optical_flow = np.mean(optical_flows)
+                
+                df_batch_labels[self.key_column].append(key)
+                df_batch_labels['mean_optical_flow_raft'].append(mean_optical_flow)
+        return df_batch_labels
+         
             
