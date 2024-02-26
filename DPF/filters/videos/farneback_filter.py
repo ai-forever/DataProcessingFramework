@@ -9,12 +9,13 @@ from .video_filter import VideoFilter
 
 
 class GunnarFarnebackFilter(VideoFilter):
-    """ 
-    RAFT model inference class to get mean optical flow each video.
+    """
+    Gunnar-Farneback filter inference class to get mean optical flow each video.
         The video's current and next frame are used for optical flow calculation between them. 
         After, the mean value of optical flow for the entire video is calculated on the array of optical flow between two frames.
-    More info about the model here: https://github.com/princeton-vl/RAFT
-    """ 
+    More info about the model here: https://docs.opencv.org/4.x/d4/dee/tutorial_optical_flow.html
+    """
+    
     def __init__(self,
              workers: int = 16,
              batch_size: int = 1,
@@ -23,6 +24,14 @@ class GunnarFarnebackFilter(VideoFilter):
         
         self.num_workers = workers
         self.batch_size = batch_size
+        
+        self.pyramid_scale = 0.5  # parameter, specifying the image scale (<1) to build pyramids for each image
+        self.levels = 3  # number of pyramid layers including the initial image
+        self.win_size = 15   # averaging window size
+        self.iterations = 3  # number of iterations the algorithm does at each pyramid level
+        self.size_poly_exp = 5  # size of the pixel neighborhood used to find polynomial expansion in each pixel
+        self.poly_sigma = 1.2  # std of the Gaussian that is used to smooth derivatives used as a basis for the polynomial expansion
+        self.flags = 0  # operation flags that can be a combination of OPTFLOW_USE_INITIAL_FLOW and/or OPTFLOW_FARNEBACK_GAUSSIAN
         
         self.schema = [
             self.key_column,
@@ -63,8 +72,16 @@ class GunnarFarnebackFilter(VideoFilter):
                 for current_frame, next_frame in zip(frames[:-1], frames[1:]):
                     current_frame = self.load_image(current_frame)
                     next_frame = self.load_image(next_frame)
-
-                    flow = cv2.calcOpticalFlowFarneback(current_frame, next_frame, None, 0.5, 3, 15, 3, 5, 1.2, 0)
+                    flow = cv2.calcOpticalFlowFarneback(current_frame,
+                                                        next_frame,
+                                                        None,
+                                                        self.pyramid_scale,
+                                                        self.levels,
+                                                        self.win_size,
+                                                        self.iterations,
+                                                        self.size_poly_exp,
+                                                        self.poly_sigma,
+                                                        self.flags)
                     mag, ang = cv2.cartToPolar(flow[..., 0], flow[..., 1])
                     mags.append(mag)
                 mean_optical_flow = np.mean(mags)
