@@ -14,10 +14,34 @@ class GunnarFarnebackFilter(VideoFilter):
         The video's current and next frame are used for optical flow calculation between them. 
         After, the mean value of optical flow for the entire video is calculated on the array of optical flow between two frames.
     More info about the model here: https://docs.opencv.org/4.x/d4/dee/tutorial_optical_flow.html
+    
+    Parameters
+    ----------
+    pyramid_scale: float
+        Parameter, specifying the image scale (<1) to build pyramids for each image
+    levels: int
+        Number of pyramid layers including the initial image
+    win_size: int
+        Averaging window size
+    iterations: int
+        Number of iterations the algorithm does at each pyramid level
+    size_poly_exp: int
+        Size of the pixel neighborhood used to find polynomial expansion in each pixel
+    poly_sigma: float
+        Std of the Gaussian that is used to smooth derivatives used as a basis for the polynomial expansion
+    flags: int 
+        Operation flags that can be a combination of OPTFLOW_USE_INITIAL_FLOW and/or OPTFLOW_FARNEBACK_GAUSSIAN
     """
     
     def __init__(self,
+             pyramid_scale: float = 0.5,
+             levels: int = 3,
+             win_size: int = 15,
+             iterations: int = 3,
+             size_poly_exp: int = 5,
+             poly_sigma: float = 1.2,
              workers: int = 16,
+             flags: int = 0,
              batch_size: int = 1,
              pbar: bool = True,):
         super().__init__(pbar)
@@ -25,13 +49,13 @@ class GunnarFarnebackFilter(VideoFilter):
         self.num_workers = workers
         self.batch_size = batch_size
         
-        self.pyramid_scale = 0.5  # parameter, specifying the image scale (<1) to build pyramids for each image
-        self.levels = 3  # number of pyramid layers including the initial image
-        self.win_size = 15   # averaging window size
-        self.iterations = 3  # number of iterations the algorithm does at each pyramid level
-        self.size_poly_exp = 5  # size of the pixel neighborhood used to find polynomial expansion in each pixel
-        self.poly_sigma = 1.2  # std of the Gaussian that is used to smooth derivatives used as a basis for the polynomial expansion
-        self.flags = 0  # operation flags that can be a combination of OPTFLOW_USE_INITIAL_FLOW and/or OPTFLOW_FARNEBACK_GAUSSIAN
+        self.pyramid_scale = pyramid_scale  
+        self.levels = levels  
+        self.win_size = win_size  
+        self.iterations = iterations 
+        self.size_poly_exp = size_poly_exp 
+        self.poly_sigma = poly_sigma  
+        self.flags = flags  
         
         self.schema = [
             self.key_column,
