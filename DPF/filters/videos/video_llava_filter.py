@@ -45,7 +45,7 @@ class VideoLLaVAFilter(VideoFilter):
         load_8bit: bool = False,
         device: str = "cuda:0",
         workers: int = 16,
-        batch_size: int = 4,
+        batch_size: int = 8,
         pbar: bool = True,
     ):
         super().__init__(pbar)
@@ -75,8 +75,8 @@ class VideoLLaVAFilter(VideoFilter):
         self.conv_mode = "llava_v1"
         self.conv = conv_templates[self.conv_mode].copy()
         
-        self.inp = ' '.join([DEFAULT_IMAGE_TOKEN] * self.model.get_video_tower().config.num_frames) + '\n' + self.inp
-        self.conv.append_message(self.conv.roles[0], self.inp)
+        inp = ' '.join([DEFAULT_IMAGE_TOKEN] * self.model.get_video_tower().config.num_frames) + '\n' + self.inp
+        self.conv.append_message(self.conv.roles[0], inp)
         self.conv.append_message(self.conv.roles[1], None)
         prompt = self.conv.get_prompt()
         self.input_ids = tokenizer_image_token(prompt, 
@@ -86,6 +86,7 @@ class VideoLLaVAFilter(VideoFilter):
         stop_str = self.conv.sep if self.conv.sep_style != SeparatorStyle.TWO else self.conv.sep2
         keywords = [stop_str]
         self.stopping_criteria = KeywordsStoppingCriteria(keywords, self.tokenizer, self.input_ids)
+        
             
         self.schema = [self.key_column, f"caption {model_name} prompt {self.prompt_to_use}"]
             
@@ -98,7 +99,7 @@ class VideoLLaVAFilter(VideoFilter):
     def preprocess(self, modality2data: Dict[str, Union[bytes, str]], metadata: dict):
         key = metadata[self.key_column]
         video_file = BytesIO(modality2data['video'])
-        video_file = self.video_processor(video_file, return_tensors='pt')['pixel_values'].half()
+        video_file = self.video_processor(video_file, return_tensors='pt')['pixel_values'][0].half()
         return key, video_file
     
     def process_batch(self, batch) -> dict:
@@ -108,7 +109,6 @@ class VideoLLaVAFilter(VideoFilter):
         video_tensors = default_collate(video_tensors).to(self.device)
         
         input_ids_batch = self.input_ids.repeat_interleave(video_tensors.shape[0], 0).to(self.device)
-        
         with torch.inference_mode():
             output_ids = self.model.generate(
                 input_ids_batch,
