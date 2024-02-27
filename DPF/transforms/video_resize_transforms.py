@@ -23,10 +23,10 @@ class VideoResizeTransforms(BaseFilesTransforms):
         resizer: Resizer,
         ffmpeg_preset: str = 'fast',
         pool_type: str = 'processes',
-        max_workers: int = 16,
+        workers: int = 16,
         pbar: bool = True
     ):
-        super().__init__(pool_type, max_workers, pbar)
+        super().__init__(pool_type, workers, pbar)
         self.resizer = resizer
         self.ffmpeg_preset = ffmpeg_preset
 

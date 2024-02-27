@@ -15,12 +15,12 @@ class BaseFilesTransforms(ABC):
     def __init__(
         self,
         pool_type: str = 'processes',
-        max_workers: int = 16,
+        workers: int = 16,
         pbar: bool = True
     ):
         assert pool_type in ['processes', 'threads']
         self.pool_type = pool_type
-        self.max_workers = max_workers
+        self.max_workers = workers
         self.pbar = pbar
 
     @property
