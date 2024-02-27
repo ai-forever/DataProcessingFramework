@@ -1,12 +1,15 @@
-from typing import Dict, Union, List
-import imageio.v3 as iio
 import io
-import numpy as np
-import cv2
+from typing import Dict, List, Union
 
+import cv2
+import imageio.v3 as iio
+import numpy as np
 import torch
-from .video_filter import VideoFilter
+import torch.nn.functional as F
+from scipy import interpolate
+
 from .raft_core.model import RAFT
+from .video_filter import VideoFilter
 
 
 class InputPadder:
@@ -37,14 +40,22 @@ class RAFTOpticalFlowFilter(VideoFilter):
         The video's current and next frame are used for optical flow calculation between them. 
         After, the mean value of optical flow for the entire video is calculated on the array of optical flow between two frames.
     More info about the model here: https://github.com/princeton-vl/RAFT
+    
+    Parameters
+    ----------
+    weights_path: str
+        Path to the local modal weights
+    small: bool
+        Use small model
     """ 
+    
     def __init__(self,
-             weights_path: str = 'raft-things.pth'
-             small: bool = False,
-             device: str = "cuda:0",
-             workers: int = 16,
-             batch_size: int = 64,
-             pbar: bool = True,):
+                 weights_path: str = "raft-things.pth",
+                 small: bool = False,
+                 device: str = "cuda:0",
+                 workers: int = 16,
+                 batch_size: int = 1,
+                 pbar: bool = True):
         super().__init__(pbar)
         
         self.num_workers = workers
@@ -53,6 +64,10 @@ class RAFTOpticalFlowFilter(VideoFilter):
         
         self.model = torch.nn.DataParallel(RAFT(small=small))
         self.model.load_state_dict(torch.load(weights_path))
+        
+        self.model = self.model.module
+        self.model.to(self.device)
+        self.model.eval()
         
         self.schema = [
             self.key_column,
@@ -78,13 +93,13 @@ class RAFTOpticalFlowFilter(VideoFilter):
         frames = iio.imread(io.BytesIO(video_file), plugin="pyav")
         return key, frames
         
-    def process(self, batch) -> dict:
+    def process_batch(self, batch) -> dict:
         df_batch_labels = self._generate_dict_from_schema()
         
-        optical_flows = []
-        with torch.no_grad():
-            for data in batch:
-                key, frames = data
+        mean_magnitudes = []
+        for data in batch:
+            key, frames = data
+            with torch.no_grad():
                 for current_frame, next_frame in zip(frames[:-1], frames[1:]):
                     current_frame = self.load_image(current_frame)
                     next_frame = self.load_image(next_frame)
@@ -92,12 +107,13 @@ class RAFTOpticalFlowFilter(VideoFilter):
                     padder = InputPadder(current_frame.shape)
                     current_frame, next_frame = padder.pad(current_frame, next_frame)
 
-                    flow_low, flow_up = self.model(current_frame, next_frame, iters=20, test_mode=True)
-                    optical_flows.append(flow_up)
-                mean_optical_flow = np.mean(optical_flows)
+                    _, flow = self.model(current_frame, next_frame, iters=20, test_mode=True)
+                    flow = flow.detach().cpu().numpy()
+                    magnitude, angle = cv2.cartToPolar(flow[0][..., 0], flow[0][..., 1])
+                    mean_magnitudes.append(magnitude)
+                mean_value = np.mean(mean_magnitudes)
                 
                 df_batch_labels[self.key_column].append(key)
-                df_batch_labels['mean_optical_flow_raft'].append(mean_optical_flow)
+                df_batch_labels['mean_optical_flow_raft'].append(round(mean_value, 3))
         return df_batch_labels
-         
-            
+                 
