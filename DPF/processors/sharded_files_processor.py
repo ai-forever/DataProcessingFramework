@@ -3,10 +3,12 @@ import pandas as pd
 
 from DPF.filesystems import FileSystem
 from DPF.configs import ShardedFilesDatasetConfig
+from DPF.modalities import MODALITIES
 from DPF.dataloaders import FilesDataset, default_preprocess
 from .sharded_processor import ShardedDatasetProcessor
 from DPF.validators.format_validators import ShardedValidationResult, ShardedFilesValidator
 from DPF.datatypes import ColumnDataType, ShardedDataType
+from DPF.transforms import BaseFilesTransforms
 
 
 class ShardedFilesDatasetProcessor(ShardedDatasetProcessor):
@@ -86,3 +88,16 @@ class ShardedFilesDatasetProcessor(ShardedDatasetProcessor):
             modality = column2modality[col]
             modality2data[modality] = sample[col]
         return modality2data
+
+    def apply_transform(self, transforms: Union[BaseFilesTransforms]):
+        assert transforms.modality in self.config.modality2datatype
+        filepaths = self.df[MODALITIES[transforms.modality].path_column].tolist()
+
+        metadata_lists = None
+        if len(transforms.required_metadata) > 0:
+            metadata_lists = {
+                col: self.df[col].tolist()
+                for col in transforms.required_metadata
+            }
+
+        transforms.run(filepaths, metadata_lists=metadata_lists)

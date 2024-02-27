@@ -1,17 +1,15 @@
 from typing import Dict, List, Optional, Union, Callable, Any
 import pandas as pd
-from abc import ABC, abstractmethod
 import os
 
 from DPF.filesystems import FileSystem
 from DPF.datatypes import FileDataType, ColumnDataType
 from DPF.configs import DatasetConfig, FilesDatasetConfig
-from DPF.processors.helpers import DataFramesChanger
-from DPF.filters.data_filter import DataFilter
-from DPF.processors.writers import ABSWriter
 from .processor import DatasetProcessor
 from DPF.dataloaders import default_preprocess, FilesDataset
 from DPF.validators.format_validators import FilesValidator, FilesValidationResult
+from DPF.modalities import MODALITIES
+from DPF.transforms import BaseFilesTransforms
 
 
 class FilesDatasetProcessor(DatasetProcessor):
@@ -142,3 +140,16 @@ class FilesDatasetProcessor(DatasetProcessor):
             modality = column2modality[col]
             modality2data[modality] = sample[col]
         return modality2data
+
+    def apply_transform(self, transforms: Union[BaseFilesTransforms]):
+        assert transforms.modality in self.config.modality2datatype
+        filepaths = self.df[MODALITIES[transforms.modality].path_column].tolist()
+
+        metadata_lists = None
+        if len(transforms.required_metadata) > 0:
+            metadata_lists = {
+                col: self.df[col].tolist()
+                for col in transforms.required_metadata
+            }
+
+        transforms.run(filepaths, metadata_lists=metadata_lists)
