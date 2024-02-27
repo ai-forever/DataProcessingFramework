@@ -1,10 +1,11 @@
-from typing import Dict, Union, List
-import imageio.v3 as iio
 import io
-import numpy as np
-import cv2
+from typing import Dict, List, Union
 
+import cv2
+import imageio.v3 as iio
+import numpy as np
 import torch
+
 from .video_filter import VideoFilter
 
 
@@ -89,29 +90,27 @@ class GunnarFarnebackFilter(VideoFilter):
     def process_batch(self, batch) -> dict:
         df_batch_labels = self._generate_dict_from_schema()
         
-        mags = []
-        with torch.no_grad():
-            for data in batch:
-                key, frames = data
-                for current_frame, next_frame in zip(frames[:-1], frames[1:]):
-                    current_frame = self.load_image(current_frame)
-                    next_frame = self.load_image(next_frame)
-                    flow = cv2.calcOpticalFlowFarneback(current_frame,
-                                                        next_frame,
-                                                        None,
-                                                        self.pyramid_scale,
-                                                        self.levels,
-                                                        self.win_size,
-                                                        self.iterations,
-                                                        self.size_poly_exp,
-                                                        self.poly_sigma,
-                                                        self.flags)
-                    mag, ang = cv2.cartToPolar(flow[..., 0], flow[..., 1])
-                    mags.append(mag)
-                mean_optical_flow = np.mean(mags)
+        mean_magnitudes = []
+        for data in batch:
+            key, frames = data
+            for current_frame, next_frame in zip(frames[:-1], frames[1:]):
+                current_frame = self.load_image(current_frame)
+                next_frame = self.load_image(next_frame)
+                flow = cv2.calcOpticalFlowFarneback(current_frame,
+                                                    next_frame,
+                                                    None,
+                                                    self.pyramid_scale,
+                                                    self.levels,
+                                                    self.win_size,
+                                                    self.iterations,
+                                                    self.size_poly_exp,
+                                                    self.poly_sigma,
+                                                    self.flags)
+                magnitude, _ = cv2.cartToPolar(flow[..., 0], flow[..., 1])
+                mean_magnitudes.append(magnitude)
+            mean_optical_flow = np.mean(mean_magnitudes)
                 
-                df_batch_labels[self.key_column].append(key)
-                df_batch_labels['mean_optical_flow_farneback'].append(round(mean_optical_flow, 3))
+            df_batch_labels[self.key_column].append(key)
+            df_batch_labels['mean_optical_flow_farneback'].append(round(mean_optical_flow, 3))
         return df_batch_labels
          
-            
