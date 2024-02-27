@@ -82,7 +82,12 @@ class RAFTOpticalFlowFilter(VideoFilter):
     
     def load_image(self, image_file):
         image_file = np.array(image_file).astype(np.uint8)
-        image_file = cv2.resize(image_file, (800, 450))
+        if image_file.shape[0] > image_file.shape[1]:
+            image_file = cv2.resize(image_file, (450, 800))
+        elif image_file.shape[1] > image_file.shape[0]:
+            image_file = cv2.resize(image_file, (800, 450))
+        else:
+            image_file = cv2.resize(image_file, (450, 450))
         image_file = torch.from_numpy(image_file).permute(2, 0, 1).float()
         return image_file[None].to(self.device)
 
