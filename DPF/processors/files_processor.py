@@ -143,7 +143,9 @@ class FilesDatasetProcessor(DatasetProcessor):
 
     def apply_transform(self, transforms: Union[BaseFilesTransforms]):
         assert transforms.modality in self.config.modality2datatype
-        filepaths = self.df[MODALITIES[transforms.modality].path_column].tolist()
+
+        filepath_column = MODALITIES[transforms.modality].path_column
+        filepaths = self.df[filepath_column].tolist()
 
         metadata_lists = None
         if len(transforms.required_metadata) > 0:
@@ -152,4 +154,12 @@ class FilesDatasetProcessor(DatasetProcessor):
                 for col in transforms.required_metadata
             }
 
-        transforms.run(filepaths, metadata_lists=metadata_lists)
+        transformed_metadata = transforms.run(filepaths, metadata_lists=metadata_lists)
+        for data in transformed_metadata:
+            data.metadata[filepath_column] = data.filepath
+        df_to_merge = pd.DataFrame([data.metadata for data in transformed_metadata])
+
+        # drop metadata columns from original df to replace them
+        self._df.drop(columns=transforms.metadata_to_change, errors='ignore', inplace=True)
+
+        self._df = pd.merge(self._df, df_to_merge, on=filepath_column, how='left')

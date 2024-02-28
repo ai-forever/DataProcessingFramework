@@ -1,11 +1,11 @@
 from abc import ABC, abstractmethod
-from typing import List, Dict, Any, Optional, Iterable
+from typing import List, Dict, Any, Optional, Iterable, Literal
 from tqdm.contrib.concurrent import process_map, thread_map
 from dataclasses import dataclass
 
 
 @dataclass
-class TransformsFileArguments:
+class TransformsFileData:
     filepath: str
     metadata: Dict[str, Any]
 
@@ -14,7 +14,7 @@ class BaseFilesTransforms(ABC):
 
     def __init__(
         self,
-        pool_type: str = 'processes',
+        pool_type: Literal['processes', 'threads'],
         workers: int = 16,
         pbar: bool = True
     ):
@@ -33,11 +33,16 @@ class BaseFilesTransforms(ABC):
     def required_metadata(self) -> List[str]:
         pass
 
+    @property
     @abstractmethod
-    def _process_filepath(self, data: TransformsFileArguments):
+    def metadata_to_change(self) -> List[str]:
         pass
 
-    def run(self, paths: List[str], metadata_lists: Optional[Dict[str, List[Any]]] = None):
+    @abstractmethod
+    def _process_filepath(self, data: TransformsFileData) -> TransformsFileData:
+        pass
+
+    def run(self, paths: List[str], metadata_lists: Optional[Dict[str, List[Any]]] = None) -> List[TransformsFileData]:
         if self.pool_type == 'threads':
             pool_map = thread_map
         else:
@@ -51,15 +56,16 @@ class BaseFilesTransforms(ABC):
         if metadata_lists is None:
             metadata_lists = {}
 
-        def data_iterator() -> Iterable[TransformsFileArguments]:
+        def data_iterator() -> Iterable[TransformsFileData]:
             for i, fp in enumerate(paths):
-                arg = TransformsFileArguments(fp, {k: v[i] for k, v in metadata_lists.items()})
+                arg = TransformsFileData(fp, {k: v[i] for k, v in metadata_lists.items()})
                 yield arg
 
-        pool_map(
+        transformed_metadata = pool_map(
             self._process_filepath,
             data_iterator(),
             total=len(paths),
             max_workers=self.max_workers,
             disable=not self.pbar
         )
+        return transformed_metadata

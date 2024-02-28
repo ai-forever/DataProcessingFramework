@@ -1,7 +1,7 @@
 from typing import List
 from PIL import Image
 
-from DPF.transforms.base_file_transforms import BaseFilesTransforms, TransformsFileArguments
+from DPF.transforms.base_file_transforms import BaseFilesTransforms, TransformsFileData
 from DPF.transforms.image_video_resizer import Resizer
 
 
@@ -24,10 +24,14 @@ class ImageResizeTransforms(BaseFilesTransforms):
         return []
 
     @property
+    def metadata_to_change(self) -> List[str]:
+        return ['width', 'height']
+
+    @property
     def modality(self) -> str:
         return 'image'
 
-    def _process_filepath(self, data: TransformsFileArguments):
+    def _process_filepath(self, data: TransformsFileData) -> TransformsFileData:
         filepath = data.filepath
         img = Image.open(filepath)
         width, height = self.resizer.get_new_size(img.width, img.height)
@@ -35,3 +39,5 @@ class ImageResizeTransforms(BaseFilesTransforms):
         if (width, height) != (img.width, img.height):
             img = img.resize((width, height))
             img.save(filepath, format=self.img_format)
+
+        return TransformsFileData(filepath, {'width': width, 'height': height})

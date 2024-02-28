@@ -1,4 +1,4 @@
-from .base_file_transforms import BaseFilesTransforms, TransformsFileArguments
+from .base_file_transforms import BaseFilesTransforms, TransformsFileData
 from .image_video_resizer import Resizer, ResizerModes
 from .image_resize_transforms import ImageResizeTransforms
 from .video_resize_transforms import VideoResizeTransforms

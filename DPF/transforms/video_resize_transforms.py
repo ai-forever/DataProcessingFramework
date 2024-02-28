@@ -4,7 +4,7 @@ import os
 import shutil
 import subprocess
 import uuid
-from DPF.transforms.base_file_transforms import BaseFilesTransforms, TransformsFileArguments
+from DPF.transforms.base_file_transforms import BaseFilesTransforms, TransformsFileData
 from DPF.transforms.image_video_resizer import Resizer
 
 
@@ -37,10 +37,14 @@ class VideoResizeTransforms(BaseFilesTransforms):
         return ['width', 'height']
 
     @property
+    def metadata_to_change(self) -> List[str]:
+        return ['width', 'height']
+
+    @property
     def modality(self) -> str:
         return 'video'
 
-    def _process_filepath(self, data: TransformsFileArguments):
+    def _process_filepath(self, data: TransformsFileData) -> TransformsFileData:
         filepath = data.filepath
         ext = filepath.split('.')[-1]
         width = data.metadata['width']
@@ -54,3 +58,5 @@ class VideoResizeTransforms(BaseFilesTransforms):
             ffmpeg_command = f'ffmpeg -i {filepath} -preset {self.ffmpeg_preset} -vf "scale={new_width}:{new_height}" {temp_filename} -y'
             result = subprocess.run(ffmpeg_command, shell=True, capture_output=True, check=True)
             shutil.move(temp_filename, filepath)
+
+        return TransformsFileData(filepath, {'width': new_width, 'height': new_height})
