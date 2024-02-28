@@ -1,5 +1,5 @@
 import io
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Tuple
 
 import cv2
 import imageio.v3 as iio
@@ -9,6 +9,12 @@ import torch
 from .video_filter import VideoFilter
 
 
+def transform_frame(frame: np.ndarray, target_size: Tuple):
+    frame = cv2.resize(frame, dsize=(target_size[0], target_size[1]), interpolation=cv2.INTER_LINEAR)
+    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    return frame 
+    
+    
 class GunnarFarnebackFilter(VideoFilter):
     """
     Gunnar-Farneback filter inference class to get mean optical flow each video.
@@ -18,6 +24,8 @@ class GunnarFarnebackFilter(VideoFilter):
     
     Parameters
     ----------
+    pass_frames: int
+        Number of frames to pass. pass_frames = 1, if need to process all frames.
     pyramid_scale: float
         Parameter, specifying the image scale (<1) to build pyramids for each image
     levels: int
@@ -35,6 +43,7 @@ class GunnarFarnebackFilter(VideoFilter):
     """
     
     def __init__(self,
+             pass_frames: int = 10,
              pyramid_scale: float = 0.5,
              levels: int = 3,
              win_size: int = 15,
@@ -56,7 +65,9 @@ class GunnarFarnebackFilter(VideoFilter):
         self.iterations = iterations 
         self.size_poly_exp = size_poly_exp 
         self.poly_sigma = poly_sigma  
-        self.flags = flags  
+        self.flags = flags 
+        
+        self.pass_frames = pass_frames
         
         self.schema = [
             self.key_column,
@@ -68,23 +79,18 @@ class GunnarFarnebackFilter(VideoFilter):
             "batch_size": self.batch_size,
             "drop_last": False,
         }
-    
-    def load_image(self, image_file):
-        image_file = np.array(image_file).astype(np.uint8)
-        if image_file.shape[0] > image_file.shape[1]:
-            image_file = cv2.resize(image_file, (450, 800))
-        elif image_file.shape[1] > image_file.shape[0]:
-            image_file = cv2.resize(image_file, (800, 450))
-        else:
-            image_file = cv2.resize(image_file, (450, 450))
-        image_file = cv2.cvtColor(image_file, cv2.COLOR_BGR2GRAY)
-        return image_file
 
     def preprocess(self, modality2data: Dict[str, Union[bytes, str]], metadata: dict):
         key = metadata[self.key_column]
         video_file = modality2data['video']
         
         frames = iio.imread(io.BytesIO(video_file), plugin="pyav")
+        if frames.shape[1] > frames.shape[2]:
+            frames = [transform_frame(frame=i, target_size=(450, 800)) for i in frames]
+        elif frames.shape[2] > frames.shape[1]:
+            frames = [transform_frame(frame=i, target_size=(800, 450)) for i in frames]
+        else:
+            frames = [transform_frame(frame=i, targe_size=(450, 450)) for i in frames]
         return key, frames
         
     def process_batch(self, batch) -> dict:
@@ -93,9 +99,9 @@ class GunnarFarnebackFilter(VideoFilter):
         mean_magnitudes = []
         for data in batch:
             key, frames = data
-            for current_frame, next_frame in zip(frames[:-1], frames[1:]):
-                current_frame = self.load_image(current_frame)
-                next_frame = self.load_image(next_frame)
+            for i in range(self.pass_frames, len(frames), self.pass_frames):
+                current_frame = frames[i - self.pass_frames]
+                next_frame = frames[i]
                 flow = cv2.calcOpticalFlowFarneback(current_frame,
                                                     next_frame,
                                                     None,
