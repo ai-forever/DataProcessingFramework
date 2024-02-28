@@ -13,6 +13,7 @@ from DPF.datatypes import ColumnDataType
 from DPF.modalities import MODALITIES
 from DPF.configs import DatasetConfig, config2format
 from DPF.validators import ValidationResult
+from DPF.transforms import BaseFilesTransforms
 
 
 class DatasetProcessor(ABC):
@@ -190,6 +191,10 @@ class DatasetProcessor(ABC):
                 f"Length of resulted dataframe changed after filtering. Old length = {len(self._df)}, new = {len(filter_res)}"
 
         self._df[column_filter.schema] = filter_res
+
+    @abstractmethod
+    def apply_transform(self, transforms: Union[BaseFilesTransforms]):
+        pass
 
     @abstractmethod
     def validate(
