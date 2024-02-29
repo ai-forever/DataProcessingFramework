@@ -52,8 +52,8 @@ class VideoLLaVAFilter(VideoFilter):
         self.model_name = model_name
         self.prompt_to_use = prompt
         prompt_templates = {
-            'detailed_video': 'Describe this video in details.',
-            'short_video': 'Describe this video very shortly in 1-2 short sentences. Describe what is happening in this video.'
+            'detailed_video': 'Describe this video and its style in a very detailed manner',
+            'short_video': 'Describe this video and its style briefly'
         }
             
         self.num_workers = workers
@@ -66,9 +66,11 @@ class VideoLLaVAFilter(VideoFilter):
         
         disable_torch_init()
         
-        pretrainers = load_pretrained_model(model_path, model_base, model_name,
-                                            load_8bit, load_4bit,
-                                            device=self.device, cache_dir=cache_path)
+        pretrainers = load_pretrained_model(
+            model_path, model_base, model_name,
+            load_8bit, load_4bit,
+            device=self.device, cache_dir=cache_path
+        )
         self.tokenizer, self.model, self.processor, self.context_len = pretrainers
         self.video_processor = self.processor['video']
         
@@ -79,10 +81,12 @@ class VideoLLaVAFilter(VideoFilter):
         self.conv.append_message(self.conv.roles[0], inp)
         self.conv.append_message(self.conv.roles[1], None)
         prompt = self.conv.get_prompt()
-        self.input_ids = tokenizer_image_token(prompt, 
-                                               self.tokenizer,
-                                               IMAGE_TOKEN_INDEX,
-                                               return_tensors='pt').unsqueeze(0).cuda()
+        self.input_ids = tokenizer_image_token(
+            prompt,
+            self.tokenizer,
+            IMAGE_TOKEN_INDEX,
+            return_tensors='pt'
+        ).unsqueeze(0).cuda()
         stop_str = self.conv.sep if self.conv.sep_style != SeparatorStyle.TWO else self.conv.sep2
         keywords = [stop_str]
         self.stopping_criteria = KeywordsStoppingCriteria(keywords, self.tokenizer, self.input_ids)
