@@ -13,6 +13,7 @@ from DPF.datatypes import ColumnDataType
 from DPF.modalities import MODALITIES
 from DPF.configs import DatasetConfig, config2format
 from DPF.validators import ValidationResult
+from DPF.transforms import BaseFilesTransforms
 
 
 class DatasetProcessor(ABC):
@@ -193,6 +194,10 @@ class DatasetProcessor(ABC):
             self._df[column_filter.schema[0]] = filter_res
         else:
             self._df[column_filter.schema] = filter_res
+
+    @abstractmethod
+    def apply_transform(self, transforms: Union[BaseFilesTransforms]):
+        pass
 
     @abstractmethod
     def validate(

@@ -9,6 +9,7 @@ from DPF.dataloaders import ShardsDataset, identical_preprocess_function
 from DPF.datatypes import ColumnDataType, ShardedDataType
 from .sharded_processor import ShardedDatasetProcessor
 from DPF.validators.format_validators import ShardedValidationResult, ShardsValidator
+from ..transforms import BaseFilesTransforms
 
 
 class ShardsDatasetProcessor(ShardedDatasetProcessor):
@@ -96,3 +97,6 @@ class ShardsDatasetProcessor(ShardedDatasetProcessor):
             modality = column2modality[col]
             modality2data[modality] = sample[col]
         return modality2data
+
+    def apply_transform(self, transforms: Union[BaseFilesTransforms]):
+        raise NotImplementedError()
