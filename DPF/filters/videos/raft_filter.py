@@ -1,5 +1,7 @@
 import io
-from typing import Dict, List, Union, Tuple
+from typing import Dict, List, Tuple, Union
+from urllib.request import urlopen
+from zipfile import ZipFile
 
 import cv2
 import imageio.v3 as iio
@@ -10,6 +12,8 @@ from scipy import interpolate
 
 from .raft_core.model import RAFT
 from .video_filter import VideoFilter
+
+WEIGHTS_URL = 'https://dl.dropboxusercontent.com/s/4j4z58wuv8o0mfz/models.zip'
 
 
 class InputPadder:
@@ -60,7 +64,6 @@ class RAFTOpticalFlowFilter(VideoFilter):
     
     def __init__(self,
                  pass_frames: int = 10,
-                 weights_path: str = "raft-things.pth",
                  small: bool = False,
                  device: str = "cuda:0",
                  workers: int = 16,
@@ -74,8 +77,16 @@ class RAFTOpticalFlowFilter(VideoFilter):
         
         self.pass_frames = pass_frames
         
+        resp = urlopen(WEIGHTS_URL)
+        zipped_files = ZipFile(io.BytesIO(resp.read()))
+        
+        if small:
+            model_name = 'models/raft-small.pth'
+        else:
+            model_name = 'models/raft-things.pth'
+            
         self.model = torch.nn.DataParallel(RAFT(small=small))
-        self.model.load_state_dict(torch.load(weights_path))
+        self.model.load_state_dict(torch.load(zipped_files.open(model_name)))
         
         self.model = self.model.module
         self.model.to(self.device)
