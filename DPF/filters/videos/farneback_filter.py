@@ -1,5 +1,5 @@
 import io
-from typing import Dict, List, Union, Tuple
+from typing import Dict, List, Union, Tuple, Any
 
 import cv2
 import imageio.v3 as iio
@@ -42,18 +42,20 @@ class GunnarFarnebackFilter(VideoFilter):
         Operation flags that can be a combination of OPTFLOW_USE_INITIAL_FLOW and/or OPTFLOW_FARNEBACK_GAUSSIAN
     """
     
-    def __init__(self,
-             pass_frames: int = 10,
-             pyramid_scale: float = 0.5,
-             levels: int = 3,
-             win_size: int = 15,
-             iterations: int = 3,
-             size_poly_exp: int = 5,
-             poly_sigma: float = 1.2,
-             workers: int = 16,
-             flags: int = 0,
-             batch_size: int = 1,
-             pbar: bool = True,):
+    def __init__(
+        self,
+        pass_frames: int = 10,
+        pyramid_scale: float = 0.5,
+        levels: int = 3,
+        win_size: int = 15,
+        iterations: int = 3,
+        size_poly_exp: int = 5,
+        poly_sigma: float = 1.2,
+        workers: int = 16,
+        flags: int = 0,
+        batch_size: int = 1,
+        pbar: bool = True
+    ):
         super().__init__(pbar)
         
         self.num_workers = workers
@@ -68,13 +70,17 @@ class GunnarFarnebackFilter(VideoFilter):
         self.flags = flags 
         
         self.pass_frames = pass_frames
-        
-        self.schema = [
+
+    @property
+    def schema(self) -> List[str]:
+        return [
             self.key_column,
             "mean_optical_flow_farneback"
         ]
-            
-        self.dataloader_kwargs = {
+
+    @property
+    def dataloader_kwargs(self) -> Dict[str, Any]:
+        return {
             "num_workers": self.num_workers,
             "batch_size": self.batch_size,
             "drop_last": False,
@@ -102,16 +108,18 @@ class GunnarFarnebackFilter(VideoFilter):
             for i in range(self.pass_frames, len(frames), self.pass_frames):
                 current_frame = frames[i - self.pass_frames]
                 next_frame = frames[i]
-                flow = cv2.calcOpticalFlowFarneback(current_frame,
-                                                    next_frame,
-                                                    None,
-                                                    self.pyramid_scale,
-                                                    self.levels,
-                                                    self.win_size,
-                                                    self.iterations,
-                                                    self.size_poly_exp,
-                                                    self.poly_sigma,
-                                                    self.flags)
+                flow = cv2.calcOpticalFlowFarneback(
+                    current_frame,
+                    next_frame,
+                    None,
+                    self.pyramid_scale,
+                    self.levels,
+                    self.win_size,
+                    self.iterations,
+                    self.size_poly_exp,
+                    self.poly_sigma,
+                    self.flags
+                )
                 magnitude, _ = cv2.cartToPolar(flow[..., 0], flow[..., 1])
                 mean_magnitudes.append(magnitude)
             mean_optical_flow = np.mean(mean_magnitudes)

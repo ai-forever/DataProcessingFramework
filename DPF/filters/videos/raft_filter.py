@@ -1,5 +1,5 @@
 import io
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Tuple, Union, Any
 from urllib.request import urlopen
 from zipfile import ZipFile
 
@@ -12,6 +12,7 @@ from scipy import interpolate
 
 from .raft_core.model import RAFT
 from .video_filter import VideoFilter
+
 
 WEIGHTS_URL = 'https://dl.dropboxusercontent.com/s/4j4z58wuv8o0mfz/models.zip'
 
@@ -62,13 +63,15 @@ class RAFTOpticalFlowFilter(VideoFilter):
         Use small model
     """ 
     
-    def __init__(self,
-                 pass_frames: int = 10,
-                 small: bool = False,
-                 device: str = "cuda:0",
-                 workers: int = 16,
-                 batch_size: int = 1,
-                 pbar: bool = True):
+    def __init__(
+        self,
+        pass_frames: int = 10,
+        small: bool = False,
+        device: str = "cuda:0",
+        workers: int = 16,
+        batch_size: int = 1,
+        pbar: bool = True
+    ):
         super().__init__(pbar)
         
         self.num_workers = workers
@@ -91,13 +94,17 @@ class RAFTOpticalFlowFilter(VideoFilter):
         self.model = self.model.module
         self.model.to(self.device)
         self.model.eval()
-        
-        self.schema = [
+
+    @property
+    def schema(self) -> List[str]:
+        return [
             self.key_column,
             "mean_optical_flow_raft"
         ]
-            
-        self.dataloader_kwargs = {
+
+    @property
+    def dataloader_kwargs(self) -> Dict[str, Any]:
+        return {
             "num_workers": self.num_workers,
             "batch_size": self.batch_size,
             "drop_last": False,
@@ -127,9 +134,11 @@ class RAFTOpticalFlowFilter(VideoFilter):
                     current_frame = frames[i - self.pass_frames]
                     next_frame = frames[i]
                     
-                    _, flow = self.model(current_frame.to(self.device),
-                                         next_frame.to(self.device),
-                                         iters=20, test_mode=True)
+                    _, flow = self.model(
+                        current_frame.to(self.device),
+                        next_frame.to(self.device),
+                        iters=20, test_mode=True
+                    )
                     
                     flow = flow.detach().cpu().numpy()
                     magnitude, angle = cv2.cartToPolar(flow[0][..., 0], flow[0][..., 1])
