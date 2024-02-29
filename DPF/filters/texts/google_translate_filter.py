@@ -47,7 +47,7 @@ class GoogleTranslateFilter(ColumnFilter):
 
     def __init__(
         self,
-        text_column_name: str = "caption",
+        text_column_name: str = "text",
         source_lang: str = "auto",
         target_lang: str = "en",
         max_symbols_in_batch: int = 3000,
@@ -64,14 +64,19 @@ class GoogleTranslateFilter(ColumnFilter):
         self.num_retries_per_batch = num_retries_per_batch
         self.translator = GoogleTranslator(source=source_lang, target=target_lang)
 
-        self.df_columns = [self.text_column_name]
-        self.schema = f"{text_column_name}_translated"
+    @property
+    def columns_to_process(self) -> List[str]:
+        return [self.text_column_name]
+
+    @property
+    def schema(self) -> List[str]:
+        return [f"{self.text_column_name}_translated"]
 
     def process(self, row: dict) -> tuple:
         pass
 
     def __call__(self, df: pd.DataFrame) -> np.ndarray:
-        texts_to_translate = list(set(df[self.df_columns[0]].tolist()))
+        texts_to_translate = list(set(df[self.columns_to_process[0]].tolist()))
         batches = split_on_batches(
             list(texts_to_translate),
             self.max_symbols_in_batch
@@ -87,5 +92,5 @@ class GoogleTranslateFilter(ColumnFilter):
                     print(f'[{self.__class__.__name__}] {err}, retry: {num_retry}/{self.num_retries_per_batch}')
                     time.sleep(self.timeout)
 
-        res = np.array(list(df[self.df_columns[0]].apply(lambda x: results.get(x, None))))
+        res = np.array(list(df[self.columns_to_process[0]].apply(lambda x: results.get(x, None))))
         return res
