@@ -1,17 +1,11 @@
-from typing import Dict, List, Union
-import os
-import torch
-from torch import nn
+from typing import Dict, List, Union, Any
 import numpy as np
 
 try:
     from torch.utils.data.dataloader import default_collate
 except ImportError:
     from torch.utils.data import default_collate
-from torchvision import models, transforms
-from huggingface_hub import hf_hub_url, cached_download
 
-from DPF.filters.utils import FP16Module, identical_collate_fn
 from DPF.utils import read_image_rgb_from_bytes
 from .img_filter import ImageFilter
 
@@ -37,8 +31,13 @@ class CRAFTFilter(ImageFilter):
         self.weights_folder = weights_folder
         self.model = CRAFTModel(weights_folder, device, use_refiner=False, fp16=True)
 
-        self.schema = [self.key_column, f"text_boxes", "num_text_boxes", "text_area"]
-        self.dataloader_kwargs = {
+    @property
+    def schema(self) -> List[str]:
+        return [self.key_column, f"text_boxes", "num_text_boxes", "text_area"]
+
+    @property
+    def dataloader_kwargs(self) -> Dict[str, Any]:
+        return {
             "num_workers": self.num_workers,
             "batch_size": self.batch_size,
             "drop_last": False,

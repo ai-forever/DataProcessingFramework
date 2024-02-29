@@ -1,4 +1,4 @@
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Any
 import torch
 from lavis.models import load_model_and_preprocess
 
@@ -8,7 +8,6 @@ except ImportError:
     from torch.utils.data import default_collate
 
 from DPF.utils import read_image_rgb_from_bytes
-from DPF.filters.utils import identical_collate_fn
 from .img_filter import ImageFilter
 
 
@@ -32,8 +31,13 @@ class BLIPCaptioningFilter(ImageFilter):
         )
         self.blip_processor = self.blip_processor["eval"]
 
-        self.schema = [self.key_column, "blip_caption"]
-        self.dataloader_kwargs = {
+    @property
+    def schema(self) -> List[str]:
+        return [self.key_column, "blip_caption"]
+
+    @property
+    def dataloader_kwargs(self) -> Dict[str, Any]:
+        return {
             "num_workers": self.num_workers,
             "batch_size": self.batch_size,
             "drop_last": False,

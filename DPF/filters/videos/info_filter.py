@@ -1,12 +1,23 @@
-from typing import Dict, Union, List
+from typing import Dict, Union, List, Any, Optional
 import imageio.v3 as iio
 import io
+from dataclasses import dataclass
 
-from DPF.filters.utils import identical_collate_fn
 from .video_filter import VideoFilter
 
 
-def get_video_info(video_bytes, data, key_column):
+@dataclass
+class VideoInfo:
+    key: str
+    is_correct: bool
+    width: int
+    height: int
+    fps: float
+    duration: float
+    error: Optional[str]
+
+
+def get_video_info(video_bytes, data, key_column) -> VideoInfo:
     """
     Get image path, read status, width, height, num channels, read error
     """
@@ -26,7 +37,7 @@ def get_video_info(video_bytes, data, key_column):
         is_correct = False
         err_str = str(err)
 
-    return key, is_correct, width, height, fps, duration, err_str
+    return VideoInfo(key, is_correct, width, height, fps, duration, err_str)
 
 
 class VideoInfoFilter(VideoFilter):
@@ -36,37 +47,35 @@ class VideoInfoFilter(VideoFilter):
 
     def __init__(self, workers: int = 16, pbar: bool = True):
         super().__init__(pbar)
-
         self.num_workers = workers
 
-        self.schema = [
-            self.key_column,
-            "is_correct",
-            "error",
-            "width",
-            "height",
-            "fps",
-            "duration"
+    @property
+    def schema(self) -> List[str]:
+        return [
+            self.key_column, "is_correct", "error",
+            "width", "height", "fps", "duration"
         ]
-        self.dataloader_kwargs = {
+
+    @property
+    def dataloader_kwargs(self) -> Dict[str, Any]:
+        return {
             "num_workers": self.num_workers,
             "batch_size": 1,
             "drop_last": False,
         }
 
-    def preprocess(self, modality2data: Dict[str, Union[bytes, str]], metadata: dict):
+    def preprocess(self, modality2data: Dict[str, Union[bytes, str]], metadata: dict) -> VideoInfo:
         return get_video_info(modality2data['video'], metadata, self.key_column)
 
     def process_batch(self, batch) -> dict:
         df_batch_labels = self._generate_dict_from_schema()
 
-        for data in batch:
-            key, is_correct, width, height, fps, duration, error = data
-            df_batch_labels[self.key_column].append(key)
-            df_batch_labels["is_correct"].append(is_correct)
-            df_batch_labels["error"].append(error)
-            df_batch_labels["width"].append(width)
-            df_batch_labels["height"].append(height)
-            df_batch_labels["fps"].append(fps)
-            df_batch_labels["duration"].append(duration)
+        for video_info in batch:
+            df_batch_labels[self.key_column].append(video_info.key)
+            df_batch_labels["is_correct"].append(video_info.is_correct)
+            df_batch_labels["error"].append(video_info.error)
+            df_batch_labels["width"].append(video_info.width)
+            df_batch_labels["height"].append(video_info.height)
+            df_batch_labels["fps"].append(video_info.fps)
+            df_batch_labels["duration"].append(video_info.duration)
         return df_batch_labels

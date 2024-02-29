@@ -1,4 +1,4 @@
-from typing import List, Optional, Dict, Union
+from typing import List, Optional, Dict, Union, Any
 from io import BytesIO
 import torch
 
@@ -49,7 +49,7 @@ class VideoLLaVAFilter(VideoFilter):
         pbar: bool = True,
     ):
         super().__init__(pbar)
-        
+        self.model_name = model_name
         self.prompt_to_use = prompt
         prompt_templates = {
             'detailed_video': 'Describe this video in details.',
@@ -86,11 +86,14 @@ class VideoLLaVAFilter(VideoFilter):
         stop_str = self.conv.sep if self.conv.sep_style != SeparatorStyle.TWO else self.conv.sep2
         keywords = [stop_str]
         self.stopping_criteria = KeywordsStoppingCriteria(keywords, self.tokenizer, self.input_ids)
-        
-            
-        self.schema = [self.key_column, f"caption {model_name} prompt {self.prompt_to_use}"]
-            
-        self.dataloader_kwargs = {
+
+    @property
+    def schema(self) -> List[str]:
+        return [self.key_column, f"caption {self.model_name} prompt {self.prompt_to_use}"]
+
+    @property
+    def dataloader_kwargs(self) -> Dict[str, Any]:
+        return {
             "num_workers": self.num_workers,
             "batch_size": self.batch_size,
             "drop_last": False,

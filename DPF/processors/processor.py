@@ -8,7 +8,7 @@ from tqdm import tqdm
 from DPF.filesystems import FileSystem, LocalFileSystem
 from DPF.filters import DataFilter, ColumnFilter
 from DPF.processors.writers import ABSWriter, ShardedFilesWriter, ShardsWriter
-from DPF.dataloaders.utils import default_preprocess, default_collate
+from DPF.dataloaders.dataloader_utils import identical_preprocess_function, identical_collate_fn
 from DPF.datatypes import ColumnDataType
 from DPF.modalities import MODALITIES
 from DPF.configs import DatasetConfig, config2format
@@ -136,7 +136,7 @@ class DatasetProcessor(ABC):
     self,
     modalities: List[str],
     meta_columns: Optional[List[str]] = None,
-    preprocess_f: Callable[[dict, dict], Any] = default_preprocess,
+    preprocess_f: Callable[[dict, dict], Any] = identical_preprocess_function,
     return_none_on_error: bool = False
     ) -> Dataset:
         pass
@@ -190,7 +190,10 @@ class DatasetProcessor(ABC):
             assert len(filter_res) == len(self._df), \
                 f"Length of resulted dataframe changed after filtering. Old length = {len(self._df)}, new = {len(filter_res)}"
 
-        self._df[column_filter.schema] = filter_res
+        if len(column_filter.schema) == 1:
+            self._df[column_filter.schema[0]] = filter_res
+        else:
+            self._df[column_filter.schema] = filter_res
 
     @abstractmethod
     def apply_transform(self, transforms: Union[BaseFilesTransforms]):
@@ -277,14 +280,14 @@ class DatasetProcessor(ABC):
         new_dataloader_kwargs = {
             'num_workers': 8,
             'batch_size': 1,
-            'collate_fn': default_collate,
+            'collate_fn': identical_collate_fn,
             'drop_last': False,
         }
         new_dataloader_kwargs.update(dataloader_kwargs)
 
         dataset = self.get_torch_dataset(
             list(self.config.modality2datatype.keys()),
-            preprocess_f=default_preprocess,
+            preprocess_f=identical_preprocess_function,
             meta_columns=meta_columns
         )
         dataloader = DataLoader(dataset, **new_dataloader_kwargs)

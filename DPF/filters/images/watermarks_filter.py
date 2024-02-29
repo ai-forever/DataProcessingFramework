@@ -1,4 +1,4 @@
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Any
 import os
 import torch
 from torch import nn
@@ -10,7 +10,7 @@ except ImportError:
 from torchvision import models, transforms
 from huggingface_hub import hf_hub_url, cached_download
 
-from DPF.filters.utils import FP16Module, identical_collate_fn
+from DPF.filters.utils import FP16Module
 from DPF.utils import read_image_rgb_from_bytes
 from .img_filter import ImageFilter
 
@@ -112,8 +112,13 @@ class WatermarksFilter(ImageFilter):
             ]
         )
 
-        self.schema = [self.key_column, f"watermark_{self.watermarks_model}"]
-        self.dataloader_kwargs = {
+    @property
+    def schema(self) -> List[str]:
+        return [self.key_column, f"watermark_{self.watermarks_model}"]
+
+    @property
+    def dataloader_kwargs(self) -> Dict[str, Any]:
+        return {
             "num_workers": self.num_workers,
             "batch_size": self.batch_size,
             "drop_last": False,

@@ -6,7 +6,7 @@ from DPF.filesystems import FileSystem
 from DPF.datatypes import FileDataType, ColumnDataType
 from DPF.configs import DatasetConfig, FilesDatasetConfig
 from .processor import DatasetProcessor
-from DPF.dataloaders import default_preprocess, FilesDataset
+from DPF.dataloaders import identical_preprocess_function, FilesDataset
 from DPF.validators.format_validators import FilesValidator, FilesValidationResult
 from DPF.modalities import MODALITIES
 from DPF.transforms import BaseFilesTransforms
@@ -101,7 +101,7 @@ class FilesDatasetProcessor(DatasetProcessor):
         self,
         modalities: List[str],
         meta_columns: Optional[List[str]] = None,
-        preprocess_f: Callable[[dict, dict], Any] = default_preprocess,
+        preprocess_f: Callable[[dict, dict], Any] = identical_preprocess_function,
         return_none_on_error: bool = False
     ) -> FilesDataset:
         assert len(set(modalities)) == len(list(modalities))
@@ -111,7 +111,7 @@ class FilesDatasetProcessor(DatasetProcessor):
             self._df,
             datatypes_to_load,
             meta_columns=meta_columns,
-            preprocess_f=preprocess_f,
+            preprocess_function=preprocess_f,
             return_none_on_error=return_none_on_error
         )
 

@@ -4,7 +4,7 @@ from tqdm import tqdm
 
 from DPF.filters.images.img_filter import ImageFilter
 from DPF.filters.text2image.t2i_filter import T2IFilter
-from DPF.filters.utils import identical_collate_fn
+from DPF.dataloaders.dataloader_utils import identical_collate_fn
 from DPF.filesystems.filesystem import FileSystem
 
 
@@ -68,6 +68,7 @@ class ComplexFilter:
         preprocessed_data = []
 
         if self.use_same_preprocess:
+            # TODO(review) - несоответствие входных и ожидаемых типов в preprocess (видно в pycharm)
             preprocessed_data.append(self.filter_list[0].preprocess(img_bytes, data))
         else:
             for imgfilter in self.filter_list:
@@ -84,6 +85,7 @@ class ComplexFilter:
         return {i: [] for i in self.schema}
 
     def run(self, df: pd.DataFrame, filesystem: FileSystem) -> pd.DataFrame:
+        # TODO(review, error) - ошибка, используется необъявленная зависимость
         dataloader = UniversalT2IDataloader(filesystem, df, **self.dataloader_kwargs)
 
         df_labels = self._generate_dict_from_schema()

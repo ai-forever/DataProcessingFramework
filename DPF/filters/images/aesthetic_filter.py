@@ -1,8 +1,9 @@
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Any
 import os
 from urllib.request import urlretrieve
 import torch
 from torch import nn
+# TODO(review) - зависимость отсутствует в requirements.txt
 import clip
 
 try:
@@ -11,7 +12,6 @@ except ImportError:
     from torch.utils.data import default_collate
 
 from DPF.utils import read_image_rgb_from_bytes
-from DPF.filters.utils import identical_collate_fn
 from .img_filter import ImageFilter
 
 
@@ -38,6 +38,7 @@ def get_aesthetic_model(clip_model, cache_folder):
             + "_linear.pth?raw=true"
         )
         # TODO rework download
+        # TODO(review) - сделать в виде загрузчика моделей с удаленных ресурсов
         urlretrieve(url_model, path_to_model)
 
     s = torch.load(path_to_model)
@@ -73,8 +74,13 @@ class AestheticFilter(ImageFilter):
         self.aesthetic_model = get_aesthetic_model(clip_model, weights_folder)
         self.aesthetic_model.to(self.device)
 
-        self.schema = [self.key_column, "aesthetic_score"]
-        self.dataloader_kwargs = {
+    @property
+    def schema(self) -> List[str]:
+        return [self.key_column, "aesthetic_score"]
+
+    @property
+    def dataloader_kwargs(self) -> Dict[str, Any]:
+        return {
             "num_workers": self.num_workers,
             "batch_size": self.batch_size,
             "drop_last": False,

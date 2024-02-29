@@ -8,7 +8,7 @@ from DPF.validators.format_validators import (
 
 
 def test_shards_to_shards():
-    path = 'tests/datasets/shards_correct/'
+    path = 'tests/datasets/shards_correct'
     config = ShardsDatasetConfig.from_modalities(
         path,
         image_name_col="image_name",
@@ -27,7 +27,7 @@ def test_shards_to_shards():
     )
 
     config = ShardsDatasetConfig.from_modalities(
-        new_dir,
+        new_dir.rstrip('/'),
         image_name_col="image_name",
         caption_col="caption"
     )
@@ -42,7 +42,7 @@ def test_shards_to_shards():
 
 
 def test_shards_to_sharded_files():
-    path = 'tests/datasets/shards_correct/'
+    path = 'tests/datasets/shards_correct'
     config = ShardsDatasetConfig.from_modalities(
         path,
         image_name_col="image_name",
@@ -61,7 +61,7 @@ def test_shards_to_sharded_files():
     )
 
     config = ShardedFilesDatasetConfig.from_modalities(
-        new_dir,
+        new_dir.rstrip('/'),
         image_name_col="image_name",
         caption_col="caption"
     )
@@ -89,13 +89,13 @@ def test_files_to_shards():
     if os.path.exists(new_dir):
         shutil.rmtree(new_dir)
     processor.to_shards(
-        new_dir,
+        new_dir.rstrip('/'),
         keys_mapping={'text': 'caption'},
         workers=1
     )
 
     config = ShardsDatasetConfig.from_modalities(
-        new_dir,
+        new_dir.rstrip('/'),
         image_name_col="image_name",
         caption_col="caption"
     )
@@ -123,13 +123,13 @@ def test_files_to_sharded_files():
     if os.path.exists(new_dir):
         shutil.rmtree(new_dir)
     processor.to_sharded_files(
-        new_dir,
+        new_dir.rstrip('/'),
         keys_mapping={'text': 'caption'},
         workers=1
     )
 
     config = ShardedFilesDatasetConfig.from_modalities(
-        new_dir,
+        new_dir.rstrip('/'),
         image_name_col="image_name",
         caption_col="caption"
     )

@@ -3,8 +3,8 @@ import pandas as pd
 
 from DPF.filesystems import FileSystem
 from DPF.configs import ShardedFilesDatasetConfig
+from DPF.dataloaders import FilesDataset, identical_preprocess_function
 from DPF.modalities import MODALITIES
-from DPF.dataloaders import FilesDataset, default_preprocess
 from .sharded_processor import ShardedDatasetProcessor
 from DPF.validators.format_validators import ShardedValidationResult, ShardedFilesValidator
 from DPF.datatypes import ColumnDataType, ShardedDataType
@@ -49,7 +49,7 @@ class ShardedFilesDatasetProcessor(ShardedDatasetProcessor):
         self,
         modalities: List[str],
         meta_columns: Optional[List[str]] = None,
-        preprocess_f: Callable[[dict, dict], Any] = default_preprocess,
+        preprocess_f: Callable[[dict, dict], Any] = identical_preprocess_function,
         return_none_on_error: bool = False
     ) -> FilesDataset:
         assert len(set(modalities)) == len(list(modalities))
@@ -59,7 +59,7 @@ class ShardedFilesDatasetProcessor(ShardedDatasetProcessor):
             self._df,
             datatypes_to_load,
             meta_columns=meta_columns,
-            preprocess_f=preprocess_f,
+            preprocess_function=preprocess_f,
             return_none_on_error=return_none_on_error
         )
 

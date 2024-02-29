@@ -1,4 +1,5 @@
 import os
+from typing import List, Dict, Any
 from urllib.request import urlretrieve
 import zipfile
 import numpy as np
@@ -14,7 +15,6 @@ import autokeras as ak
 from tensorflow.keras.models import load_model
 
 from DPF.utils import read_image_rgb_from_bytes
-from DPF.filters.utils import identical_collate_fn
 from .img_filter import ImageFilter
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
@@ -91,8 +91,13 @@ class NSFWFilter(ImageFilter):
             device=self.device.lower().replace("cuda", "gpu"),
         )
 
-        self.schema = ["image_path", "nsfw"]
-        self.dataloader_kwargs = {
+    @property
+    def schema(self) -> List[str]:
+        return ["image_path", "nsfw_score"]
+
+    @property
+    def dataloader_kwargs(self) -> Dict[str, Any]:
+        return {
             "num_workers": self.num_workers,
             "batch_size": self.batch_size,
             "preprocess_f": self.preprocess,
@@ -119,7 +124,7 @@ class NSFWFilter(ImageFilter):
             .reshape(-1)
             .tolist()
         )
-        df_batch_labels["nsfw"].extend(nsfw_values)
+        df_batch_labels["nsfw_score"].extend(nsfw_values)
         df_batch_labels["image_path"].extend(image_paths)
 
         return df_batch_labels

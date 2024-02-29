@@ -1,10 +1,10 @@
 from typing import List, Dict, Optional, Union
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 
 from DPF.datatypes import DataType
 
 
-class DatasetConfig:
+class DatasetConfig(ABC):
     """Config for a dataset"""
 
     def __init__(
@@ -21,8 +21,9 @@ class DatasetConfig:
             List of datatypes in dataset
         """
         assert len(set([d.modality.key for d in datatypes])) == len(datatypes)
+        assert not path.endswith('/')
         self.datatypes = datatypes
-        self.path = path.rstrip('/')
+        self.path = path
 
     @property
     @abstractmethod

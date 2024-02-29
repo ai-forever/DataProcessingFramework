@@ -14,6 +14,7 @@ class LocalFileSystem(FileSystem):
     def __init__(self):
         super(LocalFileSystem).__init__()
 
+    # TODO(review) - дубль кода с filesystem.py
     def read_file(self, filepath: str, binary: bool) -> io.BytesIO:
         mode = "rb" if binary else "rt"
         with open(filepath, mode) as f:

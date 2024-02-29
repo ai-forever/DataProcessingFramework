@@ -4,7 +4,7 @@ import pandas as pd
 from tqdm import tqdm
 from torch.utils.data import Dataset, DataLoader
 
-from DPF.filters.utils import identical_collate_fn
+from DPF.dataloaders.dataloader_utils import identical_collate_fn
 
 
 class DataFilter(ABC):
@@ -16,8 +16,17 @@ class DataFilter(ABC):
         super().__init__()
         self.pbar = pbar
 
-        self.schema = []
-        self.dataloader_kwargs = {}  # Insert your params
+    @property
+    @abstractmethod
+    def schema(self) -> List[str]:
+        """List of result columns that filter adds to a DataFrame"""
+        pass
+
+    @property
+    @abstractmethod
+    def dataloader_kwargs(self) -> Dict[str, Any]:
+        """Parameters for dataloader"""
+        pass
 
     @property
     @abstractmethod

@@ -1,19 +1,12 @@
-from typing import Dict, List, Union
-import torch
-import time
+from typing import Dict, List, Union, Any
 
 from transformers import AutoTokenizer, BitsAndBytesConfig
 from llava.model import LlavaLlamaForCausalLM
 import torch
-import os
-import requests
-from PIL import Image
-from io import BytesIO
 from llava.conversation import conv_templates, SeparatorStyle
 from llava.utils import disable_torch_init
 from llava.constants import IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_TOKEN, DEFAULT_IM_START_TOKEN, DEFAULT_IM_END_TOKEN
 from llava.mm_utils import tokenizer_image_token, get_model_name_from_path, KeywordsStoppingCriteria
-from transformers import TextStreamer
 
 try:
     from torch.utils.data.dataloader import default_collate
@@ -21,7 +14,6 @@ except ImportError:
     from torch.utils.data import default_collate
 
 from DPF.utils import read_image_rgb_from_bytes
-from DPF.filters.utils import identical_collate_fn
 from .img_filter import ImageFilter
 
 
@@ -83,10 +75,15 @@ class LLaVaCaptioningFilter(ImageFilter):
         keywords = [stop_str]
         self.stopping_criteria = KeywordsStoppingCriteria(keywords, self.tokenizer, self.input_ids)
 
-        self.schema = [self.key_column, f"caption {self.model_path} prompt {self.prompt_to_use}"]
-        self.dataloader_kwargs = {
+    @property
+    def schema(self) -> List[str]:
+        return [self.key_column, f"caption {self.model_path} prompt {self.prompt_to_use}"]
+
+    @property
+    def dataloader_kwargs(self) -> Dict[str, Any]:
+        return {
             "num_workers": self.num_workers,
-            "batch_size": batch_size,
+            "batch_size": self.batch_size,
             "drop_last": False,
         }
 

@@ -1,3 +1,4 @@
+# TODO(review) - лучше сделать для пайплайна абстракцию с базовыми методами (run и т.д.), и наследоваться от неё
 class FilterPipeline:
     """
     FilterPipeline
