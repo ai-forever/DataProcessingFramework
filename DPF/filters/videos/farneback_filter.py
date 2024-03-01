@@ -91,12 +91,16 @@ class GunnarFarnebackFilter(VideoFilter):
         video_file = modality2data['video']
         
         frames = iio.imread(io.BytesIO(video_file), plugin="pyav")
+        
         if frames.shape[1] > frames.shape[2]:
-            frames = [transform_frame(frame=i, target_size=(450, 800)) for i in frames]
+            frames = [transform_frame(frame=frames[i], 
+                                      target_size=(450, 800)) for i in range(self.pass_frames, len(frames), self.pass_frames)]
         elif frames.shape[2] > frames.shape[1]:
-            frames = [transform_frame(frame=i, target_size=(800, 450)) for i in frames]
+            frames = [transform_frame(frame=frames[i],
+                                      target_size=(800, 450)) for i in range(self.pass_frames, len(frames), self.pass_frames)]
         else:
-            frames = [transform_frame(frame=i, targe_size=(450, 450)) for i in frames]
+            frames = [transform_frame(frame=frames[i], 
+                                      targe_size=(450, 450)) for i in range(self.pass_frames, len(frames), self.pass_frames)]
         return key, frames
         
     def process_batch(self, batch) -> dict:
