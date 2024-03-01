@@ -41,7 +41,7 @@ class VideoLLaVAFilter(VideoFilter):
         prompt: str = "detailed_video",
         temperature: float = 0.2,
         max_new_tokens: int = 1024,
-        load_4bit: bool = True,
+        load_4bit: bool = False,
         load_8bit: bool = False,
         device: str = "cuda:0",
         workers: int = 16,
@@ -86,7 +86,7 @@ class VideoLLaVAFilter(VideoFilter):
             self.tokenizer,
             IMAGE_TOKEN_INDEX,
             return_tensors='pt'
-        ).unsqueeze(0).cuda()
+        ).unsqueeze(0).to(self.device)
         stop_str = self.conv.sep if self.conv.sep_style != SeparatorStyle.TWO else self.conv.sep2
         keywords = [stop_str]
         self.stopping_criteria = KeywordsStoppingCriteria(keywords, self.tokenizer, self.input_ids)
@@ -116,6 +116,7 @@ class VideoLLaVAFilter(VideoFilter):
         video_tensors = default_collate(video_tensors).to(self.device)
         
         input_ids_batch = self.input_ids.repeat_interleave(video_tensors.shape[0], 0).to(self.device)
+        
         with torch.inference_mode():
             output_ids = self.model.generate(
                 input_ids_batch,
