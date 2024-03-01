@@ -88,10 +88,12 @@ class RAFTOpticalFlowFilter(VideoFilter):
         else:
             model_name = 'models/raft-things.pth'
             
-        self.model = torch.nn.DataParallel(RAFT(small=small))
-        self.model.load_state_dict(torch.load(zipped_files.open(model_name)))
+        self.model = RAFT(small=small)
         
-        self.model = self.model.module
+        model_weights = torch.load(zipped_files.open(model_name))
+        model_weights = {key.replace("module.", ""): value for key, value in model_weights.items()}
+        self.model.load_state_dict(model_weights)
+        
         self.model.to(self.device)
         self.model.eval()
 
@@ -115,12 +117,19 @@ class RAFTOpticalFlowFilter(VideoFilter):
         video_file = modality2data['video']
         
         frames = iio.imread(io.BytesIO(video_file), plugin="pyav")
+        
         if frames.shape[1] > frames.shape[2]:
-            frames = [transform_frame(frame=i, target_size=(450, 800), device=self.device) for i in frames]
+            frames = [transform_frame(frame=frames[i], 
+                                      target_size=(450, 800),
+                                      device=self.device) for i in range(self.pass_frames, len(frames), self.pass_frames)]
         elif frames.shape[2] > frames.shape[1]:
-            frames = [transform_frame(frame=i, target_size=(800, 450), device=self.device) for i in frames]
+            frames = [transform_frame(frame=frames[i],
+                                      target_size=(800, 450),
+                                      device=self.device) for i in range(self.pass_frames, len(frames), self.pass_frames)]
         else:
-            frames = [transform_frame(frame=i, targe_size=(450, 450), device=self.device) for i in frames]
+            frames = [transform_frame(frame=frames[i], 
+                                      targe_size=(450, 450),
+                                      device=self.device) for i in range(self.pass_frames, len(frames), self.pass_frames)]
         return key, frames
         
     def process_batch(self, batch) -> dict:
