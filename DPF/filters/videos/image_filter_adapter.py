@@ -17,9 +17,10 @@ class ImageFilterAdapter(VideoFilter):
         image_filter: ImageFilter,
         video_frame: float,
         workers: int = 8,
-        pbar: bool = True
+        pbar: bool = True,
+        _pbar_position: int = 0
     ):
-        super().__init__(pbar)
+        super().__init__(pbar, _pbar_position)
         self.image_filter = image_filter
         self.video_frame = video_frame
         self.num_workers = workers

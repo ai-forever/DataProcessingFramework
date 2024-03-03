@@ -12,9 +12,10 @@ class DataFilter(ABC):
     Abstract class for all filters that use datalaaders.
     """
 
-    def __init__(self, pbar: bool):
+    def __init__(self, pbar: bool, _pbar_position: int = 0):
         super().__init__()
         self.pbar = pbar
+        self.pbar_position = _pbar_position
 
     @property
     @abstractmethod
@@ -66,7 +67,7 @@ class DataFilter(ABC):
         dataloader = DataLoader(dataset, collate_fn=identical_collate_fn, **self.dataloader_kwargs)
         df_labels = self._generate_dict_from_schema()
 
-        for batch in tqdm(dataloader, disable=not self.pbar):
+        for batch in tqdm(dataloader, disable=not self.pbar, position=self.pbar_position):
             # drop Nans
             batch_filtered = [b[1] for b in batch if b[0]]
             if len(batch_filtered) == 0:

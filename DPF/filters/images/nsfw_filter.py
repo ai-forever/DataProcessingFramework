@@ -74,8 +74,9 @@ class NSFWFilter(ImageFilter):
         batch_size: int = 64,
         device: str = "cuda:0",
         pbar: bool = True,
+        _pbar_position: int = 0
     ):
-        super().__init__(pbar)
+        super().__init__(pbar, _pbar_position)
 
         self.num_workers = workers
         self.batch_size = batch_size
