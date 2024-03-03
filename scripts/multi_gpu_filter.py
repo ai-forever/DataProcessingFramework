@@ -3,8 +3,6 @@ sys.path.append('../')
 sys.path.append('./')
 
 import os
-from tqdm import tqdm
-import torch
 from accelerate import Accelerator
 
 from DPF.configs import ShardsDatasetConfig
