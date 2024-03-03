@@ -41,10 +41,10 @@ class MultiGPUDataFilter:
         self,
         devices: List[Union[torch.device | str]],
         filter_class: type,
-        **filter_kwargs
+        filter_params: dict
     ):
         self.filter_class = filter_class
-        self.filter_kwargs = filter_kwargs
+        self.filter_params = filter_params
         self.devices = devices
         self.num_parts = len(devices)
 
@@ -64,7 +64,7 @@ class MultiGPUDataFilter:
                     df_splits[i].index,
                     shared_results,
                     self.filter_class,
-                    self.filter_kwargs,
+                    self.filter_params,
                     self.devices[i],
                     filter_run_kwargs
                 )
