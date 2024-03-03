@@ -1,0 +1,16 @@
+name: Code Quality
+on: [pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v4
+      with:
+        python-version: "3.9"
+    - run: pip install --upgrade pip
+    - run: pip install mypy ruff isort
+    - run: mypy --disable-error-code=import-untyped --strict DPF/ scripts/
+    - run: ruff check DPF/ scripts/
+    - run: isort --check DPF/
