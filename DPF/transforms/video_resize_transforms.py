@@ -1,7 +1,8 @@
-from typing import List
 import shutil
 import subprocess
 import uuid
+from typing import List
+
 from DPF.transforms.base_file_transforms import BaseFilesTransforms, TransformsFileData
 from DPF.transforms.image_video_resizer import Resizer
 

@@ -1,9 +1,9 @@
-import os
 import io
+import os
 from datetime import datetime
-from typing import Union, List, Optional, Tuple, Iterable
+from typing import Iterable, List, Optional, Tuple, Union
 
-from .filesystem import FileSystem, FileData
+from .filesystem import FileData, FileSystem
 
 
 class LocalFileSystem(FileSystem):

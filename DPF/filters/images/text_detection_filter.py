@@ -1,10 +1,11 @@
-from typing import Dict, List, Union, Any
+from typing import Any, Dict, List, Union
+
 import numpy as np
+from CRAFT import CRAFTModel, boxes_area, preprocess_image
 
 from DPF.utils import read_image_rgb_from_bytes
-from .img_filter import ImageFilter
 
-from CRAFT import CRAFTModel, preprocess_image, boxes_area
+from .img_filter import ImageFilter
 
 
 class CRAFTFilter(ImageFilter):

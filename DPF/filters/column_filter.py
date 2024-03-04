@@ -1,5 +1,5 @@
+from abc import ABC, abstractmethod
 from typing import List
-from abc import abstractmethod, ABC
 
 import numpy as np
 import pandas as pd

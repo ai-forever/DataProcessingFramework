@@ -1,14 +1,19 @@
-from typing import Dict, List, Optional, Union, Callable, Any
+from typing import Any, Callable, Dict, List, Optional, Union
+
 import pandas as pd
 
-from DPF.filesystems import FileSystem
 from DPF.configs import ShardedFilesDatasetConfig
 from DPF.dataloaders import FilesDataset, identical_preprocess_function
-from DPF.modalities import MODALITIES
-from .sharded_processor import ShardedDatasetProcessor
-from DPF.validators.format_validators import ShardedValidationResult, ShardedFilesValidator
 from DPF.datatypes import ColumnDataType, ShardedDataType
+from DPF.filesystems import FileSystem
+from DPF.modalities import MODALITIES
 from DPF.transforms import BaseFilesTransforms
+from DPF.validators.format_validators import (
+    ShardedFilesValidator,
+    ShardedValidationResult,
+)
+
+from .sharded_processor import ShardedDatasetProcessor
 
 
 class ShardedFilesDatasetProcessor(ShardedDatasetProcessor):

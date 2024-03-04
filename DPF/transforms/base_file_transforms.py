@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
-from typing import List, Dict, Any, Optional, Iterable, Literal
-from tqdm.contrib.concurrent import process_map, thread_map
 from dataclasses import dataclass
+from typing import Any, Dict, Iterable, List, Literal, Optional
+
+from tqdm.contrib.concurrent import process_map, thread_map
 
 
 @dataclass

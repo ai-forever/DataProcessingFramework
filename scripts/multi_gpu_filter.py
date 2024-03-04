@@ -1,14 +1,15 @@
 import sys
+
 sys.path.append('../')
 sys.path.append('./')
 
 import os
+
 from accelerate import Accelerator
 
 from DPF.configs import ShardsDatasetConfig
 from DPF.dataset_reader import DatasetReader
 from DPF.filters.images.llava_captioning_filter import LLaVaCaptioningFilter
-
 
 SAVE_RESULTS_DIR = 'multigpu_filter_res/'
 SHARDS_DIR = 'examples/example_dataset/'

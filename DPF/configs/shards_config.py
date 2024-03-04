@@ -1,7 +1,8 @@
 from typing import List, Optional, Union
 
+from DPF.datatypes import ColumnDataType, ShardedDataType
 from DPF.modalities import MODALITIES
-from DPF.datatypes import ShardedDataType, ColumnDataType
+
 from .sharded_config import ShardedDatasetConfig
 
 

@@ -1,9 +1,11 @@
-from typing import Dict, Union, List, Any
-import imageio.v3 as iio
 import io
+from typing import Any, Dict, List, Union
+
+import imageio.v3 as iio
 from PIL import Image
 
 from DPF.filters.images.img_filter import ImageFilter
+
 from .video_filter import VideoFilter
 
 

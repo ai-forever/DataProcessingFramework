@@ -1,5 +1,6 @@
-from typing import List, Dict, Union, Any
 import os
+from typing import Any, Dict, List, Union
+
 import torch
 from torch import nn
 
@@ -7,13 +8,14 @@ try:
     from torch.utils.data.dataloader import default_collate
 except ImportError:
     from torch.utils.data import default_collate
+
+from huggingface_hub import cached_download, hf_hub_url
 from torchvision import models, transforms
-from huggingface_hub import hf_hub_url, cached_download
 
 from DPF.filters.utils import FP16Module
 from DPF.utils import read_image_rgb_from_bytes
-from .img_filter import ImageFilter
 
+from .img_filter import ImageFilter
 
 MODELS = {
     "resnext101_32x8d-large": {

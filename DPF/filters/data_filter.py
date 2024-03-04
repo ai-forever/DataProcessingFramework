@@ -1,8 +1,9 @@
-from typing import Dict, List, Union, Any
-from abc import abstractmethod, ABC
+from abc import ABC, abstractmethod
+from typing import Any, Dict, List, Union
+
 import pandas as pd
+from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
-from torch.utils.data import Dataset, DataLoader
 
 from DPF.dataloaders.dataloader_utils import identical_collate_fn
 

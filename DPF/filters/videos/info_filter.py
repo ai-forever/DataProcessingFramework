@@ -1,7 +1,8 @@
-from typing import Dict, Union, List, Any, Optional
-import imageio.v3 as iio
 import io
 from dataclasses import dataclass
+from typing import Any, Dict, List, Optional, Union
+
+import imageio.v3 as iio
 
 from .video_filter import VideoFilter
 

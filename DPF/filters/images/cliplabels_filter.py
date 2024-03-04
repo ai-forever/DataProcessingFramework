@@ -1,6 +1,7 @@
-from typing import List, Optional, Dict, Union, Any
-import torch
+from typing import Any, Dict, List, Optional, Union
+
 import clip
+import torch
 
 try:
     from torch.utils.data.dataloader import default_collate
@@ -8,6 +9,7 @@ except ImportError:
     from torch.utils.data import default_collate
 
 from DPF.utils import read_image_rgb_from_bytes
+
 from .img_filter import ImageFilter
 
 

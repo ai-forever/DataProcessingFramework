@@ -1,5 +1,5 @@
 import io
-from typing import Dict, List, Tuple, Union, Any
+from typing import Any, Dict, List, Tuple, Union
 from urllib.request import urlopen
 from zipfile import ZipFile
 
@@ -11,7 +11,6 @@ import torch.nn.functional as F
 
 from .raft_core.model import RAFT
 from .video_filter import VideoFilter
-
 
 WEIGHTS_URL = 'https://dl.dropboxusercontent.com/s/4j4z58wuv8o0mfz/models.zip'
 

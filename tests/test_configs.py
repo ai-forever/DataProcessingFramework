@@ -1,4 +1,8 @@
-from DPF.configs import ShardsDatasetConfig, ShardedFilesDatasetConfig, FilesDatasetConfig
+from DPF.configs import (
+    FilesDatasetConfig,
+    ShardedFilesDatasetConfig,
+    ShardsDatasetConfig,
+)
 
 
 def test_shards_config():

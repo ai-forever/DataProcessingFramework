@@ -1,8 +1,10 @@
-from typing import List, Optional, Dict
+from typing import Dict, List, Optional
+
 import pandas as pd
-from DPF.filesystems import FileSystem
-from DPF.configs import DatasetConfig
 from tqdm.contrib.concurrent import thread_map
+
+from DPF.configs import DatasetConfig
+from DPF.filesystems import FileSystem
 
 
 class DataFramesChanger:

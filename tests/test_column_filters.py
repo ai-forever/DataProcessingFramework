@@ -1,8 +1,8 @@
 from DPF import DatasetReader
-from DPF.configs import ShardsDatasetConfig, FilesDatasetConfig
+from DPF.configs import FilesDatasetConfig, ShardsDatasetConfig
+from DPF.filters.texts.lang_filter import LangFilter
 from DPF.filters.texts.regex_filter import RegexFilter
 from DPF.filters.texts.regexs import ENG_REGEXS, SPECIAL_REGEXS
-from DPF.filters.texts.lang_filter import LangFilter
 
 
 def test_shards_langid_filter():

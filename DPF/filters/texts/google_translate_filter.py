@@ -1,5 +1,5 @@
 import time
-from typing import List, Dict
+from typing import Dict, List
 
 import numpy as np
 import pandas as pd

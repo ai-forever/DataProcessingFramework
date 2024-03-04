@@ -1,4 +1,5 @@
-from typing import Dict, List, Union, Any
+from typing import Any, Dict, List, Union
+
 import torch
 from lavis.models import load_model_and_preprocess
 
@@ -8,6 +9,7 @@ except ImportError:
     from torch.utils.data import default_collate
 
 from DPF.utils import read_image_rgb_from_bytes
+
 from .img_filter import ImageFilter
 
 

@@ -1,8 +1,9 @@
-from typing import Dict, Union, List, Any, Optional
-from io import BytesIO
-from PIL import Image
-import numpy as np
 from dataclasses import dataclass
+from io import BytesIO
+from typing import Any, Dict, List, Optional, Union
+
+import numpy as np
+from PIL import Image
 
 from .img_filter import ImageFilter
 

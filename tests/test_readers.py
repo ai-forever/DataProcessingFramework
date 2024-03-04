@@ -1,7 +1,16 @@
 import os
+
 from DPF import DatasetReader
-from DPF.configs import ShardsDatasetConfig, ShardedFilesDatasetConfig, FilesDatasetConfig
-from DPF.processors import ShardsDatasetProcessor, ShardedFilesDatasetProcessor, FilesDatasetProcessor
+from DPF.configs import (
+    FilesDatasetConfig,
+    ShardedFilesDatasetConfig,
+    ShardsDatasetConfig,
+)
+from DPF.processors import (
+    FilesDatasetProcessor,
+    ShardedFilesDatasetProcessor,
+    ShardsDatasetProcessor,
+)
 
 
 def test_shards_reader():

@@ -1,11 +1,14 @@
-from typing import List, Dict, Union, Optional, Any
+from typing import Any, Dict, List, Optional, Union
+
 import numpy as np
-import torch
-from torch.nn.utils.rnn import pad_sequence
+
 # TODO(review) - зависимость отсутствует в requirements.txt
 import ruclip
+import torch
+from torch.nn.utils.rnn import pad_sequence
 
 from DPF.utils import read_image_rgb_from_bytes
+
 from .t2i_filter import T2IFilter
 
 

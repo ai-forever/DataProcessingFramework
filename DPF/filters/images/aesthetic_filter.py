@@ -1,10 +1,11 @@
-from typing import Dict, List, Union, Any
 import os
+from typing import Any, Dict, List, Union
 from urllib.request import urlretrieve
-import torch
-from torch import nn
+
 # TODO(review) - зависимость отсутствует в requirements.txt
 import clip
+import torch
+from torch import nn
 
 try:
     from torch.utils.data.dataloader import default_collate
@@ -12,6 +13,7 @@ except ImportError:
     from torch.utils.data import default_collate
 
 from DPF.utils import read_image_rgb_from_bytes
+
 from .img_filter import ImageFilter
 
 

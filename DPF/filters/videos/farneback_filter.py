@@ -1,5 +1,5 @@
 import io
-from typing import Dict, List, Union, Tuple, Any
+from typing import Any, Dict, List, Tuple, Union
 
 import cv2
 import imageio.v3 as iio

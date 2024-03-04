@@ -1,5 +1,5 @@
-from typing import List
 from abc import ABC
+from typing import List
 
 from DPF.filters.data_filter import DataFilter
 from DPF.modalities import MODALITIES

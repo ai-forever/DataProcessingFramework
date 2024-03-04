@@ -1,7 +1,11 @@
 from DPF import DatasetReader
-from DPF.configs import ShardsDatasetConfig, ShardedFilesDatasetConfig, FilesDatasetConfig
-from DPF.filters.images.info_filter import ImageInfoFilter
+from DPF.configs import (
+    FilesDatasetConfig,
+    ShardedFilesDatasetConfig,
+    ShardsDatasetConfig,
+)
 from DPF.filters.images.hash_filters import PHashFilter
+from DPF.filters.images.info_filter import ImageInfoFilter
 
 
 def test_shards_info_filter():

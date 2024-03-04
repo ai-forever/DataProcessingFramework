@@ -1,15 +1,23 @@
-from typing import List, Tuple, Union, Optional
+from functools import partial
+from typing import List, Optional, Tuple, Union
+
 import pandas as pd
 from tqdm.contrib.concurrent import process_map
-from functools import partial
 
+from DPF.configs import (
+    DatasetConfig,
+    FilesDatasetConfig,
+    ShardedDatasetConfig,
+    ShardedFilesDatasetConfig,
+    ShardsDatasetConfig,
+)
+from DPF.datatypes import FileDataType, ShardedDataType
 from DPF.filesystems import FileSystem, LocalFileSystem, S3FileSystem
-from DPF.datatypes import ShardedDataType, FileDataType
-from DPF.configs import DatasetConfig, ShardedDatasetConfig, ShardsDatasetConfig, ShardedFilesDatasetConfig, \
-    FilesDatasetConfig
 from DPF.processors import (
-    DatasetProcessor, ShardsDatasetProcessor, ShardedFilesDatasetProcessor,
-    FilesDatasetProcessor
+    DatasetProcessor,
+    FilesDatasetProcessor,
+    ShardedFilesDatasetProcessor,
+    ShardsDatasetProcessor,
 )
 
 

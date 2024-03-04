@@ -1,9 +1,10 @@
-from typing import Dict, List, Union, Any
 import os
+from typing import Any, Dict, List, Union
 from urllib.request import urlretrieve
-import torch
+
 import clip
 import numpy as np
+import torch
 import torch.nn as nn
 
 try:
@@ -12,6 +13,7 @@ except ImportError:
     from torch.utils.data import default_collate
 
 from DPF.utils import read_image_rgb_from_bytes
+
 from .img_filter import ImageFilter
 
 

@@ -1,14 +1,15 @@
-from typing import Optional, List, Dict, Any
-import os
-import torch
 import json
+import os
+from typing import Any, Dict, List, Optional
+
+import torch
 
 from DPF.utils import read_image_rgb_from_bytes
-from .img_filter import ImageFilter
 
-from .ocr_model.utils import AttnLabelConverter
+from .img_filter import ImageFilter
 from .ocr_model.dataset import AlignCollate
 from .ocr_model.model import Model
+from .ocr_model.utils import AttnLabelConverter
 
 
 class Options:

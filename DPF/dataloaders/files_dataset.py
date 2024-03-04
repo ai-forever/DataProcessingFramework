@@ -1,10 +1,11 @@
-from typing import List, Dict, Optional, Callable, Any, Union
+from typing import Any, Callable, Dict, List, Optional, Union
+
 import pandas as pd
 from torch.utils.data import Dataset
 
-from DPF.filesystems.filesystem import FileSystem
 from DPF.dataloaders.dataloader_utils import identical_preprocess_function
-from DPF.datatypes import ShardedDataType, ColumnDataType, FileDataType
+from DPF.datatypes import ColumnDataType, FileDataType, ShardedDataType
+from DPF.filesystems.filesystem import FileSystem
 
 
 class FilesDataset(Dataset):

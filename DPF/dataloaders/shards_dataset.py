@@ -1,14 +1,15 @@
-from typing import List, Dict, Optional, Callable, Union, Any
+import itertools
 import os
 import tarfile
-import itertools
+from typing import Any, Callable, Dict, List, Optional, Union
+
 import pandas as pd
 import torch
 from torch.utils.data import IterableDataset
 
-from DPF.filesystems.filesystem import FileSystem
 from DPF.dataloaders.dataloader_utils import identical_preprocess_function
-from DPF.datatypes import ShardedDataType, ColumnDataType
+from DPF.datatypes import ColumnDataType, ShardedDataType
+from DPF.filesystems.filesystem import FileSystem
 
 
 class ShardsDataset(IterableDataset):

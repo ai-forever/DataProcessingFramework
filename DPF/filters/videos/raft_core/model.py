@@ -2,9 +2,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .update import BasicUpdateBlock, SmallUpdateBlock
+from .corr import AlternateCorrBlock, CorrBlock
 from .extractor import BasicEncoder, SmallEncoder
-from .corr import CorrBlock, AlternateCorrBlock
+from .update import BasicUpdateBlock, SmallUpdateBlock
 from .utils import coords_grid
 
 try:

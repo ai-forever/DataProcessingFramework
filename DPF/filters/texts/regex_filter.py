@@ -1,5 +1,5 @@
-from typing import Optional, List
 import re
+from typing import List, Optional
 
 from DPF.filters import ColumnFilter
 

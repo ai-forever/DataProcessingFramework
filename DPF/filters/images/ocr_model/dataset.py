@@ -1,11 +1,15 @@
 import math
+
+import numpy as np
+
 # TODO(review) - зависимость отсутствует в requirements.txt
 import torch
-# TODO(review) - зависимость отсутствует в requirements.txt
-from PIL import Image
-import numpy as np
+
 # TODO(review) - зависимость отсутствует в requirements.txt
 import torchvision.transforms as transforms
+
+# TODO(review) - зависимость отсутствует в requirements.txt
+from PIL import Image
 
 
 # TODO(review) - зачем наследоваться от object?

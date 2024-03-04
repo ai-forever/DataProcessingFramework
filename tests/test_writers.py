@@ -1,7 +1,12 @@
-import shutil
 import os
+import shutil
+
 from DPF import DatasetReader
-from DPF.configs import ShardsDatasetConfig, ShardedFilesDatasetConfig, FilesDatasetConfig
+from DPF.configs import (
+    FilesDatasetConfig,
+    ShardedFilesDatasetConfig,
+    ShardsDatasetConfig,
+)
 
 
 def test_shards_to_shards():

@@ -1,9 +1,10 @@
-from typing import List, Dict, Optional, Union
 import os
+from typing import Dict, List, Optional, Union
 
-from DPF.datatypes import DataType, ColumnDataType, FileDataType
-from .dataset_config import DatasetConfig
+from DPF.datatypes import ColumnDataType, DataType, FileDataType
+
 from ..modalities import MODALITIES
+from .dataset_config import DatasetConfig
 
 
 class FilesDatasetConfig(DatasetConfig):

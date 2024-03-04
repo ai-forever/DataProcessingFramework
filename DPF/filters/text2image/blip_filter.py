@@ -1,10 +1,12 @@
-from typing import List, Dict, Union, Optional, Any
+from typing import Any, Dict, List, Optional, Union
+
 import numpy as np
 import torch
-from torch.nn.utils.rnn import pad_sequence
 from lavis.models import load_model_and_preprocess
+from torch.nn.utils.rnn import pad_sequence
 
 from DPF.utils import read_image_rgb_from_bytes
+
 from .t2i_filter import T2IFilter
 
 

@@ -1,19 +1,23 @@
 import os.path
-from typing import Union, Dict, List, Optional, Callable, Any
 from abc import ABC, abstractmethod
-from torch.utils.data import Dataset, DataLoader
+from typing import Any, Callable, Dict, List, Optional, Union
+
 import pandas as pd
+from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
 
-from DPF.filesystems import FileSystem, LocalFileSystem
-from DPF.filters import DataFilter, ColumnFilter
-from DPF.processors.writers import ABSWriter, ShardedFilesWriter, ShardsWriter
-from DPF.dataloaders.dataloader_utils import identical_preprocess_function, identical_collate_fn
-from DPF.datatypes import ColumnDataType
-from DPF.modalities import MODALITIES
 from DPF.configs import DatasetConfig, config2format
-from DPF.validators import ValidationResult
+from DPF.dataloaders.dataloader_utils import (
+    identical_collate_fn,
+    identical_preprocess_function,
+)
+from DPF.datatypes import ColumnDataType
+from DPF.filesystems import FileSystem, LocalFileSystem
+from DPF.filters import ColumnFilter, DataFilter
+from DPF.modalities import MODALITIES
+from DPF.processors.writers import ABSWriter, ShardedFilesWriter, ShardsWriter
 from DPF.transforms import BaseFilesTransforms
+from DPF.validators import ValidationResult
 
 
 class DatasetProcessor(ABC):

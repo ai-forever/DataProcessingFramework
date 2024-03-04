@@ -1,10 +1,12 @@
-from typing import Dict, Union, List, Any
 import hashlib
-from PIL import Image
+from typing import Any, Dict, List, Union
+
 import numpy as np
+from PIL import Image
 from scipy.fftpack import dct
 
 from DPF.utils import read_image_rgb_from_bytes
+
 from .img_filter import ImageFilter
 
 

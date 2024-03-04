@@ -1,7 +1,8 @@
+from multiprocessing import Manager, Process
 from typing import List
-from multiprocessing import Process, Manager
-import pandas as pd
+
 import numpy as np
+import pandas as pd
 import torch
 
 from DPF.filesystems import FileSystem

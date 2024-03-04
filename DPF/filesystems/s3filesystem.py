@@ -1,9 +1,10 @@
-import os
 import io
-from typing import Union, List, Optional, Tuple, Iterable
+import os
+from typing import Iterable, List, Optional, Tuple, Union
+
 import fsspec
 
-from .filesystem import FileSystem, FileData
+from .filesystem import FileData, FileSystem
 
 
 class S3FileSystem(FileSystem):

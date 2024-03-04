@@ -1,6 +1,6 @@
 from typing import List
 
-from py3langid.langid import LanguageIdentifier, MODEL_FILE
+from py3langid.langid import MODEL_FILE, LanguageIdentifier
 
 from DPF.filters import ColumnFilter
 
