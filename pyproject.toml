@@ -1,3 +1,6 @@
+[tool.isort]
+profile = "black"
+
 [tool.ruff.lint]
 ignore-init-module-imports = true
 
