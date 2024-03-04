@@ -62,7 +62,7 @@ class ShardedFilesWriter(ABSWriter):
         self.df_raw.append(table_data)
         self._try_close_batch()
 
-    def __enter__(self) -> "FileWriter":
+    def __enter__(self) -> "FileWriter":  # noqa: F821
         return self
 
     def __exit__(

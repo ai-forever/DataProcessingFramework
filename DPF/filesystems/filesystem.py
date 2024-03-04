@@ -3,7 +3,7 @@ import os
 import io
 import tarfile
 import datetime
-from typing import Union, List, Dict, Optional, Tuple, Iterable
+from typing import Union, List, Optional, Tuple, Iterable
 import pandas as pd
 
 

@@ -1,4 +1,4 @@
-from typing import List, Dict, Optional, Union
+from typing import List, Dict, Union
 
 from DPF.datatypes import DataType, ShardedDataType, ColumnDataType
 from .dataset_config import DatasetConfig

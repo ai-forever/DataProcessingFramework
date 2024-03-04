@@ -1,14 +1,12 @@
-from typing import List, Optional, Dict, Union, Any
+from typing import List, Dict, Union, Any
 from io import BytesIO
 import torch
 
 from videollava.constants import DEFAULT_IMAGE_TOKEN, IMAGE_TOKEN_INDEX
 from videollava.conversation import SeparatorStyle, conv_templates
 from videollava.mm_utils import (KeywordsStoppingCriteria,
-                                 get_model_name_from_path,
                                  tokenizer_image_token)
 from videollava.model.builder import load_pretrained_model
-from videollava.utils import disable_torch_init
 
 from .video_filter import VideoFilter
 

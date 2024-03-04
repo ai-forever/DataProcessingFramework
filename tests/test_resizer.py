@@ -1,3 +1,4 @@
+# ruff: noqa: F841
 import pytest
 from DPF.transforms import Resizer, ResizerModes
 

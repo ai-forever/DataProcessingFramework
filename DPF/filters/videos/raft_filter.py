@@ -8,7 +8,6 @@ import imageio.v3 as iio
 import numpy as np
 import torch
 import torch.nn.functional as F
-from scipy import interpolate
 
 from .raft_core.model import RAFT
 from .video_filter import VideoFilter

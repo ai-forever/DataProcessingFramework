@@ -29,12 +29,11 @@ def load_safety_model(clip_model, cache_folder, device):
             # Currently, memory growth needs to be the same across GPUs
             for gpu in gpus:
                 tf.config.experimental.set_memory_growth(gpu, True)
-        except:
+        except Exception:
             pass
 
     if clip_model == "ViT-L/14":
         model_dir = cache_folder + "/clip_autokeras_binary_nsfw"
-        dim = 768
         url_model = (
             "https://raw.githubusercontent.com/LAION-AI/"
             "CLIP-based-NSFW-Detector/main/clip_autokeras_binary_nsfw.zip"

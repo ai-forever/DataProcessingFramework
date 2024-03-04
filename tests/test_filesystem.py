@@ -1,4 +1,4 @@
-from DPF.filesystems import LocalFileSystem, S3FileSystem
+from DPF.filesystems import S3FileSystem
 
 
 def test_s3_join():

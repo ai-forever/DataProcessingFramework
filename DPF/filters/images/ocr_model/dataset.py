@@ -1,17 +1,9 @@
-import os
-import sys
-import re
-import six
 import math
 # TODO(review) - зависимость отсутствует в requirements.txt
-import lmdb
 import torch
 # TODO(review) - зависимость отсутствует в requirements.txt
-from natsort import natsorted
 from PIL import Image
 import numpy as np
-from torch.utils.data import Dataset, ConcatDataset, Subset
-from torch._utils import _accumulate
 # TODO(review) - зависимость отсутствует в requirements.txt
 import torchvision.transforms as transforms
 

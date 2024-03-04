@@ -1,10 +1,10 @@
 import torch
 import torch.nn.functional as F
-from .utils import bilinear_sampler, coords_grid
+from .utils import bilinear_sampler
 
 try:
     import alt_cuda_corr
-except:
+except Exception:
     # alt_cuda_corr is not compiled
     pass
 

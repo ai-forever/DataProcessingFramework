@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Union, List, Any
+from typing import Dict, Union, List, Any
 import hashlib
 from PIL import Image
 import numpy as np

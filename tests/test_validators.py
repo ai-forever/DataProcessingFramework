@@ -1,7 +1,7 @@
 from DPF import DatasetReader
 from DPF.configs import ShardsDatasetConfig, ShardedFilesDatasetConfig, FilesDatasetConfig
 from DPF.validators.format_validators import (
-    ShardsValidator, ShardedFilesValidator, IsNotKeyError, MissedColumnsError, MissingValueError
+    IsNotKeyError, MissedColumnsError, MissingValueError
 )
 
 

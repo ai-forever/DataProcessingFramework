@@ -1,11 +1,10 @@
 import os
-from typing import List, Dict, Optional
+from typing import List
 import pandas as pd
 
 from DPF.datatypes import ShardedDataType
 from DPF.validators.format_validators import (
-    ShardedValidator, FileStructureError, NoSuchFileError, IsNotKeyError, \
-    DataFrameError, MissingValueError
+    ShardedValidator, FileStructureError, NoSuchFileError, DataFrameError, MissingValueError
 )
 
 

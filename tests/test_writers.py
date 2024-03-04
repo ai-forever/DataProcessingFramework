@@ -2,9 +2,6 @@ import shutil
 import os
 from DPF import DatasetReader
 from DPF.configs import ShardsDatasetConfig, ShardedFilesDatasetConfig, FilesDatasetConfig
-from DPF.validators.format_validators import (
-    ShardsValidator, ShardedFilesValidator, IsNotKeyError, MissedColumnsError, MissingValueError
-)
 
 
 def test_shards_to_shards():

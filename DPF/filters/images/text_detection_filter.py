@@ -1,11 +1,6 @@
 from typing import Dict, List, Union, Any
 import numpy as np
 
-try:
-    from torch.utils.data.dataloader import default_collate
-except ImportError:
-    from torch.utils.data import default_collate
-
 from DPF.utils import read_image_rgb_from_bytes
 from .img_filter import ImageFilter
 
@@ -33,7 +28,7 @@ class CRAFTFilter(ImageFilter):
 
     @property
     def schema(self) -> List[str]:
-        return [self.key_column, f"text_boxes", "num_text_boxes", "text_area"]
+        return [self.key_column, "text_boxes", "num_text_boxes", "text_area"]
 
     @property
     def dataloader_kwargs(self) -> Dict[str, Any]:

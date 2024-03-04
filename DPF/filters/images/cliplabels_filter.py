@@ -74,12 +74,12 @@ class CLIPLabelsFilter(ImageFilter):
         self.text_features = self.get_text_features()
         #
         self.label2column = {
-            l: f'{self.clip_version} clip score "{l}"' for l in self.labels
+            label: f'{self.clip_version} clip score "{label}"' for label in self.labels
         }
 
     @property
     def schema(self) -> List[str]:
-        return [self.key_column] + [self.label2column[l] for l in self.labels]
+        return [self.key_column] + [self.label2column[label] for label in self.labels]
 
     @property
     def dataloader_kwargs(self) -> Dict[str, Any]:

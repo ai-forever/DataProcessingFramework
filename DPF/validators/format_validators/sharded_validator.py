@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import List, Dict
 
 import pandas as pd
-from tqdm.contrib.concurrent import process_map, thread_map
+from tqdm.contrib.concurrent import thread_map
 
 from DPF.validators.format_validators import (
     IsNotKeyError, FileStructureError, DataFrameError, MissedColumnsError, DuplicatedValuesError

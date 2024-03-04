@@ -39,11 +39,11 @@ class CTCLabelConverter(object):
     def decode(self, text_index, length):
         """ convert text-index into text-label. """
         texts = []
-        for index, l in enumerate(length):
+        for index, l in enumerate(length):  # noqa: E741
             t = text_index[index, :]
 
             char_list = []
-            for i in range(l):
+            for i in range(l):  # noqa: E741
                 if t[i] != 0 and (not (i > 0 and t[i - 1] == t[i])):  # removing repeated characters and blank.
                     char_list.append(self.character[t[i]])
             text = ''.join(char_list)
@@ -85,7 +85,7 @@ class CTCLabelConverterForBaiduWarpctc(object):
         """ convert text-index into text-label. """
         texts = []
         index = 0
-        for l in length:
+        for l in length:  # noqa: E741
             t = text_index[index:index + l]
 
             char_list = []
@@ -140,7 +140,7 @@ class AttnLabelConverter(object):
     def decode(self, text_index, length):
         """ convert text-index into text-label. """
         texts = []
-        for index, l in enumerate(length):
+        for index, l in enumerate(length):  # noqa: E741
             text = ''.join([self.character[i] for i in text_index[index, :]])
             texts.append(text)
         return texts

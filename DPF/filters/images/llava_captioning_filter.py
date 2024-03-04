@@ -1,12 +1,12 @@
 from typing import Dict, List, Union, Any
 
-from transformers import AutoTokenizer, BitsAndBytesConfig
+from transformers import AutoTokenizer
 from llava.model import LlavaLlamaForCausalLM
 import torch
 from llava.conversation import conv_templates, SeparatorStyle
 from llava.utils import disable_torch_init
 from llava.constants import IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_TOKEN, DEFAULT_IM_START_TOKEN, DEFAULT_IM_END_TOKEN
-from llava.mm_utils import tokenizer_image_token, get_model_name_from_path, KeywordsStoppingCriteria
+from llava.mm_utils import tokenizer_image_token, KeywordsStoppingCriteria
 
 try:
     from torch.utils.data.dataloader import default_collate

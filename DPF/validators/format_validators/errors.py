@@ -1,6 +1,6 @@
 from abc import abstractmethod, ABC
 from dataclasses import dataclass
-from typing import List, Dict
+from typing import List
 
 
 class DataFrameError:

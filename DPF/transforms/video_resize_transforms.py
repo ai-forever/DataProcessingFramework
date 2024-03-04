@@ -1,6 +1,4 @@
 from typing import List
-from PIL import Image
-import os
 import shutil
 import subprocess
 import uuid
@@ -56,7 +54,7 @@ class VideoResizeTransforms(BaseFilesTransforms):
             new_height += new_height % 2
             temp_filename = str(uuid.uuid4())+'.'+ext
             ffmpeg_command = f'ffmpeg -i {filepath} -preset {self.ffmpeg_preset} -vf "scale={new_width}:{new_height}" {temp_filename} -y'
-            result = subprocess.run(ffmpeg_command, shell=True, capture_output=True, check=True)
+            subprocess.run(ffmpeg_command, shell=True, capture_output=True, check=True)
             shutil.move(temp_filename, filepath)
 
         return TransformsFileData(filepath, {'width': new_width, 'height': new_height})

@@ -100,7 +100,7 @@ class ShardsDataset(IterableDataset):
                     if self.return_none_on_error:
                         try:
                             file_bytes = tar.extractfile(filename).read()
-                        except Exception as err:
+                        except Exception:
                             file_bytes = None
                             is_ok = False
                     else:

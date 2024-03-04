@@ -3,10 +3,8 @@ import numpy as np
 import torch
 from torch.nn.utils.rnn import pad_sequence
 from lavis.models import load_model_and_preprocess
-from PIL import Image
 
 from DPF.utils import read_image_rgb_from_bytes
-from ...dataloaders.dataloader_utils import identical_collate_fn
 from .t2i_filter import T2IFilter
 
 
@@ -59,7 +57,7 @@ class BlipFilter(T2IFilter):
 
     @property
     def schema(self) -> List[str]:
-        return [self.key_column, f"blip2_ViT-L_similarity"]
+        return [self.key_column, "blip2_ViT-L_similarity"]
 
     @property
     def dataloader_kwargs(self) -> Dict[str, Any]:
@@ -91,7 +89,7 @@ class BlipFilter(T2IFilter):
             
             batch_similarity = self.get_similarity(features_image, features_text)
 
-        df_batch_labels[f"blip2_ViT-L_similarity"].extend(batch_similarity)
+        df_batch_labels["blip2_ViT-L_similarity"].extend(batch_similarity)
         df_batch_labels[self.key_column].extend(keys)
 
         return df_batch_labels

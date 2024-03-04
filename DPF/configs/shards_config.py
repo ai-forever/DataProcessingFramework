@@ -1,4 +1,4 @@
-from typing import List, Dict, Optional, Union
+from typing import List, Optional, Union
 
 from DPF.modalities import MODALITIES
 from DPF.datatypes import ShardedDataType, ColumnDataType

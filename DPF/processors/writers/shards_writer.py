@@ -72,7 +72,7 @@ class ShardsWriter(ABSWriter):
         img_tar_info.size = len(fp.getvalue())
         return img_tar_info, fp
 
-    def __enter__(self) -> "FileWriter":
+    def __enter__(self) -> "FileWriter":  # noqa: F821
         return self
 
     def __exit__(

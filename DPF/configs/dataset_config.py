@@ -1,4 +1,4 @@
-from typing import List, Dict, Optional, Union
+from typing import List, Dict
 from abc import abstractmethod, ABC
 
 from DPF.datatypes import DataType

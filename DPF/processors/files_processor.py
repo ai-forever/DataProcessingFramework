@@ -1,10 +1,9 @@
 from typing import Dict, List, Optional, Union, Callable, Any
 import pandas as pd
-import os
 
 from DPF.filesystems import FileSystem
 from DPF.datatypes import FileDataType, ColumnDataType
-from DPF.configs import DatasetConfig, FilesDatasetConfig
+from DPF.configs import FilesDatasetConfig
 from .processor import DatasetProcessor
 from DPF.dataloaders import identical_preprocess_function, FilesDataset
 from DPF.validators.format_validators import FilesValidator, FilesValidationResult
@@ -65,7 +64,7 @@ class FilesDatasetProcessor(DatasetProcessor):
         duplicates = df_new[df_new[key_column].duplicated()][key_column].tolist()
         assert len(duplicates) == 0, f'New dataframe has duplicates in "{key_column}" column: {duplicates}'
 
-        assert len(df_old) == len(df_new), f'Length of dataframe is changed'
+        assert len(df_old) == len(df_new), 'Length of dataframe is changed'
 
         columns_to_add = [i for i in df_new.columns if i != key_column]
         columns_intersection = set(df_old.columns).intersection(set(columns_to_add))

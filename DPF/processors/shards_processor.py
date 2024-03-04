@@ -1,10 +1,9 @@
 import os
-import tarfile
 from typing import Dict, List, Optional, Union, Callable, Any
 import pandas as pd
 
 from DPF.filesystems import FileSystem
-from DPF.configs import DatasetConfig, ShardedDatasetConfig
+from DPF.configs import ShardedDatasetConfig
 from DPF.dataloaders import ShardsDataset, identical_preprocess_function
 from DPF.datatypes import ColumnDataType, ShardedDataType
 from .sharded_processor import ShardedDatasetProcessor

@@ -4,11 +4,11 @@ from tqdm.contrib.concurrent import process_map
 from functools import partial
 
 from DPF.filesystems import FileSystem, LocalFileSystem, S3FileSystem
-from DPF.datatypes import ShardedDataType, ColumnDataType, FileDataType
+from DPF.datatypes import ShardedDataType, FileDataType
 from DPF.configs import DatasetConfig, ShardedDatasetConfig, ShardsDatasetConfig, ShardedFilesDatasetConfig, \
     FilesDatasetConfig
 from DPF.processors import (
-    DatasetProcessor, ShardedDatasetProcessor, ShardsDatasetProcessor, ShardedFilesDatasetProcessor,
+    DatasetProcessor, ShardsDatasetProcessor, ShardedFilesDatasetProcessor,
     FilesDatasetProcessor
 )
 

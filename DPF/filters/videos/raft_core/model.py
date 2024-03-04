@@ -1,4 +1,3 @@
-import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -6,11 +5,11 @@ import torch.nn.functional as F
 from .update import BasicUpdateBlock, SmallUpdateBlock
 from .extractor import BasicEncoder, SmallEncoder
 from .corr import CorrBlock, AlternateCorrBlock
-from .utils import bilinear_sampler, coords_grid
+from .utils import coords_grid
 
 try:
     autocast = torch.cuda.amp.autocast
-except:
+except Exception:
     # dummy autocast for PyTorch < 1.6
     class autocast:
         def __init__(self, enabled):
