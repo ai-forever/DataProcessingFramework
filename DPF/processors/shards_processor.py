@@ -30,10 +30,12 @@ class ShardsDatasetProcessor(ShardedDatasetProcessor):
         self,
         validate_filestructure: bool = True,
         validate_shards: bool = True,
-        columns_to_check: List[str] = [],
+        columns_to_check: Optional[List[str]] = None,
         workers: int = 1,
         pbar: bool = True
     ) -> ShardedValidationResult:
+        if columns_to_check is None:
+            columns_to_check = []
         validator = ShardsValidator(
             self.df,
             self.filesystem,

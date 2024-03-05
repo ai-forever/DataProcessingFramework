@@ -13,7 +13,7 @@ def split_on_batches(text_list: List[str], max_symbols: int = 3000) -> List[List
     batches = []
     count = 0
     batch = []
-    for i, text in enumerate(text_list):
+    for _, text in enumerate(text_list):
         if len(text) >= max_symbols:
             if len(batch) > 0:
                 batches.append(batch)
@@ -83,7 +83,7 @@ class GoogleTranslateFilter(ColumnFilter):
         )
 
         results = {}
-        for i, batch in enumerate(tqdm(batches, disable=not self.pbar)):
+        for _, batch in enumerate(tqdm(batches, disable=not self.pbar)):
             for num_retry in range(self.num_retries_per_batch+1):
                 try:
                     results.update(translate_batch(self.translator, batch))

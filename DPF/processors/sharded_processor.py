@@ -72,7 +72,7 @@ class ShardedDatasetProcessor(DatasetProcessor, ABC):
             return data
 
         table_to_new_data = self.df.groupby("split_name").apply(
-            lambda x: list(v for v in _add_key_column(x[[path_column]+columns]).to_dict("records"))
+            lambda x: list(v for v in _add_key_column(x[[path_column]+columns]).to_dict("records"))  # noqa
         )
         table_to_new_data.index = [self.get_datafile_path(i) for i in table_to_new_data.index]
 

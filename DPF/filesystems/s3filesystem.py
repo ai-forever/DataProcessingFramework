@@ -53,7 +53,7 @@ class S3FileSystem(FileSystem):
     def listdir(
         self, folder_path: str, filenames_only: Optional[bool] = False
     ) -> List[str]:
-        folder_path = folder_path.lstrip("s3://").rstrip("/") + "/"
+        folder_path = folder_path.lstrip("s3://").rstrip("/") + "/"  # noqa
         s3 = fsspec.filesystem("s3", **self.storage_options)
         files = s3.ls(folder_path)
         if folder_path in files:
@@ -65,7 +65,7 @@ class S3FileSystem(FileSystem):
         return files
 
     def listdir_meta(self, folder_path: str) -> List[FileData]:
-        folder_path = folder_path.lstrip("s3://").rstrip("/") + "/"
+        folder_path = folder_path.lstrip("s3://").rstrip("/") + "/"  # noqa
         s3 = fsspec.filesystem("s3", **self.storage_options)
         files_data = s3.ls(folder_path, detail=True)
 

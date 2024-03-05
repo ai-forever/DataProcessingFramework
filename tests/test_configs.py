@@ -43,4 +43,3 @@ def test_files_config():
     assert config.table_path == path
     assert len(config.datatypes) == 2
 
-    

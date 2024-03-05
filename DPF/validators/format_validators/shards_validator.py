@@ -21,8 +21,8 @@ class ShardsValidator(ShardedValidator):
     def _validate_files(self, filepaths: List[str]) -> List[FileStructureError]:
         datafiles_ext = '.' + self.config.datafiles_ext
         archives_ext = '.' + self.config.archives_ext
-        datafiles_set = set([f for f in filepaths if f.endswith(datafiles_ext)])
-        archives_set = set([f for f in filepaths if f.endswith(archives_ext)])
+        datafiles_set = {f for f in filepaths if f.endswith(datafiles_ext)}
+        archives_set = {f for f in filepaths if f.endswith(archives_ext)}
 
         errors = []
         for datafile in datafiles_set:
@@ -47,7 +47,7 @@ class ShardsValidator(ShardedValidator):
 
         tar = self.filesystem.read_tar(archive_path)
         filenames_in_tar = []
-        for c, member in enumerate(tar):
+        for member in tar:
             filenames_in_tar.append(member.name)
         tar.close()
         filenames_in_tar_set = set(filenames_in_tar)

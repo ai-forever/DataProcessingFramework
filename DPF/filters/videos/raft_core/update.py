@@ -13,7 +13,7 @@ class FlowHead(nn.Module):
     def forward(self, x):
         return self.conv2(self.relu(self.conv1(x)))
 
-    
+
 class ConvGRU(nn.Module):
     def __init__(self, hidden_dim=128, input_dim=192+128):
         super(ConvGRU, self).__init__()
@@ -31,7 +31,7 @@ class ConvGRU(nn.Module):
         h = (1-z) * h + z * q
         return h
 
-    
+
 class SepConvGRU(nn.Module):
     def __init__(self, hidden_dim=128, input_dim=192+128):
         super(SepConvGRU, self).__init__()
@@ -49,18 +49,18 @@ class SepConvGRU(nn.Module):
         hx = torch.cat([h, x], dim=1)
         z = torch.sigmoid(self.convz1(hx))
         r = torch.sigmoid(self.convr1(hx))
-        q = torch.tanh(self.convq1(torch.cat([r*h, x], dim=1)))        
+        q = torch.tanh(self.convq1(torch.cat([r*h, x], dim=1)))
         h = (1-z) * h + z * q
 
         # vertical
         hx = torch.cat([h, x], dim=1)
         z = torch.sigmoid(self.convz2(hx))
         r = torch.sigmoid(self.convr2(hx))
-        q = torch.tanh(self.convq2(torch.cat([r*h, x], dim=1)))       
+        q = torch.tanh(self.convq2(torch.cat([r*h, x], dim=1)))
         h = (1-z) * h + z * q
         return h
 
-    
+
 class SmallMotionEncoder(nn.Module):
     def __init__(self, corr_levels, corr_radius):
         super(SmallMotionEncoder, self).__init__()
@@ -78,7 +78,7 @@ class SmallMotionEncoder(nn.Module):
         out = F.relu(self.conv(cor_flo))
         return torch.cat([out, flow], dim=1)
 
-    
+
 class BasicMotionEncoder(nn.Module):
     def __init__(self, corr_levels, corr_radius):
         super(BasicMotionEncoder, self).__init__()
@@ -99,7 +99,7 @@ class BasicMotionEncoder(nn.Module):
         out = F.relu(self.conv(cor_flo))
         return torch.cat([out, flow], dim=1)
 
-    
+
 class SmallUpdateBlock(nn.Module):
     def __init__(self, corr_levels, corr_radius, hidden_dim=96):
         super(SmallUpdateBlock, self).__init__()
@@ -114,7 +114,7 @@ class SmallUpdateBlock(nn.Module):
         delta_flow = self.flow_head(net)
         return net, None, delta_flow
 
-    
+
 class BasicUpdateBlock(nn.Module):
     def __init__(self, corr_levels, corr_radius, hidden_dim=128, input_dim=128):
         super(BasicUpdateBlock, self).__init__()

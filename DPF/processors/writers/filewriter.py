@@ -8,7 +8,7 @@ class ABSWriter:
     def save_sample(
         self,
         modality2sample_data: Dict[str, Tuple[str, bytes]],
-        table_data: Dict[str, str] = {},
+        table_data: Optional[Dict[str, str]] = None,
     ) -> None:
         pass
 

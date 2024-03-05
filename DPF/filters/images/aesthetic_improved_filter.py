@@ -48,24 +48,24 @@ def get_improved_aesthetic_model(cache_folder):
     """
     Load the aesthetic model
     """
-    path_to_model = cache_folder + "/sac+logos+ava1-l14-linearMSE.pth" 
+    path_to_model = cache_folder + "/sac+logos+ava1-l14-linearMSE.pth"
     if not os.path.exists(path_to_model):
         os.makedirs(cache_folder, exist_ok=True)
         url_model = (
             "https://github.com/christophschuhmann/improved-aesthetic-predictor/blob/main/"
-            + "sac+logos+ava1-l14-linearMSE.pth" 
+            + "sac+logos+ava1-l14-linearMSE.pth"
             + '?raw=true'
         )
         # TODO rework download
         urlretrieve(url_model, path_to_model)
-        
+
     model = MLP(768)  # CLIP embedding dim is 768 for CLIP ViT L 14
 
-    s = torch.load(path_to_model) 
+    s = torch.load(path_to_model)
 
     model.load_state_dict(s)
-    model.eval()    
-    
+    model.eval()
+
     return model
 
 
@@ -89,7 +89,7 @@ class ImprovedAestheticFilter(ImageFilter):
         self.device = device
 
         self.weights_folder = weights_folder
-        
+
         self.aesthetic_model = get_improved_aesthetic_model(weights_folder)
         self.aesthetic_model.to(self.device)
         self.clip_model, self.clip_transforms = clip.load("ViT-L/14", device=device)
@@ -109,7 +109,7 @@ class ImprovedAestheticFilter(ImageFilter):
     def preprocess(self, modality2data: Dict[str, Union[bytes, str]], metadata: dict):
         key = metadata[self.key_column]
         pil_image = read_image_rgb_from_bytes(modality2data['image'])
-        
+
         image = self.clip_transforms(pil_image)
 
         return key, image
@@ -123,7 +123,7 @@ class ImprovedAestheticFilter(ImageFilter):
             inputs = self.clip_model.encode_image(batch)
             inputs = normalized(inputs.cpu().detach().numpy())
             outputs = self.aesthetic_model(torch.from_numpy(inputs).to(self.device).type(torch.cuda.FloatTensor))
-        
+
         df_batch_labels["improved_aesthetic_score_ViT-L/14"].extend(outputs.cpu().reshape(-1).tolist())
         df_batch_labels[self.key_column].extend(keys)
 

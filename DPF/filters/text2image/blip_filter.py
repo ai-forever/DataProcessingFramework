@@ -68,7 +68,7 @@ class BlipFilter(T2IFilter):
             "batch_size": self.batch_size,
             "drop_last": False
         }
-        
+
     def preprocess(self, modality2data: Dict[str, Union[bytes, str]], metadata: dict):
         key = metadata[self.key_column]
         text = modality2data['text']
@@ -80,7 +80,7 @@ class BlipFilter(T2IFilter):
     def process_batch(self, batch) -> dict:
         df_batch_labels = self._generate_dict_from_schema()
         keys, image_tensors, text_tensors = list(zip(*batch))
-           
+
         sample  = {}
         with torch.no_grad():
             image_tensors = [t.to(self.device) for t in image_tensors]
@@ -88,7 +88,7 @@ class BlipFilter(T2IFilter):
             sample['text_input'] = text_tensors
             features_image = self.blip_model.extract_features(sample, mode="image")
             features_text = self.blip_model.extract_features(sample, mode="text")
-            
+
             batch_similarity = self.get_similarity(features_image, features_text)
 
         df_batch_labels["blip2_ViT-L_similarity"].extend(batch_similarity)

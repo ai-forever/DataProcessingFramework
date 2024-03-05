@@ -19,15 +19,15 @@ def disable_torch_init():
     """
     Disable the redundant torch default initialization to accelerate model creation.
     """
-    setattr(torch.nn.Linear, "reset_parameters", lambda self: None)
-    setattr(torch.nn.LayerNorm, "reset_parameters", lambda self: None)
-    
+    torch.nn.Linear.reset_parameters = lambda self: None
+    torch.nn.LayerNorm.reset_parameters = lambda self: None
+
 
 class VideoLLaVAFilter(VideoFilter):
-    """ 
+    """
     Video-LLaVA inference class to get captions for auto-labeling videos.
     More info about the model here: https://github.com/PKU-YuanGroup/Video-LLaVA
-    """ 
+    """
     def __init__(
         self,
         model_path: str = "LanguageBind/Video-LLaVA-7B",
@@ -51,17 +51,17 @@ class VideoLLaVAFilter(VideoFilter):
             'detailed_video': 'Describe this video and its style in a very detailed manner',
             'short_video': 'Describe this video and its style briefly'
         }
-            
+
         self.num_workers = workers
         self.batch_size = batch_size
         self.device = device
-        
+
         self.inp = prompt_templates[self.prompt_to_use]
         self.temperature = temperature
         self.max_new_tokens = max_new_tokens
-        
+
         disable_torch_init()
-        
+
         pretrainers = load_pretrained_model(
             model_path, model_base, model_name,
             load_8bit, load_4bit,
@@ -69,10 +69,10 @@ class VideoLLaVAFilter(VideoFilter):
         )
         self.tokenizer, self.model, self.processor, self.context_len = pretrainers
         self.video_processor = self.processor['video']
-        
+
         self.conv_mode = "llava_v1"
         self.conv = conv_templates[self.conv_mode].copy()
-        
+
         inp = ' '.join([DEFAULT_IMAGE_TOKEN] * self.model.get_video_tower().config.num_frames) + '\n' + self.inp
         self.conv.append_message(self.conv.roles[0], inp)
         self.conv.append_message(self.conv.roles[1], None)
@@ -98,21 +98,21 @@ class VideoLLaVAFilter(VideoFilter):
             "batch_size": self.batch_size,
             "drop_last": False,
         }
-        
+
     def preprocess(self, modality2data: Dict[str, Union[bytes, str]], metadata: dict):
         key = metadata[self.key_column]
         video_file = BytesIO(modality2data['video'])
         video_file = self.video_processor(video_file, return_tensors='pt')['pixel_values'][0].half()
         return key, video_file
-    
+
     def process_batch(self, batch) -> dict:
         df_batch_labels = self._generate_dict_from_schema()
-        
+
         keys, video_tensors = list(zip(*batch))
         video_tensors = default_collate(video_tensors).to(self.device)
-        
+
         input_ids_batch = self.input_ids.repeat_interleave(video_tensors.shape[0], 0).to(self.device)
-        
+
         with torch.inference_mode():
             output_ids = self.model.generate(
                 input_ids_batch,
@@ -122,13 +122,12 @@ class VideoLLaVAFilter(VideoFilter):
                 max_new_tokens=self.max_new_tokens,
                 use_cache=True,
                 stopping_criteria=[self.stopping_criteria])
-        
+
         all_outputs = []
         for i in range(output_ids.shape[0]):
             caption = self.tokenizer.decode(output_ids[i, self.input_ids.shape[1]:]).strip().split('</s>')[0]
             all_outputs.append(caption)
-       
+
         df_batch_labels[self.schema[1]].extend(all_outputs)
         df_batch_labels[self.key_column].extend(keys)
         return df_batch_labels
-        

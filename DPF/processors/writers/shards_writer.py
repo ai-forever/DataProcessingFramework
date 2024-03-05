@@ -46,8 +46,10 @@ class ShardsWriter(ABSWriter):
     def save_sample(
         self,
         modality2sample_data: Dict[str, Tuple[str, bytes]],
-        table_data: Dict[str, str] = {},
+        table_data: Optional[Dict[str, str]] = None,
     ) -> None:
+        if table_data is None:
+            table_data = {}
         # check tar
         if self.tar is None:
             self.tar = tarfile.open(mode="w", fileobj=self.tar_bytes)

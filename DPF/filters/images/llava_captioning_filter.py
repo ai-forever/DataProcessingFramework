@@ -29,19 +29,19 @@ class LLaVaCaptioningFilter(ImageFilter):
     """
 
     def __init__(
-        self, 
-        model_path: str = 'liuhaotian/llava-v1.5-13b', 
-        prompt: str = 'detailed-long', 
+        self,
+        model_path: str = 'liuhaotian/llava-v1.5-13b',
+        prompt: str = 'detailed-long',
         workers: int = 16,
         batch_size: int = 16,
-        device="cuda:0", 
+        device="cuda:0",
         pbar=True
     ):
         super().__init__(pbar)
         self.batch_size = batch_size
         self.num_workers = workers
         self.device = device
-        
+
         #
         self.prompt_to_use = prompt
         prompts = {
@@ -104,19 +104,19 @@ class LLaVaCaptioningFilter(ImageFilter):
 
         keys, image_tensors = list(zip(*batch))
         image_tensors = default_collate(image_tensors).to(self.device)
-        
+
         input_ids_batch = self.input_ids.repeat_interleave(image_tensors.shape[0], 0).to(self.device)
         with torch.inference_mode():
             output_ids = self.model.generate(
                 input_ids_batch, images=image_tensors, do_sample=True, temperature=0.2, top_p=0.7,
                 max_new_tokens=512, use_cache=True, stopping_criteria=[self.stopping_criteria]
             )
-        
+
         all_outputs = []
         for i in range(output_ids.shape[0]):
             output = self.tokenizer.decode(output_ids[i, self.input_ids.shape[1]:]).strip().split('</s>')[0]
             all_outputs.append(output)
-            
+
         df_batch_labels[self.schema[1]].extend(all_outputs)
         df_batch_labels[self.key_column].extend(keys)
 

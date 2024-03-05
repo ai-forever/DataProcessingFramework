@@ -49,7 +49,7 @@ class DatasetReader:
             raise ValueError("No datafiles in this path")
 
         required_columns = config.user_column_names if validate_columns else None
-        
+
         worker_co = partial(read_and_validate_df, self.filesystem, required_columns)
         paths_dataframes: List[Tuple[str, pd.DataFrame]] = process_map(
             worker_co, datafiles,

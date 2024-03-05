@@ -54,10 +54,10 @@ class OCRFilter(ImageFilter):
         self.opt.input_channel = 1
         self.opt.output_channel = 512
         self.opt.hidden_size = 256
-        
+
         self.converter = AttnLabelConverter(self.opt.character)
         self.opt.num_class = len(self.converter.character)
-        
+
         self.model = Model(self.opt)
         weights = torch.load(self.weights_path)
         keys = list(weights.keys())
@@ -68,7 +68,7 @@ class OCRFilter(ImageFilter):
         self.model.load_state_dict(weights)
         self.model.to(self.device)
         self.model.eval()
-        
+
         self.AlignCollate = AlignCollate(imgH=self.opt.imgH, imgW=self.opt.imgW, keep_ratio_with_pad=self.opt.PAD)
         #
         self.text_box_col = "text_boxes"
@@ -98,7 +98,7 @@ class OCRFilter(ImageFilter):
         df_batch_labels = self._generate_dict_from_schema()
         image_path, pil_img, boxes = batch[0]
         w, h = pil_img.size
-        
+
         input_data = []
         for box in boxes:
             left = max(box[0][0], 0)
@@ -109,20 +109,20 @@ class OCRFilter(ImageFilter):
                 upper, lower = lower, upper
             if left > right:
                 left, right = right, left
-                
+
             crop = pil_img.crop(
                 (left, upper, right, lower)
             )
             input_data.append((crop, ''))
-            
+
         if len(input_data) == 0:
             df_batch_labels[self.ocr_col].append("[]")
             df_batch_labels["image_path"].append(image_path)
             return df_batch_labels
-        
+
         data_preproc = self.AlignCollate(input_data)
         image_tensors = data_preproc[0]
-        
+
         batch_size = image_tensors.size(0)
         image = image_tensors.to(self.device)
         length_for_pred = torch.IntTensor([self.opt.batch_max_length] * batch_size).to(self.device)
@@ -132,11 +132,11 @@ class OCRFilter(ImageFilter):
         _, preds_index = preds.max(2)
         preds_str = self.converter.decode(preds_index, length_for_pred)
         preds_str = [s.replace('[s]', '') for s in preds_str]
-        
+
         res = []
         for box, prediction in zip(boxes, preds_str):
             res.append((box, prediction))
-            
+
         df_batch_labels[self.ocr_col].append(json.dumps(res))
         df_batch_labels["image_path"].append(image_path)
 

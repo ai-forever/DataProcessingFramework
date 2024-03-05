@@ -82,10 +82,12 @@ class FilesDatasetProcessor(DatasetProcessor):
         self,
         validate_filestructure: bool = True,
         validate_dataframes: bool = True,
-        columns_to_check: List[str] = [],
+        columns_to_check: Optional[List[str]] = None,
         workers: int = 1,
         pbar: bool = True
     ) -> FilesValidationResult:
+        if columns_to_check is None:
+            columns_to_check = []
         validator = FilesValidator(
             self.df,
             self.filesystem,

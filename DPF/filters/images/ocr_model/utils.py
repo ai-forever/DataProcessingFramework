@@ -3,7 +3,7 @@ import torch
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
-class CTCLabelConverter(object):
+class CTCLabelConverter:
     """ Convert between text-label and text-index """
 
     def __init__(self, character):
@@ -53,7 +53,7 @@ class CTCLabelConverter(object):
         return texts
 
 
-class CTCLabelConverterForBaiduWarpctc(object):
+class CTCLabelConverterForBaiduWarpctc:
     """ Convert between text-label and text-index for baidu warpctc """
 
     def __init__(self, character):
@@ -100,7 +100,7 @@ class CTCLabelConverterForBaiduWarpctc(object):
         return texts
 
 
-class AttnLabelConverter(object):
+class AttnLabelConverter:
     """ Convert between text-label and text-index """
 
     def __init__(self, character):
@@ -147,7 +147,7 @@ class AttnLabelConverter(object):
         return texts
 
 
-class Averager(object):
+class Averager:
     """Compute average for torch.Tensor, used for loss average."""
 
     def __init__(self):

@@ -20,8 +20,8 @@ class ShardedFilesValidator(ShardedValidator):
 
     def _validate_files(self, filepaths: List[str]) -> List[FileStructureError]:
         datafiles_ext = '.' + self.config.datafiles_ext.lstrip('.')
-        datafiles_set = set([f for f in filepaths if f.endswith(datafiles_ext)])
-        folders_set = set([f.rstrip('/') for f in filepaths if f not in datafiles_set])
+        datafiles_set = {f for f in filepaths if f.endswith(datafiles_ext)}
+        folders_set = {f.rstrip('/') for f in filepaths if f not in datafiles_set}
 
         errors = []
         for datafile in datafiles_set:

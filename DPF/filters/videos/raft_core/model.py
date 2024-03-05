@@ -26,7 +26,7 @@ def upflow8(flow, mode='bilinear'):
 
 
 class RAFT(nn.Module):
-    def __init__(self, 
+    def __init__(self,
                  small: bool = False,
                  alternate_corr: bool = False,
                  mixed_precision: bool = False,
@@ -38,7 +38,7 @@ class RAFT(nn.Module):
             self.context_dim = cdim = 64
             self.corr_levels = 4
             self.corr_radius = 3
-        
+
         else:
             self.hidden_dim = hdim = 128
             self.context_dim = cdim = 128
@@ -51,12 +51,12 @@ class RAFT(nn.Module):
 
         # feature network, context network, and update block
         if small:
-            self.fnet = SmallEncoder(output_dim=128, norm_fn='instance', dropout=self.dropout)        
+            self.fnet = SmallEncoder(output_dim=128, norm_fn='instance', dropout=self.dropout)
             self.cnet = SmallEncoder(output_dim=hdim+cdim, norm_fn='none', dropout=self.dropout)
             self.update_block = SmallUpdateBlock(self.corr_levels, self.corr_radius, hidden_dim=hdim)
 
         else:
-            self.fnet = BasicEncoder(output_dim=256, norm_fn='instance', dropout=self.dropout)        
+            self.fnet = BasicEncoder(output_dim=256, norm_fn='instance', dropout=self.dropout)
             self.cnet = BasicEncoder(output_dim=hdim+cdim, norm_fn='batch', dropout=self.dropout)
             self.update_block = BasicUpdateBlock(self.corr_levels, self.corr_radius, hidden_dim=hdim)
 
@@ -101,8 +101,8 @@ class RAFT(nn.Module):
 
         # run the feature network
         with autocast(enabled=self.mixed_precision):
-            fmap1, fmap2 = self.fnet([image1, image2])        
-        
+            fmap1, fmap2 = self.fnet([image1, image2])
+
         fmap1 = fmap1.float()
         fmap2 = fmap2.float()
         if self.alternate_corr:
@@ -139,9 +139,9 @@ class RAFT(nn.Module):
                 flow_up = upflow8(coords1 - coords0)
             else:
                 flow_up = self.upsample_flow(coords1 - coords0, up_mask)
-            
+
             flow_predictions.append(flow_up)
 
         if test_mode:
-            return coords1 - coords0, flow_up     
+            return coords1 - coords0, flow_up
         return flow_predictions

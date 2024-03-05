@@ -20,7 +20,7 @@ class DatasetConfig(ABC):
         datatypes: List[DataType]
             List of datatypes in dataset
         """
-        assert len(set([d.modality.key for d in datatypes])) == len(datatypes)
+        assert len({d.modality.key for d in datatypes}) == len(datatypes)
         assert not path.endswith('/')
         self.datatypes = datatypes
         self.path = path

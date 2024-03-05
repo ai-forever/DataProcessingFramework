@@ -47,7 +47,7 @@ class CRAFTFilter(ImageFilter):
 
     def process_batch(self, batch) -> dict:
         df_batch_labels = self._generate_dict_from_schema()
-        
+
         key, img_tensor, ratio_w, ratio_h, orig_size = batch[0]
 
         boxes = self.model._get_boxes_preproc(img_tensor, ratio_w, ratio_h)

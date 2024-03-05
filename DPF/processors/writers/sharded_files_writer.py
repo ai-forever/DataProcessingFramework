@@ -41,8 +41,10 @@ class ShardedFilesWriter(ABSWriter):
     def save_sample(
         self,
         modality2sample_data: Dict[str, Tuple[str, bytes]],
-        table_data: Dict[str, str] = {},
+        table_data: Optional[Dict[str, str]] = None,
     ) -> None:
+        if table_data is None:
+            table_data = {}
         # creating directory
         path_to_dir = self.filesystem.join(
             self.destination_dir, self._calculate_current_dirname()
@@ -96,7 +98,7 @@ class ShardedFilesWriter(ABSWriter):
             return int(last_dir), int(last_dir)*self.max_files_in_shard
 
         if self.filenaming == "counter":
-            if all([name.isdigit() for name in names]):
+            if all(name.isdigit() for name in names):
                 index = int(sorted(names)[-1]) + 1
             else:
                 raise ValueError(f'Could read index from {dir_path}. Check filenames')
