@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
 from torch.utils.data import Dataset
@@ -8,7 +8,7 @@ from DPF.datatypes import ColumnDataType, FileDataType, ShardedDataType
 from DPF.filesystems.filesystem import FileSystem
 
 
-class FilesDataset(Dataset):
+class FilesDataset(Dataset[Tuple[bool, Any]]):
     """
     Dataset class to read "raw" files
     """
@@ -19,7 +19,7 @@ class FilesDataset(Dataset):
         df: pd.DataFrame,
         datatypes: List[Union[ShardedDataType, FileDataType, ColumnDataType]],
         meta_columns: Optional[List[str]] = None,
-        preprocess_function: Callable[[Dict[str, bytes], Dict[str, str]], Any] = identical_preprocess_function,
+        preprocess_function: Callable[[Dict[str, Union[bytes, Any]], Dict[str, str]], Any] = identical_preprocess_function,
         # TODO(review) - на ошибке надо выбрасывать ошибку, а не возвращать None, и в дальнейшем эту ошибку обрабатывать прикладом, использующим этот класс
         return_none_on_error: bool = False
     ):
@@ -50,7 +50,7 @@ class FilesDataset(Dataset):
         self.column2modality = {}
         for d in self.datatypes:
             if isinstance(d, ColumnDataType):
-                self.column2modality[d.modality.column] = d.modality.key
+                self.column2modality[d.column_name] = d.modality.key
             elif isinstance(d, (ShardedDataType, FileDataType)):
                 self.path_column2modality[d.modality.path_column] = d.modality.key
             else:
@@ -64,10 +64,10 @@ class FilesDataset(Dataset):
         self.preprocess_f = preprocess_function
         self.return_none_on_error = return_none_on_error
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.data_to_iterate)
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx: int) -> Tuple[bool, Any]:
         data = {
             self.columns[c]: item for c, item in enumerate(self.data_to_iterate[idx])
         }

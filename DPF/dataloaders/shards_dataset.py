@@ -1,7 +1,7 @@
 import itertools
 import os
 import tarfile
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple, Union
 
 import pandas as pd
 import torch
@@ -12,7 +12,7 @@ from DPF.datatypes import ColumnDataType, ShardedDataType
 from DPF.filesystems.filesystem import FileSystem
 
 
-class ShardsDataset(IterableDataset):
+class ShardsDataset(IterableDataset[Tuple[bool, Any]]):
     """
     Dataset class for shards format (files in tar archives)
     """
@@ -24,7 +24,7 @@ class ShardsDataset(IterableDataset):
         split2archive_path: Dict[str, str],
         datatypes: List[Union[ShardedDataType, ColumnDataType]],
         meta_columns: Optional[List[str]] = None,
-        preprocess_function: Callable[[Dict[str, bytes], Dict[str, str]], Any] = identical_preprocess_function,
+        preprocess_function: Callable[[Dict[str, Union[bytes, Any]], Dict[str, str]], Any] = identical_preprocess_function,
         return_none_on_error: bool = False
     ):
         """
@@ -44,9 +44,9 @@ class ShardsDataset(IterableDataset):
             Preprocessing function for data. First argument of the preprocess_f is mapping from modality name to bytes
             and the second argument is mapping from meta_column name to its value.
         return_none_on_error: bool = False
-            Whether to return None if error during reading file occures
+            Whether to return None if error during reading file occurs
         """
-        super(ShardsDataset).__init__()
+        super().__init__()
         self.filesystem = filesystem
 
         self.datatypes = datatypes
@@ -57,7 +57,7 @@ class ShardsDataset(IterableDataset):
         self.column2modality = {}
         for d in self.datatypes:
             if isinstance(d, ColumnDataType):
-                self.column2modality[d.modality.column] = d.modality.key
+                self.column2modality[d.column_name] = d.modality.key
             elif isinstance(d, ShardedDataType):
                 self.path_column2modality[d.modality.path_column] = d.modality.key
             else:
@@ -76,10 +76,10 @@ class ShardsDataset(IterableDataset):
         self.preprocess_f = preprocess_function
         self.return_none_on_error = return_none_on_error
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self.total_samples
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Tuple[bool, Any]]:
         worker_info = torch.utils.data.get_worker_info()
         worker_total_num = worker_info.num_workers if worker_info is not None else None
         worker_id = worker_info.id if worker_info is not None else None
@@ -100,12 +100,12 @@ class ShardsDataset(IterableDataset):
                     filename = os.path.basename(data[col])
                     if self.return_none_on_error:
                         try:
-                            file_bytes = tar.extractfile(filename).read()
+                            file_bytes = tar.extractfile(filename).read()  # type: ignore
                         except Exception:
                             file_bytes = None
                             is_ok = False
                     else:
-                        file_bytes = tar.extractfile(filename).read()
+                        file_bytes = tar.extractfile(filename).read()  # type: ignore
                     modality2data[modality] = file_bytes
                 # read data from columns
                 for col in self.column2modality.keys():
