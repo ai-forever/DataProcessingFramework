@@ -47,8 +47,9 @@ class VideoLLaVAFilter(VideoFilter):
         workers: int = 16,
         batch_size: int = 8,
         pbar: bool = True,
+        _pbar_position: int = 0
     ):
-        super().__init__(pbar)
+        super().__init__(pbar, _pbar_position)
         self.model_name = model_name
         self.prompt_to_use = prompt
         prompt_templates = {

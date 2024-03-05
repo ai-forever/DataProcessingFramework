@@ -250,6 +250,23 @@ processor.apply_data_filter(datafilter)
 processor.df # new columns ['width', 'height', 'is_correct'] are added
 ```
 
+#### Запуск фильтра на нескольких GPU
+
+```python
+from DPF.filters.images.llava_captioning_filter import LLaVaCaptioningFilter
+from DPF.filters.multigpu_filter import MultiGPUDataFilter
+
+multigpufilter = MultiGPUDataFilter(
+    ['cuda:0', 'cuda:1', 'cuda:2', 'cuda:3'],
+    LLaVaCaptioningFilter,
+    dict(
+        pbar=True, workers=8,
+        prompt='short', batch_size=16
+    )
+)
+processor.apply_multi_gpu_data_filter(multigpufilter)
+```
+
 #### Трансформация датасета
 С помощью DPF можно изменять данные в датасете, например, изменить размер каждого видео или каждого фото.
 Для этого используется трансформации `DPF.transforms`.

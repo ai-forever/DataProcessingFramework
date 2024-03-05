@@ -35,9 +35,14 @@ class PHashFilter(ImageFilter):
     PHashFilter class
     """
 
-    def __init__(self, sim_hash_size: int = 8, workers: int = 16, pbar: bool = True):
-        super().__init__(pbar)
-
+    def __init__(
+        self,
+        sim_hash_size: int = 8,
+        workers: int = 16,
+        pbar: bool = True,
+        _pbar_position: int = 0
+    ):
+        super().__init__(pbar, _pbar_position)
         self.num_workers = workers
         self.sim_hash_size = sim_hash_size
 
@@ -66,41 +71,5 @@ class PHashFilter(ImageFilter):
         keys, img_simhashes = list(zip(*batch))
         df_batch_labels[self.key_column].extend(keys)
         df_batch_labels[f"image_phash_{self.sim_hash_size}"].extend(img_simhashes)
-
-        return df_batch_labels
-
-
-class MD5Filter(ImageFilter):
-    """
-    MD5Filter class
-    """
-
-    def __init__(
-        self,
-        pbar: bool = True,
-        workers: int = 16,
-    ):
-        super().__init__(pbar)
-
-        self.num_workers = workers
-
-        self.schema = ["image_path", "image_md5"]
-        self.dataloader_kwargs = {
-            "num_workers": self.num_workers,
-            "batch_size": 1,
-            "drop_last": False,
-        }
-
-    def preprocess(self, img_bytes: bytes, data: dict):
-        image_path = data["image_path"]
-        img_md5 = get_md5_hash(img_bytes)
-        return image_path, img_md5
-
-    def process_batch(self, batch) -> dict:
-        df_batch_labels = self._generate_dict_from_schema()
-
-        image_paths, img_md5s = list(zip(*batch))
-        df_batch_labels["image_path"].extend(image_paths)
-        df_batch_labels["image_md5"].extend(img_md5s)
 
         return df_batch_labels

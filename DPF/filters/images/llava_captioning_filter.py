@@ -28,10 +28,11 @@ class LLaVaCaptioningFilter(ImageFilter):
         prompt: str = 'detailed-long', 
         workers: int = 16,
         batch_size: int = 16,
-        device="cuda:0", 
-        pbar=True
+        device: str = "cuda:0",
+        pbar: bool = True,
+        _pbar_position: int = 0
     ):
-        super().__init__(pbar)
+        super().__init__(pbar, _pbar_position)
         self.batch_size = batch_size
         self.num_workers = workers
         self.device = device

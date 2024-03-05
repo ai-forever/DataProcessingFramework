@@ -75,13 +75,6 @@ class WatermarksFilter(ImageFilter):
         Number of processes for use in dataloader
     batch_size: int = 64
         Batch size for model
-
-    Attributes
-    ----------
-    schema: List[str]
-        List of columns to be added with this filter.
-    dataloader_kwargs: dict:
-        Parameters for dataloader (batch_size, num_workers, collate_fn, etc.)
     """
 
     def __init__(
@@ -92,8 +85,9 @@ class WatermarksFilter(ImageFilter):
         workers: int = 16,
         batch_size: int = 64,
         pbar: bool = True,
+        _pbar_position: int = 0
     ):
-        super().__init__(pbar)
+        super().__init__(pbar, _pbar_position)
 
         self.num_workers = workers
         self.batch_size = batch_size
