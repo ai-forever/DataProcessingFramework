@@ -1,10 +1,27 @@
+# mypy settings
 [tool.mypy]
 strict = true
 implicit_reexport = true
 disable_error_code = ["import-untyped"]
 
+[[tool.mypy.overrides]]
+module = "DPF.filters.images.ocr_model.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "DPF.filters.videos.raft_core.*"
+ignore_errors = true
+
+# isort setting
 [tool.isort]
 profile = "black"
+
+# ruff settings
+[tool.ruff]
+extend-exclude = [
+    "DPF/filters/videos/raft_core/*",
+    "DPF/filters/images/ocr_model/*"
+]
 
 [tool.ruff.lint]
 select = [
