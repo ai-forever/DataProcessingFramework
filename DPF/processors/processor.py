@@ -262,7 +262,7 @@ class DatasetProcessor(ABC):
     def _read_files_from_sample(
         self,
         sample: Dict[str, str]
-    ) -> Dict[str, bytes]:
+    ) -> Dict[str, Union[bytes, str]]:
         pass
 
     def filter_df(

@@ -10,23 +10,20 @@ class Modality:
     ----------
     key: str
         Name of modality. Should be unique
-    can_be_file: bool
-        Can this modality be in file
+    path_column: str
+        Default column path to files with this modality
+    sharded_file_name_column: str
+        Default column name of filenames in shard with this modality
     can_be_column: bool
         Can this modality be in a column of "csv" file
     column: Optional[str] = None
         Default column name if can_be_column=True
-    sharded_file_name_column: Optional[str] = None
-        Default column name of filenames with this modality. Only if can_be_file=True
-    path_column: Optional[str] = None
-        Default column path to files with this modality. Only if can_be_file=True
     """
     key: str
-    can_be_file: bool
+    path_column: str
+    sharded_file_name_column: str
     can_be_column: bool
     column: Optional[str] = None
-    sharded_file_name_column: Optional[str] = None
-    path_column: Optional[str] = None
 
     def __hash__(self) -> int:
         return hash(self.key)
@@ -40,16 +37,16 @@ class Modality:
 
 MODALITIES = {
     'image': Modality(
-        'image', True, False, None,
-        'image_name', 'image_path'
+        'image', 'image_path',
+        'image_name', False, None
     ),
     'video': Modality(
-        'video', True, False, None,
-        'video_name', 'video_path'
+        'video', 'video_path',
+        'video_name', False, None
     ),
     'text': Modality(
-        'text', True, True, 'text',
-        'text_name', 'text_path'
+        'text', 'text_path',
+        'text_name', True, 'text'
     )
 }
 

@@ -33,11 +33,14 @@ class ShardedFilesDatasetProcessor(ShardedDatasetProcessor):
         self,
         validate_filestructure: bool = True,
         validate_shards: bool = True,
-        columns_to_check: List[str] = [],
+        columns_to_check: Optional[List[str]] = None,
         workers: int = 1,
         pbar: bool = True
     ) -> ShardedValidationResult:
-        validator = ShardedFilesValidator(
+        if columns_to_check is None:
+            columns_to_check = []
+
+        validator = ShardedFilesValidator(  # type: ignore
             self.df,
             self.filesystem,
             self.config,
@@ -71,18 +74,18 @@ class ShardedFilesDatasetProcessor(ShardedDatasetProcessor):
     def _read_files_from_sample(
         self,
         sample: Dict[str, str]
-    ) -> Dict[str, bytes]:
-        path_column2modality = {}
-        column2modality = {}
+    ) -> Dict[str, Union[bytes, str]]:
+        path_column2modality: Dict[str, str] = {}
+        column2modality: Dict[str, str] = {}
         for d in self.config.datatypes:
             if isinstance(d, ColumnDataType):
-                column2modality[d.modality.column] = d.modality.key
+                column2modality[d.column_name] = d.modality.key
             elif isinstance(d, ShardedDataType):
                 path_column2modality[d.modality.path_column] = d.modality.key
             else:
                 raise ValueError()
 
-        modality2data = {}
+        modality2data: Dict[str, Union[bytes, str]] = {}
         # read files
         for col in path_column2modality.keys():
             modality = path_column2modality[col]
@@ -94,7 +97,7 @@ class ShardedFilesDatasetProcessor(ShardedDatasetProcessor):
             modality2data[modality] = sample[col]
         return modality2data
 
-    def apply_transform(self, transforms: Union[BaseFilesTransforms]):
+    def apply_transform(self, transforms: Union[BaseFilesTransforms]) -> None:
         assert transforms.modality in self.config.modality2datatype
 
         filepath_column = MODALITIES[transforms.modality].path_column

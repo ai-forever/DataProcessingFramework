@@ -72,13 +72,13 @@ class ShardsDatasetProcessor(ShardedDatasetProcessor):
     def _read_files_from_sample(
         self,
         sample: Dict[str, str]
-    ) -> Dict[str, bytes]:
+    ) -> Dict[str, Union[bytes, str]]:
         tar_path = self.get_container_path(sample['split_name'])
-        path_column2modality = {}
-        column2modality = {}
+        path_column2modality: Dict[str, str] = {}
+        column2modality: Dict[str, str] = {}
         for d in self.config.datatypes:
             if isinstance(d, ColumnDataType):
-                column2modality[d.modality.column] = d.modality.key
+                column2modality[d.column_name] = d.modality.key
             elif isinstance(d, ShardedDataType):
                 path_column2modality[d.modality.path_column] = d.modality.key
             else:
@@ -86,7 +86,7 @@ class ShardsDatasetProcessor(ShardedDatasetProcessor):
 
         tar = self.filesystem.read_tar(tar_path)
 
-        modality2data = {}
+        modality2data: Dict[str, Union[bytes, str]] = {}
         # read files
         for col in path_column2modality.keys():
             modality = path_column2modality[col]

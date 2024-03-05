@@ -21,7 +21,7 @@ from DPF.processors import (
 )
 
 
-def help_reader(filesystem: FileSystem, required_columns: Optional[List[str]], path: str):
+def help_reader(filesystem: FileSystem, required_columns: Optional[List[str]], path: str) -> Tuple[str, pd.DataFrame]:
     df = filesystem.read_dataframe(path)
 
     if required_columns:
@@ -34,23 +34,14 @@ def help_reader(filesystem: FileSystem, required_columns: Optional[List[str]], p
 class DatasetReader:
     """Fabric for DPF.processors.DatasetProcessor"""
 
-    def __init__(self, filesystem: Union[FileSystem, str] = "local", **filesystem_kwargs):
+    def __init__(self, filesystem: FileSystem):
         """
         Parameters
         ----------
-        filesystem: str
-            'local' | 's3', type of filesystem to use
-        **filesystem_kwargs
-            kwargs for corresponding DPF.filesystems.FileSystem class
+        filesystem: FileSystem
+            Instance of a filesystem to use
         """
-        if filesystem == "local":
-            self.filesystem = LocalFileSystem()
-        elif filesystem == "s3":
-            self.filesystem = S3FileSystem(**filesystem_kwargs)
-        elif isinstance(filesystem, FileSystem):
-            self.filesystem = filesystem
-        else:
-            raise NotImplementedError(f"Unknown filesystem format: {filesystem}")
+        self.filesystem = filesystem
 
     @staticmethod
     def get_split_index(path: str) -> str:
@@ -70,7 +61,7 @@ class DatasetReader:
         required_columns = list(config.columns_mapping.keys()) if validate_columns else None
         
         worker_co = partial(help_reader, self.filesystem, required_columns)
-        paths_dataframes = process_map(
+        paths_dataframes: List[Tuple[str, pd.DataFrame]] = process_map(
             worker_co, datafiles,
             max_workers=processes,
             chunksize=1,
@@ -90,7 +81,7 @@ class DatasetReader:
         self,
         config: DatasetConfig,
         paths_dataframes: List[Tuple[str, pd.DataFrame]]
-    ):
+    ) -> None:
         required_columns = list(config.columns_mapping.keys())
 
         column_set = set(paths_dataframes[0][1].columns.tolist())
@@ -107,7 +98,7 @@ class DatasetReader:
     def _convert_to_path_columns(
         self,
         split_suffix: str,
-        config: ShardedDatasetConfig,
+        config: DatasetConfig,
         df: pd.DataFrame
     ) -> pd.DataFrame:
         split_container_path = config.path.rstrip('/')+'/'+df['split_name']+split_suffix+'/'
@@ -130,10 +121,9 @@ class DatasetReader:
     ) -> pd.DataFrame:
         column_index = []
         for datatype in config.datatypes:
-            if datatype.modality.can_be_file:
-                column_index.append(datatype.modality.path_column)
-                column_index.append(datatype.modality.sharded_file_name_column)
-            if datatype.modality.can_be_column:
+            column_index.append(datatype.modality.path_column)
+            column_index.append(datatype.modality.sharded_file_name_column)
+            if datatype.modality.column is not None:
                 column_index.append(datatype.modality.column)
 
         columns = [i for i in column_index if i in df.columns]
@@ -324,7 +314,7 @@ class DatasetReader:
             config=config
         )
 
-    def from_config(
+    def from_config(  # type: ignore
         self,
         config: DatasetConfig,
         **kwargs
@@ -343,6 +333,7 @@ class DatasetReader:
         DatasetProcessor
             Instance of DatasetProcessor dataset
         """
+        processor: DatasetProcessor
         if isinstance(config, ShardsDatasetConfig):
             processor = self.from_shards(config, **kwargs)
         elif isinstance(config, ShardedFilesDatasetConfig):

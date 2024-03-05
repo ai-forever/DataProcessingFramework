@@ -1,3 +1,8 @@
+[tool.mypy]
+strict = true
+implicit_reexport = true
+disable_error_code = ["import-untyped"]
+
 [tool.isort]
 profile = "black"
 

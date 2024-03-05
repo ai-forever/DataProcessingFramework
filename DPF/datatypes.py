@@ -8,7 +8,7 @@ class DataType(ABC):
 
     def __init__(self, modality: Modality):
         assert modality.key in MODALITIES
-        assert (modality.can_be_file and self.is_file) or (modality.can_be_column and not self.is_file)
+        assert self.is_file or (modality.can_be_column and not self.is_file)
         self.modality = modality
 
     @property
@@ -39,6 +39,10 @@ class ColumnDataType(DataType):
     @property
     def is_file(self) -> bool:
         return False
+
+    @property
+    def column_name(self) -> str:
+        return self.modality.column  # type: ignore
 
     def __repr__(self) -> str:
         return f'ColumnDataType(modality={self.modality}, user_column_name="{self.user_column_name}")'
