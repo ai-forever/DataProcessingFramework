@@ -293,7 +293,7 @@ class DatasetReader:
         config: DatasetConfig,
         **kwargs
     ) -> DatasetProcessor:
-        """Creates DatasetConfig dataset
+        """Creates DatasetProcessor from config
 
         Parameters
         ----------
@@ -317,3 +317,33 @@ class DatasetReader:
         else:
             raise ValueError(f"Unsupported config: {config}")
         return processor
+
+    def from_df(self, config: DatasetConfig, df: pd.DataFrame) -> DatasetProcessor:
+        """Creates DatasetProcessor from config and dataframe
+
+        Parameters
+        ----------
+        config: DatasetConfig
+            Config of DatasetConfig type
+        df: pd.DataFrame
+            Dataframe for DatasetProcessor.df
+
+        Returns
+        -------
+        DatasetProcessor
+            Instance of DatasetProcessor dataset
+        """
+        if isinstance(config, ShardsDatasetConfig):
+            processor_class = ShardsDatasetProcessor
+        elif isinstance(config, ShardedFilesDatasetConfig):
+            processor_class = ShardedFilesDatasetProcessor
+        elif isinstance(config, FilesDatasetConfig):
+            processor_class = FilesDatasetProcessor
+        else:
+            raise ValueError(f"Unsupported config: {config}")
+
+        return processor_class(
+            filesystem=self.filesystem,
+            config=config,
+            df=df
+        )

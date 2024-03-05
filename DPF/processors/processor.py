@@ -178,6 +178,31 @@ class DatasetProcessor(ABC):
 
         self._df = pd.merge(self._df, df_result, on=datafilter.key_column, how='left')
 
+    def apply_multi_gpu_data_filter(
+        self,
+        multi_gpu_datafilter,
+        validate_filter_result: bool = True,
+        return_none_on_error: bool = False
+    ):
+        """Applies a multi-gpu data filter to dataset
+
+        Parameters
+        ----------
+        multi_gpu_datafilter: MultiGPUDataFilter
+            Instance of a MultiGPUDataFilter
+        validate_filter_result: bool = True
+            Whether to check the correctness of datafilter result (data integrity)
+        return_none_on_error: bool = False
+            Whether to return None on sample if there is error in dataloader
+        """
+        self._df = multi_gpu_datafilter.run(
+            self.df, self.config, self.filesystem,
+            filter_run_kwargs={
+                "validate_filter_result": validate_filter_result,
+                "return_none_on_error": return_none_on_error
+            }
+        )
+
     def apply_column_filter(self, column_filter: ColumnFilter, validate_filter_result: bool = True):
         """Applies a column filter to dataset
 

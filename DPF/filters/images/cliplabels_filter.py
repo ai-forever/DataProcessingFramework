@@ -36,13 +36,6 @@ class CLIPLabelsFilter(ImageFilter):
         Batch size for model
     pbar: bool = True
         Flag for displaying progress bar
-
-    Attributes
-    ----------
-    schema: List[str]
-        List of columns to be added with this filter.
-    dataloader_kwargs: dict:
-        Parameters for dataloader (batch_size, num_workers, collate_fn, etc.)
     """
 
     def __init__(
@@ -55,8 +48,9 @@ class CLIPLabelsFilter(ImageFilter):
         workers: int = 16,
         batch_size: int = 64,
         pbar: bool = True,
+        _pbar_position: int = 0
     ):
-        super().__init__(pbar)
+        super().__init__(pbar, _pbar_position)
 
         if templates is None:
             templates = ["{}", "photo of a {}"]

@@ -53,10 +53,11 @@ class GunnarFarnebackFilter(VideoFilter):
         workers: int = 16,
         flags: int = 0,
         batch_size: int = 1,
-        pbar: bool = True
+        pbar: bool = True,
+        _pbar_position: int = 0
     ):
-        super().__init__(pbar)
-
+        super().__init__(pbar, _pbar_position)
+        
         self.num_workers = workers
         self.batch_size = batch_size
 

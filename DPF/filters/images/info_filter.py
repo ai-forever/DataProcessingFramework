@@ -52,9 +52,8 @@ class ImageInfoFilter(ImageFilter):
     ImageInfoFilter class
     """
 
-    def __init__(self, workers: int = 16, pbar: bool = True):
-        super().__init__(pbar)
-
+    def __init__(self, workers: int = 16, pbar: bool = True, _pbar_position: int = 0):
+        super().__init__(pbar, _pbar_position)
         self.num_workers = workers
 
     @property
