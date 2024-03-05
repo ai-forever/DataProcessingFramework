@@ -7,7 +7,7 @@ from DPF.configs import FilesDatasetConfig
 from DPF.datatypes import FileDataType
 from DPF.filesystems import FileSystem
 from DPF.validators import ValidationResult, Validator
-from DPF.validators.format_validators import (
+from DPF.validators.format_validators.errors import (
     DataFrameError,
     DuplicatedValuesError,
     FileStructureError,

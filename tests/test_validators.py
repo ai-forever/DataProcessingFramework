@@ -4,7 +4,7 @@ from DPF.configs import (
     ShardedFilesDatasetConfig,
     ShardsDatasetConfig,
 )
-from DPF.validators.format_validators import (
+from DPF.validators.format_validators.errors import (
     IsNotKeyError,
     MissedColumnsError,
     MissingValueError,

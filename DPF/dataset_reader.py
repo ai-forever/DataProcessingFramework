@@ -34,13 +34,15 @@ def help_reader(filesystem: FileSystem, required_columns: Optional[List[str]], p
 class DatasetReader:
     """Fabric for DPF.processors.DatasetProcessor"""
 
-    def __init__(self, filesystem: FileSystem):
+    def __init__(self, filesystem: Optional[FileSystem] = None):
         """
         Parameters
         ----------
-        filesystem: FileSystem
-            Instance of a filesystem to use
+        filesystem: Optional[FileSystem] = None
+            Instance of a filesystem to use. LocalFileSystem used by default
         """
+        if filesystem is None:
+            filesystem = LocalFileSystem()
         self.filesystem = filesystem
 
     @staticmethod

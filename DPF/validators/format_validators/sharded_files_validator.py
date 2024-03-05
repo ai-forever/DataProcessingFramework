@@ -4,13 +4,13 @@ from typing import List
 import pandas as pd
 
 from DPF.datatypes import ShardedDataType
-from DPF.validators.format_validators import (
+from DPF.validators.format_validators.errors import (
     DataFrameError,
     FileStructureError,
     MissingValueError,
     NoSuchFileError,
-    ShardedValidator,
 )
+from DPF.validators.format_validators.sharded_validator import ShardedValidator
 
 
 class ShardedFilesValidator(ShardedValidator):
