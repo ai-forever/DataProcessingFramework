@@ -43,8 +43,8 @@ class ShardedDatasetProcessor(DatasetProcessor, ABC):
 
     def delete_columns(self, columns: List[str], workers: int = 16) -> List[str]:
         for col in columns:
-            assert col not in self.config.columns_mapping.keys(), \
-                f'Column "{col}" is required column for "{self.config.columns_mapping[col]}"'
+            assert col not in self.config.user_column2default_column.keys(), \
+                f'Column "{col}" is required column for "{self.config.user_column2default_column[col]}"'
 
         splits = self.df['split_name'].unique().tolist()
         datafile_paths = [self.get_datafile_path(split) for split in splits]

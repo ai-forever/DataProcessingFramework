@@ -28,7 +28,7 @@ class ShardedDatasetConfig(DatasetConfig):
         return self._modality2datatype
 
     @property
-    def columns_mapping(self) -> Dict[str, str]:
+    def user_column2default_column(self) -> Dict[str, str]:
         mapping = {}
         for data in self.datatypes:
             if isinstance(data, ColumnDataType):

@@ -1,5 +1,5 @@
 from functools import partial
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Tuple
 
 import pandas as pd
 from tqdm.contrib.concurrent import process_map
@@ -7,12 +7,11 @@ from tqdm.contrib.concurrent import process_map
 from DPF.configs import (
     DatasetConfig,
     FilesDatasetConfig,
-    ShardedDatasetConfig,
     ShardedFilesDatasetConfig,
     ShardsDatasetConfig,
 )
 from DPF.datatypes import FileDataType, ShardedDataType
-from DPF.filesystems import FileSystem, LocalFileSystem, S3FileSystem
+from DPF.filesystems import FileSystem, LocalFileSystem
 from DPF.processors import (
     DatasetProcessor,
     FilesDatasetProcessor,
@@ -20,19 +19,12 @@ from DPF.processors import (
     ShardsDatasetProcessor,
 )
 
-
-def help_reader(filesystem: FileSystem, required_columns: Optional[List[str]], path: str) -> Tuple[str, pd.DataFrame]:
-    df = filesystem.read_dataframe(path)
-
-    if required_columns:
-        for col in required_columns:
-            assert col in df.columns, f'Expected {path} to have "{col}" column'
-
-    return path, df
+from .dataset_reader_utils import get_path_filename, read_and_validate_df
 
 
 class DatasetReader:
     """Fabric for DPF.processors.DatasetProcessor"""
+    filesystem: FileSystem
 
     def __init__(self, filesystem: Optional[FileSystem] = None):
         """
@@ -42,14 +34,10 @@ class DatasetReader:
             Instance of a filesystem to use. LocalFileSystem used by default
         """
         if filesystem is None:
-            filesystem = LocalFileSystem()
+            filesystem = LocalFileSystem()  # type: ignore
         self.filesystem = filesystem
 
-    @staticmethod
-    def get_split_index(path: str) -> str:
-        return path.split('/')[-1].split('.')[0]
-
-    def _read_dfs(
+    def _read_and_validate_dataframes(
         self,
         datafiles: List[str],
         config: DatasetConfig,
@@ -60,9 +48,9 @@ class DatasetReader:
         if len(datafiles) == 0:
             raise ValueError("No datafiles in this path")
 
-        required_columns = list(config.columns_mapping.keys()) if validate_columns else None
+        required_columns = config.user_column_names if validate_columns else None
         
-        worker_co = partial(help_reader, self.filesystem, required_columns)
+        worker_co = partial(read_and_validate_df, self.filesystem, required_columns)
         paths_dataframes: List[Tuple[str, pd.DataFrame]] = process_map(
             worker_co, datafiles,
             max_workers=processes,
@@ -71,20 +59,15 @@ class DatasetReader:
         )
 
         if validate_columns:
-            column_set = set(paths_dataframes[0][1].columns.tolist())
-            for path, df in paths_dataframes:
-                assert set(df.columns.tolist()) == column_set, (
-                    f"Dataframe {path} have different columns. "
-                    f"Expected {column_set}, got {set(df.columns)}"
-                )
+            self._validate_dataframes_columns(config, paths_dataframes)
         return paths_dataframes
 
-    def _validate_dfs(
-        self,
+    @staticmethod
+    def _validate_dataframes_columns(
         config: DatasetConfig,
-        paths_dataframes: List[Tuple[str, pd.DataFrame]]
+        paths_dataframes: List[Tuple[str, pd.DataFrame]],
     ) -> None:
-        required_columns = list(config.columns_mapping.keys())
+        required_columns = config.user_column_names
 
         column_set = set(paths_dataframes[0][1].columns.tolist())
         for path, df in paths_dataframes:
@@ -97,8 +80,8 @@ class DatasetReader:
                 f"Expected {column_set}, got {set(df.columns)}"
             )
 
-    def _convert_to_path_columns(
-        self,
+    @staticmethod
+    def _convert_sharded_columns_to_path_columns(
         split_suffix: str,
         config: DatasetConfig,
         df: pd.DataFrame
@@ -116,8 +99,8 @@ class DatasetReader:
             df.drop(columns=list(cols_to_drop), inplace=True)
         return df
 
-    def _rearrange_columns(
-        self,
+    @staticmethod
+    def _rearrange_dataframe_columns(
         df: pd.DataFrame,
         config: DatasetConfig
     ) -> pd.DataFrame:
@@ -133,28 +116,27 @@ class DatasetReader:
         columns.extend(list(orig_columns))
         return df[columns]
 
-    def _postprocess_dfs(
+    @staticmethod
+    def _merge_sharded_dataframes(paths_dataframes: List[Tuple[str, pd.DataFrame]]) -> pd.DataFrame:
+        for path, df in paths_dataframes:
+            df_name = get_path_filename(path)
+            df.insert(loc=1, column='split_name', value=df_name)
+        return pd.concat([d[1] for d in paths_dataframes], ignore_index=True)
+
+    def _post_process_dataframes(
         self,
         split_suffix: str,
         config: DatasetConfig,
         paths_dataframes: List[Tuple[str, pd.DataFrame]]
     ) -> pd.DataFrame:
-        for path, df in paths_dataframes:
-            index = self.get_split_index(path)
-            df.insert(loc=1, column='split_name', value=index)
+        df = self._merge_sharded_dataframes(paths_dataframes)
 
-        df = pd.concat([d[1] for d in paths_dataframes], ignore_index=True)
+        columns_to_rename = config.user_columns_to_rename
+        if len(columns_to_rename) > 0:
+            df.rename(columns=columns_to_rename, inplace=True)
 
-        column_mapping = {}
-        for k, v in config.columns_mapping.items():
-            if k != v:
-                column_mapping[k] = v
-
-        if len(column_mapping) > 0:
-            df.rename(columns=column_mapping, inplace=True)
-
-        df = self._convert_to_path_columns(split_suffix, config, df)
-        df = self._rearrange_columns(df, config)
+        df = self._convert_sharded_columns_to_path_columns(split_suffix, config, df)
+        df = self._rearrange_dataframe_columns(df, config)
         return df
 
     def from_shards(
@@ -171,11 +153,11 @@ class DatasetReader:
         config: ShardsDatasetConfig
             Config of ShardsDatasetConfig type
         validate_columns: bool = True
-            Whether or not to check if columns in different csvs are matched
+            Whether to check if columns in different csvs are matched
         workers: int = 1
             Number of parallel processes
         progress_bar: bool = True
-            Whether or not to display the progress bar
+            Whether to display the progress bar
 
         Returns
         -------
@@ -183,10 +165,8 @@ class DatasetReader:
             Instance of ShardsDatasetProcessor dataset
         """
         dataset_path = config.path.rstrip("/")
-        datafiles_ext = config.datafiles_ext.lstrip(".")
-        datafiles_ext_dot = '.'+datafiles_ext
-        archive_ext = config.archives_ext.lstrip(".")
-        archive_ext_dot = '.' + datafiles_ext
+        datafiles_ext_dot = '.' + config.datafiles_ext.lstrip(".")
+        archive_ext_dot = '.' + config.archives_ext.lstrip(".")
 
         filepaths = self.filesystem.listdir(dataset_path)
         datafiles = [p for p in filepaths if p.endswith(datafiles_ext_dot)]
@@ -205,13 +185,10 @@ class DatasetReader:
                 f"Archive {filepath} has not associated data file"
         #
 
-        paths_dataframes = self._read_dfs(
+        paths_dataframes = self._read_and_validate_dataframes(
             datafiles, config, validate_columns, workers, progress_bar,
         )
-        if validate_columns:
-            self._validate_dfs(config, paths_dataframes)
-
-        df = self._postprocess_dfs('.'+archive_ext, config, paths_dataframes)
+        df = self._post_process_dataframes(archive_ext_dot, config, paths_dataframes)
         processor = ShardsDatasetProcessor(
             filesystem=self.filesystem,
             df=df,
@@ -233,11 +210,11 @@ class DatasetReader:
         config: ShardedFilesDatasetConfig
             Config of ShardedFilesDatasetConfig type
         validate_columns: bool = True
-            Whether or not to check if columns in different csvs are matched
+            Whether to check if columns in different csvs are matched
         workers: int = 1
             Number of parallel processes
         progress_bar: bool = True
-            Whether or not to display the progress bar
+            Whether to display the progress bar
 
         Returns
         -------
@@ -259,13 +236,10 @@ class DatasetReader:
                 f"File {filepath} has not associated folder"
         #
 
-        paths_dataframes = self._read_dfs(
+        paths_dataframes = self._read_and_validate_dataframes(
             datafiles, config, validate_columns, workers, progress_bar,
         )
-        if validate_columns:
-            self._validate_dfs(config, paths_dataframes)
-
-        df = self._postprocess_dfs('', config, paths_dataframes)
+        df = self._post_process_dataframes('', config, paths_dataframes)
         processor = ShardedFilesDatasetProcessor(
             filesystem=self.filesystem,
             df=df,
@@ -292,19 +266,17 @@ class DatasetReader:
         table_path = config.table_path.rstrip("/")
         df = self.filesystem.read_dataframe(table_path)
 
-        required_columns = list(config.columns_mapping.keys())
+        required_columns = list(config.user_column2default_column.keys())
         column_set = set(df.columns.tolist())
         for col in required_columns:
             assert col in column_set, f'Expected table to have "{col}" column'
 
-        column_mapping = {}
-        for k, v in config.columns_mapping.items():
-            if k != v:
-                column_mapping[k] = v
+        # renaming columns
+        columns_to_rename = config.user_columns_to_rename
+        if len(columns_to_rename) > 0:
+            df.rename(columns=columns_to_rename, inplace=True)
 
-        if len(column_mapping) > 0:
-            df.rename(columns=column_mapping, inplace=True)
-
+        # append paths to files
         for datatype in config.datatypes:
             if isinstance(datatype, FileDataType):
                 path_col = datatype.modality.path_column
@@ -345,4 +317,3 @@ class DatasetReader:
         else:
             raise ValueError(f"Unsupported config: {config}")
         return processor
-
