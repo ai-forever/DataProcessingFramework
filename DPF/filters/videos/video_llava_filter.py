@@ -25,6 +25,21 @@ def disable_torch_init():
     """
     setattr(torch.nn.Linear, "reset_parameters", lambda self: None)
     setattr(torch.nn.LayerNorm, "reset_parameters", lambda self: None)
+
+    
+def check_caption(caption):
+    sentences_dict = {}
+    sentences = caption.split('.')
+    for sentence in sentences:
+        if sentence not in sentences_dict:
+            sentences_dict[sentence] = 1
+        else:
+            sentences_dict[sentence] += 1
+
+    if max(sentences_dict.values()) == 1:
+        return caption
+    else:
+        return None
     
 
 class VideoLLaVAFilter(VideoFilter):
@@ -131,7 +146,7 @@ class VideoLLaVAFilter(VideoFilter):
         all_outputs = []
         for i in range(output_ids.shape[0]):
             caption = self.tokenizer.decode(output_ids[i, self.input_ids.shape[1]:]).strip().split('</s>')[0]
-            all_outputs.append(caption)
+            all_outputs.append(check_caption(caption))
        
         df_batch_labels[self.schema[1]].extend(all_outputs)
         df_batch_labels[self.key_column].extend(keys)
