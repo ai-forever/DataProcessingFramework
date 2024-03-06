@@ -57,7 +57,7 @@ class GunnarFarnebackFilter(VideoFilter):
         _pbar_position: int = 0
     ):
         super().__init__(pbar, _pbar_position)
-        
+
         self.num_workers = workers
         self.batch_size = batch_size
 

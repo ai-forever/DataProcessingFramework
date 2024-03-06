@@ -3,7 +3,11 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 import pandas as pd
 from torch.utils.data import Dataset
 
-from DPF.dataloaders.dataloader_utils import identical_preprocess_function
+from DPF.dataloaders.dataloader_utils import (
+    get_columns_to_modality_mapping,
+    get_paths_columns_to_modality_mapping,
+    identical_preprocess_function,
+)
 from DPF.datatypes import ColumnDataType, FileDataType, ShardedDataType
 from DPF.filesystems.filesystem import FileSystem
 
@@ -43,24 +47,23 @@ class FilesDataset(Dataset[Tuple[bool, Any]]):
         self.filesystem = filesystem
 
         self.datatypes = datatypes
+        assert all(isinstance(d, (ShardedDataType, FileDataType, ColumnDataType)) for d in self.datatypes)
+
         self.meta_columns = meta_columns if meta_columns else []
 
-        # configuring columns
-        self.path_column2modality = {}
-        self.column2modality = {}
-        for d in self.datatypes:
-            if isinstance(d, ColumnDataType):
-                self.column2modality[d.column_name] = d.modality.name
-            elif isinstance(d, (ShardedDataType, FileDataType)):
-                self.path_column2modality[d.modality.path_column] = d.modality.name
-            else:
-                raise ValueError()
-        self.columns = list(set(
+        # mapping columns with path to modality name
+        self.path_column2modality = get_paths_columns_to_modality_mapping(
+            [datatype for datatype in self.datatypes if isinstance(datatype, (FileDataType, ShardedDataType))]
+        )
+        # mapping column name to modality name (if datatype is ColumnDataType)
+        self.column2modality = get_columns_to_modality_mapping(
+            [datatype for datatype in self.datatypes if isinstance(datatype, ColumnDataType)]
+        )
+        self.all_columns = list(set(
             list(self.path_column2modality.keys()) + list(self.column2modality.keys()) + self.meta_columns
         ))
 
-        #
-        self.data_to_iterate = df[self.columns].values
+        self.data_to_iterate = df[self.all_columns].values
         self.preprocess_f = preprocess_function
         self.return_none_on_error = return_none_on_error
 
@@ -68,35 +71,36 @@ class FilesDataset(Dataset[Tuple[bool, Any]]):
         return len(self.data_to_iterate)
 
     def __getitem__(self, idx: int) -> Tuple[bool, Any]:
-        data = {
-            self.columns[c]: item for c, item in enumerate(self.data_to_iterate[idx])
+        row_sample_data = {
+            self.all_columns[c]: item for c, item in enumerate(self.data_to_iterate[idx])
         }
         modality2data = {}
         is_ok = True
-        # read files
+
+        # read data from files
         for col in self.path_column2modality.keys():
             modality = self.path_column2modality[col]
             if self.return_none_on_error:
                 try:
-                    file_bytes = self.filesystem.read_file(data[col], binary=True).getvalue()
+                    file_bytes = self.filesystem.read_file(row_sample_data[col], binary=True).getvalue()
                 except Exception:
                     file_bytes = None
                     is_ok = False
             else:
-                file_bytes = self.filesystem.read_file(data[col], binary=True).getvalue()
+                file_bytes = self.filesystem.read_file(row_sample_data[col], binary=True).getvalue()
             modality2data[modality] = file_bytes
 
         # read data from columns
         for col in self.column2modality.keys():
             modality = self.column2modality[col]
-            modality2data[modality] = data[col]
+            modality2data[modality] = row_sample_data[col]
 
         preprocessed_data = None
         if self.return_none_on_error and is_ok:
             try:
-                preprocessed_data = self.preprocess_f(modality2data, data)
+                preprocessed_data = self.preprocess_f(modality2data, row_sample_data)
             except Exception:
                 is_ok = False
         elif is_ok:
-            preprocessed_data = self.preprocess_f(modality2data, data)
+            preprocessed_data = self.preprocess_f(modality2data, row_sample_data)
         return is_ok, preprocessed_data

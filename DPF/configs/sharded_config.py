@@ -18,7 +18,7 @@ class ShardedDatasetConfig(DatasetConfig):
         self.datafiles_ext = datafiles_ext.lstrip('.')
         self._modality2datatype = {d.modality.name: d for d in datatypes}
 
-        assert len(set([d.modality.name for d in datatypes])) == len(datatypes), \
+        assert len({d.modality.name for d in datatypes}) == len(datatypes), \
             "More than one datatype with same modality is not supported"
         for data in self.datatypes:
             assert isinstance(data, (ColumnDataType, ShardedDataType))

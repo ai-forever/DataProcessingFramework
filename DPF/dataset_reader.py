@@ -1,5 +1,5 @@
 from functools import partial
-from typing import List, Optional, Tuple, Union, Type
+from typing import List, Optional, Tuple, Type, Union
 
 import pandas as pd
 from tqdm.contrib.concurrent import process_map

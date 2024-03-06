@@ -68,7 +68,7 @@ class FilesDatasetProcessor(DatasetProcessor):
 
         assert len(df_old) == len(df_new), 'Length of dataframe is changed'
 
-        columns_to_add = [i for i in df_new.columns if i != key_column]
+        columns_to_add = [i for i in df_new.all_columns if i != key_column]
         columns_intersection = set(df_old.columns).intersection(set(columns_to_add))
 
         if len(columns_intersection) > 0:
