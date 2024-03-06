@@ -52,18 +52,19 @@ images/1.jpg,caption,512,512
 ```
 
 Чтение датасета из формата _files_:
+
 ```python
 from DPF.configs import FilesDatasetConfig
 from DPF.dataset_reader import DatasetReader
 
-config = FilesDatasetConfig.from_modalities(
+config = FilesDatasetConfig.from_paths_and_columns(
     'tests/datasets/files_correct/data.csv',
     image_path_col='image_path',
     caption_col='caption'
 )
 
 reader = DatasetReader()
-processor = reader.from_config(config)
+processor = reader.read_from_config(config)
 ```
 
 ### Формат shards
@@ -90,18 +91,19 @@ image_name, caption
 ```
 
 Чтение датасета из формата _shards_:
+
 ```python
 from DPF.configs import ShardsDatasetConfig
 from DPF.dataset_reader import DatasetReader
 
-config = ShardsDatasetConfig.from_modalities(
+config = ShardsDatasetConfig.from_paths_and_columns(
     'tests/datasets/shards_correct',
     image_name_col='image_name',
     caption_col='caption'
 )
 
 reader = DatasetReader()
-processor = reader.from_config(config)
+processor = reader.read_from_config(config)
 ```
 
 ### Формат sharded files
@@ -125,18 +127,19 @@ processor = reader.from_config(config)
 ```
 
 Чтение датасета из формата _sharded files_:
+
 ```python
 from DPF.configs import ShardedFilesDatasetConfig
 from DPF.dataset_reader import DatasetReader
 
-config = ShardedFilesDatasetConfig.from_modalities(
+config = ShardedFilesDatasetConfig.from_paths_and_columns(
     'tests/datasets/shards_correct',
     image_name_col='image_name',
     caption_col='caption'
 )
 
 reader = DatasetReader()
-processor = reader.from_config(config)
+processor = reader.read_from_config(config)
 ```
 
 ## Базовое использование
@@ -144,43 +147,47 @@ processor = reader.from_config(config)
 #### Конфиги
 Чтобы начать работу с датасетом, нужно сначала создать конфиг `DatasetConfig`, описывающий датасет и его модальности.
 Для каждого формата данных нужно использовать соответствующий конфиг. Пример для формата _shards_:
+
 ```python
 from DPF.configs import ShardsDatasetConfig
 
-config = ShardsDatasetConfig.from_modalities(
-    'examples/example_dataset/',  # путь к датасету
-    image_name_col='image_name',  # название колонки в csv с названием изображения
-    video_name_col='video_name',  # название колонки в csv с названием видео
-    caption_col='caption'         # название колонки в csv с кэпшенами
+config = ShardsDatasetConfig.from_paths_and_columns(
+  'examples/example_dataset/',  # путь к датасету
+  image_name_col='image_name',  # название колонки в csv с названием изображения
+  video_name_col='video_name',  # название колонки в csv с названием видео
+  caption_col='caption'  # название колонки в csv с кэпшенами
 )
 ```
 
 #### Чтение датасета
 Считать датасет можно с помощью класса `DatasetReader`, передав конфиг в метод `from_config`:
+
 ```python
 from DPF.configs import ShardsDatasetConfig
 from DPF.dataset_reader import DatasetReader
 
-config = ShardsDatasetConfig.from_modalities(
+config = ShardsDatasetConfig.from_paths_and_columns(
     'examples/example_dataset/',
     image_name_col='image_name',
     caption_col='caption'
 )
 
 reader = DatasetReader()
-processor = reader.from_config(config)
+processor = reader.read_from_config(config)
 ```
 Пример чтения датасета с видео в формате _sharded files_:
+
 ```python
 from DPF.configs import ShardedFilesDatasetConfig
-config = ShardedFilesDatasetConfig.from_modalities(
+
+config = ShardedFilesDatasetConfig.from_paths_and_columns(
     'examples/example_video_dataset/',
     video_name_col='image_name',
     caption_col='caption'
 )
 
 reader = DatasetReader()
-processor = reader.from_config(config)
+processor = reader.read_from_config(config)
 ```
 Взаимодействие с датасетом происходит через интерфейс `DatasetProcessor`. 
 `DatasetProcessor` дает возможность валидировать, просматривать, фильтровать датасеты.  

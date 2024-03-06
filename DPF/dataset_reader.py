@@ -1,5 +1,5 @@
 from functools import partial
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union, Type
 
 import pandas as pd
 from tqdm.contrib.concurrent import process_map
@@ -83,7 +83,7 @@ class DatasetReader:
     @staticmethod
     def _convert_sharded_columns_to_path_columns(
         split_suffix: str,
-        config: DatasetConfig,
+        config: Union[ShardedFilesDatasetConfig, ShardsDatasetConfig],
         df: pd.DataFrame
     ) -> pd.DataFrame:
         split_container_path = config.path.rstrip('/')+'/'+df['split_name']+split_suffix+'/'
@@ -123,10 +123,10 @@ class DatasetReader:
             df.insert(loc=1, column='split_name', value=df_name)
         return pd.concat([d[1] for d in paths_dataframes], ignore_index=True)
 
-    def _post_process_dataframes(
+    def _post_process_sharded_dataframes(
         self,
         split_suffix: str,
-        config: DatasetConfig,
+        config: Union[ShardedFilesDatasetConfig, ShardsDatasetConfig],
         paths_dataframes: List[Tuple[str, pd.DataFrame]]
     ) -> pd.DataFrame:
         df = self._merge_sharded_dataframes(paths_dataframes)
@@ -139,7 +139,7 @@ class DatasetReader:
         df = self._rearrange_dataframe_columns(df, config)
         return df
 
-    def from_shards(
+    def read_shards(
         self,
         config: ShardsDatasetConfig,
         validate_columns: bool = True,
@@ -188,7 +188,7 @@ class DatasetReader:
         paths_dataframes = self._read_and_validate_dataframes(
             datafiles, config, validate_columns, workers, progress_bar,
         )
-        df = self._post_process_dataframes(archive_ext_dot, config, paths_dataframes)
+        df = self._post_process_sharded_dataframes(archive_ext_dot, config, paths_dataframes)
         processor = ShardsDatasetProcessor(
             filesystem=self.filesystem,
             df=df,
@@ -196,7 +196,7 @@ class DatasetReader:
         )
         return processor
 
-    def from_sharded_files(
+    def read_sharded_files(
         self,
         config: ShardedFilesDatasetConfig,
         validate_columns: bool = True,
@@ -239,7 +239,7 @@ class DatasetReader:
         paths_dataframes = self._read_and_validate_dataframes(
             datafiles, config, validate_columns, workers, progress_bar,
         )
-        df = self._post_process_dataframes('', config, paths_dataframes)
+        df = self._post_process_sharded_dataframes('', config, paths_dataframes)
         processor = ShardedFilesDatasetProcessor(
             filesystem=self.filesystem,
             df=df,
@@ -247,7 +247,7 @@ class DatasetReader:
         )
         return processor
 
-    def from_files(
+    def read_files(
         self,
         config: FilesDatasetConfig,
     ) -> FilesDatasetProcessor:
@@ -288,7 +288,7 @@ class DatasetReader:
             config=config
         )
 
-    def from_config(  # type: ignore
+    def read_from_config(  # type: ignore
         self,
         config: DatasetConfig,
         **kwargs
@@ -309,11 +309,11 @@ class DatasetReader:
         """
         processor: DatasetProcessor
         if isinstance(config, ShardsDatasetConfig):
-            processor = self.from_shards(config, **kwargs)
+            processor = self.read_shards(config, **kwargs)
         elif isinstance(config, ShardedFilesDatasetConfig):
-            processor = self.from_sharded_files(config, **kwargs)
+            processor = self.read_sharded_files(config, **kwargs)
         elif isinstance(config, FilesDatasetConfig):
-            processor = self.from_files(config)
+            processor = self.read_files(config)
         else:
             raise ValueError(f"Unsupported config: {config}")
         return processor
@@ -333,6 +333,7 @@ class DatasetReader:
         DatasetProcessor
             Instance of DatasetProcessor dataset
         """
+        processor_class: Type[DatasetProcessor]
         if isinstance(config, ShardsDatasetConfig):
             processor_class = ShardsDatasetProcessor
         elif isinstance(config, ShardedFilesDatasetConfig):

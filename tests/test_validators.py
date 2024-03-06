@@ -13,14 +13,14 @@ from DPF.validators.format_validators.errors import (
 
 def test_shards_reader():
     path = 'tests/datasets/shards_correct'
-    config = ShardsDatasetConfig.from_modalities(
+    config = ShardsDatasetConfig.from_paths_and_columns(
         path,
         image_name_col="image_name",
         caption_col="caption"
     )
 
     reader = DatasetReader()
-    processor = reader.from_config(config)
+    processor = reader.read_from_config(config)
 
     result = processor.validate()
     assert result.total_errors == 0
@@ -28,14 +28,14 @@ def test_shards_reader():
 
 def test_shards_wrong_columns():
     path = 'tests/datasets/shards_wrong_columns'
-    config = ShardsDatasetConfig.from_modalities(
+    config = ShardsDatasetConfig.from_paths_and_columns(
         path,
         image_name_col="image_name",
         caption_col="caption"
     )
 
     reader = DatasetReader()
-    processor = reader.from_config(config, validate_columns=False)
+    processor = reader.read_from_config(config, validate_columns=False)
 
     result = processor.validate()
     assert len(result.dataframe_errors) == 0
@@ -51,13 +51,13 @@ def test_shards_wrong_columns():
 
 def test_shards_wrong_tar():
     path = 'tests/datasets/shards_wrong_tar'
-    config = ShardsDatasetConfig.from_modalities(
+    config = ShardsDatasetConfig.from_paths_and_columns(
         path,
         image_name_col="image_name",
         caption_col="caption"
     )
     reader = DatasetReader()
-    processor = reader.from_config(config)
+    processor = reader.read_from_config(config)
 
     result = processor.validate()
 
@@ -69,14 +69,14 @@ def test_shards_wrong_tar():
 
 def test_sharded_files_reader():
     path = 'tests/datasets/sharded_files_correct'
-    config = ShardedFilesDatasetConfig.from_modalities(
+    config = ShardedFilesDatasetConfig.from_paths_and_columns(
         path,
         image_name_col="image_name",
         caption_col="caption"
     )
 
     reader = DatasetReader()
-    processor = reader.from_config(config)
+    processor = reader.read_from_config(config)
 
     result = processor.validate()
     assert result.total_errors == 0
@@ -84,14 +84,14 @@ def test_sharded_files_reader():
 
 def test_sharded_files_wrong_columns():
     path = 'tests/datasets/sharded_files_wrong_columns'
-    config = ShardedFilesDatasetConfig.from_modalities(
+    config = ShardedFilesDatasetConfig.from_paths_and_columns(
         path,
         image_name_col="image_name",
         caption_col="caption"
     )
 
     reader = DatasetReader()
-    processor = reader.from_config(config, validate_columns=False)
+    processor = reader.read_from_config(config, validate_columns=False)
 
     result = processor.validate()
     assert len(result.dataframe_errors) == 0
@@ -107,13 +107,13 @@ def test_sharded_files_wrong_columns():
 
 def test_sharded_files_wrong_tar():
     path = 'tests/datasets/sharded_files_wrong_folder'
-    config = ShardedFilesDatasetConfig.from_modalities(
+    config = ShardedFilesDatasetConfig.from_paths_and_columns(
         path,
         image_name_col="image_name",
         caption_col="caption"
     )
     reader = DatasetReader()
-    processor = reader.from_config(config)
+    processor = reader.read_from_config(config)
 
     result = processor.validate()
 
@@ -125,14 +125,14 @@ def test_sharded_files_wrong_tar():
 
 def test_files_reader():
     path = 'tests/datasets/files_correct/data.csv'
-    config = FilesDatasetConfig.from_modalities(
+    config = FilesDatasetConfig.from_paths_and_columns(
         path,
         image_path_col="image_path",
         caption_col="caption"
     )
 
     reader = DatasetReader()
-    processor = reader.from_config(config)
+    processor = reader.read_from_config(config)
 
     result = processor.validate()
     assert result.total_errors == 0

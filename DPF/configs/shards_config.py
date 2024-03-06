@@ -19,7 +19,7 @@ class ShardsDatasetConfig(ShardedDatasetConfig):
         self.archives_ext = archives_ext.lstrip('.')
 
     @classmethod
-    def from_modalities(
+    def from_paths_and_columns(
         cls,
         path: str,
         image_name_col: Optional[str] = None,
@@ -27,8 +27,8 @@ class ShardsDatasetConfig(ShardedDatasetConfig):
         caption_col: Optional[str] = None,
         archives_ext: str = "tar",
         datafiles_ext: str = "csv",
-    ):
-        datatypes = []
+    ) -> "ShardsDatasetConfig":
+        datatypes: List[Union[ShardedDataType, ColumnDataType]] = []
         if image_name_col:
             datatypes.append(ShardedDataType(MODALITIES['image'], image_name_col))
         if video_name_col:

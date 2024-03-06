@@ -72,7 +72,7 @@ class VideoInfoFilter(VideoFilter):
         df_batch_labels = self._generate_dict_from_schema()
 
         for video_info in batch:
-            df_batch_labels[self.key_column].append(video_info.key)
+            df_batch_labels[self.key_column].append(video_info.name)
             df_batch_labels["is_correct"].append(video_info.is_correct)
             df_batch_labels["error"].append(video_info.error)
             df_batch_labels["width"].append(video_info.width)

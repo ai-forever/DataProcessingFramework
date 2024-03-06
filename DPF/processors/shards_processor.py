@@ -80,9 +80,9 @@ class ShardsDatasetProcessor(ShardedDatasetProcessor):
         column2modality: Dict[str, str] = {}
         for d in self.config.datatypes:
             if isinstance(d, ColumnDataType):
-                column2modality[d.column_name] = d.modality.key
+                column2modality[d.column_name] = d.modality.name
             elif isinstance(d, ShardedDataType):
-                path_column2modality[d.modality.path_column] = d.modality.key
+                path_column2modality[d.modality.path_column] = d.modality.name
             else:
                 raise ValueError()
 

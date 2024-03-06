@@ -126,9 +126,9 @@ class FilesDatasetProcessor(DatasetProcessor):
         column2modality = {}
         for d in self.config.datatypes:
             if isinstance(d, ColumnDataType):
-                column2modality[d.modality.column] = d.modality.key
+                column2modality[d.modality.column] = d.modality.name
             elif isinstance(d, FileDataType):
-                path_column2modality[d.modality.path_column] = d.modality.key
+                path_column2modality[d.modality.path_column] = d.modality.name
             else:
                 raise ValueError()
 

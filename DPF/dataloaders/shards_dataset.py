@@ -57,9 +57,9 @@ class ShardsDataset(IterableDataset[Tuple[bool, Any]]):
         self.column2modality = {}
         for d in self.datatypes:
             if isinstance(d, ColumnDataType):
-                self.column2modality[d.column_name] = d.modality.key
+                self.column2modality[d.column_name] = d.modality.name
             elif isinstance(d, ShardedDataType):
-                self.path_column2modality[d.modality.path_column] = d.modality.key
+                self.path_column2modality[d.modality.path_column] = d.modality.name
             else:
                 raise ValueError()
         self.columns = list(set(

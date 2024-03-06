@@ -17,15 +17,15 @@ class ShardedFilesDatasetConfig(ShardedDatasetConfig):
         super().__init__(path, datatypes, datafiles_ext)
 
     @classmethod
-    def from_modalities(
+    def from_paths_and_columns(
         cls,
         path: str,
         image_name_col: Optional[str] = None,
         video_name_col: Optional[str] = None,
         caption_col: Optional[str] = None,
         datafiles_ext: str = "csv",
-    ):
-        datatypes = []
+    ) -> "ShardedFilesDatasetConfig":
+        datatypes: List[Union[ShardedDataType, ColumnDataType]] = []
         if image_name_col:
             datatypes.append(ShardedDataType(MODALITIES['image'], image_name_col))
         if video_name_col:

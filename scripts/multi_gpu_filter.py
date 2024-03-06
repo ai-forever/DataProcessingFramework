@@ -14,14 +14,14 @@ from DPF.filters.images.llava_captioning_filter import LLaVaCaptioningFilter
 SAVE_RESULTS_DIR = 'multigpu_filter_res/'
 SHARDS_DIR = 'examples/example_dataset/'
 
-config = ShardsDatasetConfig.from_modalities(
+config = ShardsDatasetConfig.from_paths_and_columns(
     SHARDS_DIR,
     image_name_col='image_name',
     #caption_col='caption'
 )
 
 reader = DatasetReader()
-processor = reader.from_config(config)
+processor = reader.read_from_config(config)
 
 accelerator = Accelerator()
 device = accelerator.device

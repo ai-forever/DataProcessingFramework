@@ -7,23 +7,14 @@ from DPF.datatypes import DataType
 class DatasetConfig(ABC):
     """Config for a dataset"""
 
-    def __init__(
-        self,
-        path: str,
-        datatypes: List[DataType],
-    ):
-        """
-        Parameters
-        ----------
-        path: str
-            Path to dataset
-        datatypes: List[DataType]
-            List of datatypes in dataset
-        """
-        assert len({d.modality.key for d in datatypes}) == len(datatypes)
+    def __init__(self, path: str):
         assert not path.endswith('/')
-        self.datatypes = datatypes
         self.path = path
+
+    @property
+    @abstractmethod
+    def datatypes(self) -> List[DataType]:
+        pass
 
     @property
     @abstractmethod
@@ -46,11 +37,3 @@ class DatasetConfig(ABC):
             if k != v:
                 columns_to_rename[k] = v
         return columns_to_rename
-
-    def __repr__(self) -> str:
-        s = "DatasetConfig(\n\t"
-        s += 'datatypes=[\n\t\t'
-        s += '\n\t\t'.join([str(i) for i in self.datatypes])
-        s += '\n\t]'
-        s += '\n)'
-        return s
