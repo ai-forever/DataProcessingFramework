@@ -3,6 +3,7 @@ from typing import Dict, List, Union
 from DPF.datatypes import ColumnDataType, DataType, ShardedDataType
 
 from .dataset_config import DatasetConfig
+from ..modalities import ModalityName
 
 
 class ShardedDatasetConfig(DatasetConfig):
@@ -28,7 +29,7 @@ class ShardedDatasetConfig(DatasetConfig):
         return self._datatypes  # type: ignore
 
     @property
-    def modality2datatype(self) -> Dict[str, DataType]:
+    def modality2datatype(self) -> Dict[ModalityName, DataType]:
         return self._modality2datatype  # type: ignore
 
     @property

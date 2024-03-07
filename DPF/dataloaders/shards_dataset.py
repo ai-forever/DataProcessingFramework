@@ -14,6 +14,8 @@ from DPF.dataloaders.dataloader_utils import (
 )
 from DPF.datatypes import ColumnDataType, ShardedDataType
 from DPF.filesystems.filesystem import FileSystem
+from DPF.modalities import ModalityName
+from DPF.types import ModalityToDataMapping
 
 
 class ShardsDataset(IterableDataset[Tuple[bool, Any]]):
@@ -27,8 +29,8 @@ class ShardsDataset(IterableDataset[Tuple[bool, Any]]):
         df: pd.DataFrame,
         split2archive_path: Dict[str, str],
         datatypes: List[Union[ShardedDataType, ColumnDataType]],
-        meta_columns: Optional[List[str]] = None,
-        preprocess_function: Callable[[Dict[str, Union[bytes, Any]], Dict[str, str]], Any] = identical_preprocess_function,
+        metadata_columns: Optional[List[str]] = None,
+        preprocess_function: Callable[[ModalityToDataMapping, Dict[str, str]], Any] = identical_preprocess_function,
         return_none_on_error: bool = False
     ):
         """
@@ -42,9 +44,9 @@ class ShardsDataset(IterableDataset[Tuple[bool, Any]]):
             Mapping of the shard index (e.g. split index) to the tar path
         datatypes: List[Union[ShardedDataType, FileDataType, ColumnDataType]]
             List of datatypes to read
-        meta_columns: Optional[List[str]] = None
+        metadata_columns: Optional[List[str]] = None
             List of dataframe columns to return from dataloader
-        preprocess_function: Callable[[Dict[str, bytes], Dict[str, str]], Any] = default_preprocess
+        preprocess_function: Callable[[ModalityToDataMapping, Dict[str, str]], Any] = default_preprocess
             Preprocessing function for data. First argument of the preprocess_f is mapping from modality name to bytes
             and the second argument is mapping from meta_column name to its value.
         return_none_on_error: bool = False
@@ -54,7 +56,7 @@ class ShardsDataset(IterableDataset[Tuple[bool, Any]]):
         self.filesystem = filesystem
 
         self.datatypes = datatypes
-        self.meta_columns = meta_columns or []
+        self.meta_columns = metadata_columns or []
 
         # mapping columns with path to modality name
         self.path_column2modality = get_paths_columns_to_modality_mapping(

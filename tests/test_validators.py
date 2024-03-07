@@ -13,7 +13,7 @@ from DPF.validators.format_validators.errors import (
 
 def test_shards_reader():
     path = 'tests/datasets/shards_correct'
-    config = ShardsDatasetConfig.from_paths_and_columns(
+    config = ShardsDatasetConfig.from_path_and_columns(
         path,
         image_name_col="image_name",
         caption_col="caption"
@@ -28,7 +28,7 @@ def test_shards_reader():
 
 def test_shards_wrong_columns():
     path = 'tests/datasets/shards_wrong_columns'
-    config = ShardsDatasetConfig.from_paths_and_columns(
+    config = ShardsDatasetConfig.from_path_and_columns(
         path,
         image_name_col="image_name",
         caption_col="caption"
@@ -51,7 +51,7 @@ def test_shards_wrong_columns():
 
 def test_shards_wrong_tar():
     path = 'tests/datasets/shards_wrong_tar'
-    config = ShardsDatasetConfig.from_paths_and_columns(
+    config = ShardsDatasetConfig.from_path_and_columns(
         path,
         image_name_col="image_name",
         caption_col="caption"
@@ -69,7 +69,7 @@ def test_shards_wrong_tar():
 
 def test_sharded_files_reader():
     path = 'tests/datasets/sharded_files_correct'
-    config = ShardedFilesDatasetConfig.from_paths_and_columns(
+    config = ShardedFilesDatasetConfig.from_path_and_columns(
         path,
         image_name_col="image_name",
         caption_col="caption"
@@ -84,7 +84,7 @@ def test_sharded_files_reader():
 
 def test_sharded_files_wrong_columns():
     path = 'tests/datasets/sharded_files_wrong_columns'
-    config = ShardedFilesDatasetConfig.from_paths_and_columns(
+    config = ShardedFilesDatasetConfig.from_path_and_columns(
         path,
         image_name_col="image_name",
         caption_col="caption"
@@ -107,7 +107,7 @@ def test_sharded_files_wrong_columns():
 
 def test_sharded_files_wrong_tar():
     path = 'tests/datasets/sharded_files_wrong_folder'
-    config = ShardedFilesDatasetConfig.from_paths_and_columns(
+    config = ShardedFilesDatasetConfig.from_path_and_columns(
         path,
         image_name_col="image_name",
         caption_col="caption"
@@ -125,7 +125,7 @@ def test_sharded_files_wrong_tar():
 
 def test_files_reader():
     path = 'tests/datasets/files_correct/data.csv'
-    config = FilesDatasetConfig.from_paths_and_columns(
+    config = FilesDatasetConfig.from_path_and_columns(
         path,
         image_path_col="image_path",
         caption_col="caption"

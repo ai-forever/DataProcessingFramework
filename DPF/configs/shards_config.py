@@ -19,7 +19,7 @@ class ShardsDatasetConfig(ShardedDatasetConfig):
         self.archives_ext = archives_ext.lstrip('.')
 
     @classmethod
-    def from_paths_and_columns(
+    def from_path_and_columns(
         cls,
         path: str,
         image_name_col: Optional[str] = None,

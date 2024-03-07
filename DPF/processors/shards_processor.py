@@ -9,8 +9,9 @@ from DPF.datatypes import ColumnDataType, ShardedDataType
 from DPF.filesystems import FileSystem
 from DPF.validators.format_validators import ShardedValidationResult, ShardsValidator
 
-from ..transforms import BaseFilesTransforms
 from .sharded_processor import ShardedDatasetProcessor
+from DPF.modalities import ModalityName
+from DPF.types import ModalityToDataMapping
 
 
 class ShardsDatasetProcessor(ShardedDatasetProcessor):
@@ -24,7 +25,7 @@ class ShardsDatasetProcessor(ShardedDatasetProcessor):
         super().__init__(filesystem, df, config)
 
     def get_container_path(self, split_name: str) -> str:
-        return self.config.path + '/' + split_name + '.' + self.config.archives_ext
+        return self.config.path + '/' + split_name + '.' + self.config.archives_ext  # type: ignore
 
     def validate(
         self,
@@ -36,7 +37,7 @@ class ShardsDatasetProcessor(ShardedDatasetProcessor):
     ) -> ShardedValidationResult:
         if columns_to_check is None:
             columns_to_check = []
-        validator = ShardsValidator(
+        validator = ShardsValidator(  # type: ignore
             self.df,
             self.filesystem,
             self.config,
@@ -49,11 +50,11 @@ class ShardsDatasetProcessor(ShardedDatasetProcessor):
             pbar=pbar
         )
 
-    def get_torch_dataset(
+    def _get_torch_dataset(
         self,
-        modalities: List[str],
-        meta_columns: Optional[List[str]] = None,
-        preprocess_f: Callable[[dict, dict], Any] = identical_preprocess_function,
+        modalities: List[ModalityName],
+        columns_to_use: Optional[List[str]] = None,
+        preprocess_f: Callable[[ModalityToDataMapping, Dict[str, str]], Any] = identical_preprocess_function,
         return_none_on_error: bool = False
     ) -> ShardsDataset:
         assert len(set(modalities)) == len(list(modalities))
@@ -65,19 +66,19 @@ class ShardsDatasetProcessor(ShardedDatasetProcessor):
             self.filesystem,
             self._df,
             split2archive_path,
-            datatypes_to_load,
-            meta_columns=meta_columns,
+            datatypes_to_load,  # type: ignore
+            metadata_columns=columns_to_use,
             preprocess_function=preprocess_f,
             return_none_on_error=return_none_on_error
         )
 
-    def _read_files_from_sample(
+    def _read_sample_data(
         self,
         sample: Dict[str, str]
-    ) -> Dict[str, Union[bytes, str]]:
+    ) -> ModalityToDataMapping:
         tar_path = self.get_container_path(sample['split_name'])
-        path_column2modality: Dict[str, str] = {}
-        column2modality: Dict[str, str] = {}
+        path_column2modality: Dict[str, ModalityName] = {}
+        column2modality: Dict[str, ModalityName] = {}
         for d in self.config.datatypes:
             if isinstance(d, ColumnDataType):
                 column2modality[d.column_name] = d.modality.name
@@ -88,7 +89,7 @@ class ShardsDatasetProcessor(ShardedDatasetProcessor):
 
         tar = self.filesystem.read_tar(tar_path)
 
-        modality2data: Dict[str, Union[bytes, str]] = {}
+        modality2data: ModalityToDataMapping = {}
         # read files
         for col in path_column2modality.keys():
             modality = path_column2modality[col]
@@ -100,6 +101,3 @@ class ShardsDatasetProcessor(ShardedDatasetProcessor):
             modality = column2modality[col]
             modality2data[modality] = sample[col]
         return modality2data
-
-    def apply_transform(self, transforms: Union[BaseFilesTransforms]):
-        raise NotImplementedError()

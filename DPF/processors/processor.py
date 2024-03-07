@@ -1,6 +1,6 @@
 import os.path
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
 from torch.utils.data import DataLoader, Dataset
@@ -14,9 +14,9 @@ from DPF.dataloaders.dataloader_utils import (
 from DPF.datatypes import ColumnDataType
 from DPF.filesystems import FileSystem, LocalFileSystem
 from DPF.filters import ColumnFilter, DataFilter
-from DPF.modalities import MODALITIES
+from DPF.modalities import MODALITIES, ModalityName
 from DPF.processors.writers import ABSWriter, ShardedFilesWriter, ShardsWriter
-from DPF.transforms import BaseFilesTransforms
+from DPF.types import ModalityToDataMapping
 from DPF.validators import ValidationResult
 
 
@@ -38,15 +38,15 @@ class DatasetProcessor(ABC):
 
     @property
     def columns(self) -> List[str]:
-        return self._df.columns.tolist()
+        return self._df.columns.tolist()  # type: ignore
 
     def __getitem__(self, column_name: str) -> pd.Series:
         return self._df[column_name]
 
-    def __setitem__(self, key: str, value: Union[List[str], pd.Series]):
+    def __setitem__(self, key: str, value: Union[List[str], pd.Series]) -> None:
         self._df[key] = value
 
-    def summary(self):
+    def print_summary(self) -> None:
         """Prints summary info about dataset"""
         print('Dataset format:', config2format(self.config))
         print('Path:', self.config.path)
@@ -136,21 +136,21 @@ class DatasetProcessor(ABC):
         pass
 
     @abstractmethod
-    def get_torch_dataset(
-    self,
-    modalities: List[str],
-    meta_columns: Optional[List[str]] = None,
-    preprocess_f: Callable[[dict, dict], Any] = identical_preprocess_function,
-    return_none_on_error: bool = False
-    ) -> Dataset:
+    def _get_torch_dataset(
+        self,
+        modalities: List[ModalityName],
+        columns_to_use: Optional[List[str]] = None,
+        preprocess_f: Callable[[ModalityToDataMapping, Dict[str, str]], Any] = identical_preprocess_function,
+        return_none_on_error: bool = False
+    ) -> Dataset[Tuple[bool, Any]]:
         pass
 
     def apply_data_filter(
-    self,
-    datafilter: DataFilter,
-    validate_filter_result: bool = True,
+        self,
+        datafilter: DataFilter,
+        validate_filter_result: bool = True,
         return_none_on_error: bool = False
-    ):
+    ) -> None:
         """Applies a data filter to dataset
 
         Parameters
@@ -162,9 +162,9 @@ class DatasetProcessor(ABC):
         return_none_on_error: bool = False
             Whether to return None on sample if there is error in dataloader
         """
-        dataset = self.get_torch_dataset(
+        dataset = self._get_torch_dataset(
             modalities=datafilter.modalities,
-            meta_columns=datafilter.metadata_columns+[datafilter.key_column],
+            columns_to_use=datafilter.metadata_columns + [datafilter.key_column],
             preprocess_f=datafilter.preprocess,
             return_none_on_error=return_none_on_error
         )
@@ -178,12 +178,12 @@ class DatasetProcessor(ABC):
 
         self._df = pd.merge(self._df, df_result, on=datafilter.key_column, how='left')
 
-    def apply_multi_gpu_data_filter(
+    def apply_multi_gpu_data_filter(  # type: ignore
         self,
         multi_gpu_datafilter,
         validate_filter_result: bool = True,
         return_none_on_error: bool = False
-    ):
+    ) -> None:
         """Applies a multi-gpu data filter to dataset
 
         Parameters
@@ -203,7 +203,7 @@ class DatasetProcessor(ABC):
             }
         )
 
-    def apply_column_filter(self, column_filter: ColumnFilter, validate_filter_result: bool = True):
+    def apply_column_filter(self, column_filter: ColumnFilter, validate_filter_result: bool = True) -> None:
         """Applies a column filter to dataset
 
         Parameters
@@ -211,7 +211,7 @@ class DatasetProcessor(ABC):
         column_filter: ColumnFilter
             Instance of a DataFilter
         validate_filter_result: bool = True
-            Whether or not to check the correctness of datafilter result (data integrity)
+            Whether to check the correctness of datafilter result (data integrity)
         """
         filter_res = column_filter(self._df)
 
@@ -223,10 +223,6 @@ class DatasetProcessor(ABC):
             self._df[column_filter.schema[0]] = filter_res
         else:
             self._df[column_filter.schema] = filter_res
-
-    @abstractmethod
-    def apply_transform(self, transforms: Union[BaseFilesTransforms]):
-        pass
 
     @abstractmethod
     def validate(
@@ -256,10 +252,17 @@ class DatasetProcessor(ABC):
         """
         pass
 
+    @abstractmethod
+    def _read_sample_data(
+        self,
+        sample: Dict[str, str]
+    ) -> ModalityToDataMapping:
+        pass
+
     def get_random_sample(
         self,
         df_filter: Optional[pd.Series] = None
-    ) -> (Dict[str, bytes], Dict[str, str]):
+    ) -> Tuple[ModalityToDataMapping, Dict[str, str]]:
         """Returns a random sample from dataset
 
         Parameters
@@ -280,30 +283,23 @@ class DatasetProcessor(ABC):
             df_to_sample = self.df
 
         sample = df_to_sample.sample(1).iloc[0].to_dict()
-        modality2bytes = self._read_files_from_sample(sample)
+        modality2bytes = self._read_sample_data(sample)
         return modality2bytes, sample
-
-    @abstractmethod
-    def _read_files_from_sample(
-        self,
-        sample: Dict[str, str]
-    ) -> Dict[str, Union[bytes, str]]:
-        pass
 
     def filter_df(
         self,
         condition: pd.Series
-    ):
+    ) -> None:
         self._df = self._df[condition]
 
-    def convert(
+    def _write_dataset(
         self,
         writer: ABSWriter,
-        meta_columns: Optional[List[str]] = None,
-        dataloader_kwargs: Optional[dict] = None,
+        columns_to_save: Optional[List[str]] = None,
+        dataloader_kwargs: Optional[Dict[str, Any]] = None,
         pbar: bool = True
-    ):
-        meta_columns = meta_columns or []
+    ) -> None:
+        columns_to_save = columns_to_save or []
         dataloader_kwargs = dataloader_kwargs or {}
 
         new_dataloader_kwargs = {
@@ -314,12 +310,12 @@ class DatasetProcessor(ABC):
         }
         new_dataloader_kwargs.update(dataloader_kwargs)
 
-        dataset = self.get_torch_dataset(
+        dataset = self._get_torch_dataset(
             list(self.config.modality2datatype.keys()),
             preprocess_f=identical_preprocess_function,
-            meta_columns=meta_columns
+            columns_to_use=columns_to_save
         )
-        dataloader = DataLoader(dataset, **new_dataloader_kwargs)
+        dataloader = DataLoader(dataset, **new_dataloader_kwargs)  # type: ignore [arg-type]
 
         with writer as writer:
             for batch in tqdm(dataloader, disable=not pbar):
@@ -338,77 +334,80 @@ class DatasetProcessor(ABC):
 
                 writer.save_sample(modality2sample_data, metadata)
 
-    def to_sharded_files(
+    def save_to_sharded_files(
         self,
         destination_dir: str,
-        filesystem: FileSystem = LocalFileSystem(),
+        filesystem: Optional[FileSystem] = None,
         max_files_in_shard: int = 1000,
         datafiles_ext: str = "csv",
         filenaming: str = "counter",
-        meta_columns: Optional[List[str]] = None,
-        keys_mapping: Optional[Dict[str, str]] = None,
+        columns_to_save: Optional[List[str]] = None,
+        rename_columns: Optional[Dict[str, str]] = None,
         workers: int = 8,
         pbar: bool = True
-    ):
+    ) -> None:
         """Converts dataset to sharded files format
 
         Parameters
         ----------
         destination_dir: str
             Path to directory
-        filesystem: FileSystem = LocalFileSystem()
-            The FileSystem where this path is located
+        filesystem: Optional[FileSystem] = None
+            The FileSystem where this path is located. LocalFileSystem is used by default
         max_files_in_shard: int = 1000
             Maximum number of files in shard
         datafiles_ext: str = "csv"
             Extension of files with data tables
         filenaming: str = "counter"
             File naming type. "counter" and "uuid" are available
-        meta_columns: Optional[List[str]] = None
+        columns_to_save: Optional[List[str]] = None
             Column names to write in new dataset
-        keys_mapping: Optional[Dict[str, str]] = None
+        rename_columns: Optional[Dict[str, str]] = None
             Mapping used to rename columns
         workers: int = 8
             Number of parallel processes
         pbar: bool = True
             Whether to show a progress bar
         """
+        if filesystem is None:
+            filesystem = LocalFileSystem()  # type: ignore
+
         writer = ShardedFilesWriter(
             filesystem,
             destination_dir,
-            keys_mapping=keys_mapping,
+            keys_mapping=rename_columns,
             max_files_in_shard=max_files_in_shard,
             datafiles_ext=datafiles_ext,
             filenaming=filenaming
         )
-        self.convert(
+        self._write_dataset(
             writer,
-            meta_columns=meta_columns,
+            columns_to_save=columns_to_save,
             dataloader_kwargs={'num_workers': workers},
             pbar=pbar
         )
 
-    def to_shards(
+    def save_to_shards(
         self,
         destination_dir: str,
-        filesystem: FileSystem = LocalFileSystem(),
+        filesystem: Optional[FileSystem] = None,
         max_files_in_shard: int = 1000,
         datafiles_ext: str = "csv",
         archives_ext: Optional[str] = "tar",
         filenaming: str = "counter",
-        meta_columns: Optional[List[str]] = None,
-        keys_mapping: Optional[Dict[str, str]] = None,
+        columns_to_save: Optional[List[str]] = None,
+        rename_columns: Optional[Dict[str, str]] = None,
         workers: int = 8,
         pbar: bool = True
-    ):
+    ) -> None:
         """Converts dataset to sharded files format
 
         Parameters
         ----------
         destination_dir: str
             Path to directory
-        filesystem: FileSystem = LocalFileSystem()
-            The FileSystem where this path is located
+        filesystem: Optional[FileSystem] = None
+            The FileSystem where this path is located. LocalFileSystem is used by default
         max_files_in_shard: int = 1000
             Maximum number of files in shard
         datafiles_ext: str = "csv"
@@ -417,27 +416,30 @@ class DatasetProcessor(ABC):
             Extension of archives with data
         filenaming: str = "counter"
             File naming type. "counter" and "uuid" are available
-        meta_columns: Optional[List[str]] = None
+        columns_to_save: Optional[List[str]] = None
             Column names to write in new dataset
-        keys_mapping: Optional[Dict[str, str]] = None
+        rename_columns: Optional[Dict[str, str]] = None
             Mapping used to rename columns
         workers: int = 8
             Number of parallel processes
         pbar: bool = True
             Whether to show a progress bar
         """
+        if filesystem is None:
+            filesystem = LocalFileSystem()  # type: ignore
+
         writer = ShardsWriter(
             filesystem,
             destination_dir,
-            keys_mapping=keys_mapping,
+            keys_mapping=rename_columns,
             max_files_in_shard=max_files_in_shard,
             datafiles_ext=datafiles_ext,
             archives_ext=archives_ext,
             filenaming=filenaming
         )
-        self.convert(
+        self._write_dataset(
             writer,
-            meta_columns=meta_columns,
+            columns_to_save=columns_to_save,
             dataloader_kwargs={'num_workers': workers},
             pbar=pbar
         )

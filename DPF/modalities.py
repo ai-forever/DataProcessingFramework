@@ -1,5 +1,8 @@
 from dataclasses import dataclass
-from typing import Optional
+from typing import Literal, Optional
+
+
+ModalityName = Literal["image", "video", "text"]
 
 
 @dataclass
@@ -8,7 +11,7 @@ class DataModality:
 
     Parameters
     ----------
-    name: str
+    name: ModalityName
         Name of modality. Should be unique
     path_column: str
         Default column path to files with this modality
@@ -17,7 +20,7 @@ class DataModality:
     column: Optional[str] = None
         Default column name. If this modality can be stored in a column use None.
     """
-    name: str
+    name: ModalityName
     path_column: str
     sharded_file_name_column: str
     column: Optional[str] = None
@@ -50,7 +53,3 @@ MODALITIES = {
         'text_name', 'text'
     )
 }
-
-Image = 'image'
-Video = 'video'
-Text = 'text'

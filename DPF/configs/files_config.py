@@ -2,7 +2,7 @@ import os
 from typing import Dict, List, Optional, Union
 
 from DPF.datatypes import ColumnDataType, DataType, FileDataType
-from DPF.modalities import MODALITIES
+from DPF.modalities import MODALITIES, ModalityName
 
 from .dataset_config import DatasetConfig
 
@@ -30,7 +30,7 @@ class FilesDatasetConfig(DatasetConfig):
         return self._datatypes  # type: ignore
 
     @property
-    def modality2datatype(self) -> Dict[str, DataType]:
+    def modality2datatype(self) -> Dict[ModalityName, DataType]:
         return self._modality2datatype  # type: ignore
 
     @property
@@ -44,7 +44,7 @@ class FilesDatasetConfig(DatasetConfig):
         return mapping
 
     @classmethod
-    def from_paths_and_columns(
+    def from_path_and_columns(
         cls,
         path: str,
         image_path_col: Optional[str] = None,

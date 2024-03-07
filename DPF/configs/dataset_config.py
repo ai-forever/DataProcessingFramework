@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Dict, List
 
 from DPF.datatypes import DataType
+from DPF.modalities import ModalityName
 
 
 class DatasetConfig(ABC):
@@ -18,7 +19,7 @@ class DatasetConfig(ABC):
 
     @property
     @abstractmethod
-    def modality2datatype(self) -> Dict[str, DataType]:
+    def modality2datatype(self) -> Dict[ModalityName, DataType]:
         pass
 
     @property

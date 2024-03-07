@@ -6,6 +6,8 @@ from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
 
 from DPF.dataloaders.dataloader_utils import identical_collate_fn
+from DPF.modalities import ModalityName
+from DPF.types import ModalityToDataMapping
 
 
 class DataFilter(ABC):
@@ -32,7 +34,7 @@ class DataFilter(ABC):
 
     @property
     @abstractmethod
-    def modalities(self) -> List[str]:
+    def modalities(self) -> List[ModalityName]:
         """List of modalities used in filter. For example, ["image"] or ["video", "text"]."""
         pass
 
@@ -49,7 +51,7 @@ class DataFilter(ABC):
         pass
 
     @abstractmethod
-    def preprocess(self, modality2data: Dict[str, Union[bytes, str]], metadata: dict):
+    def preprocess(self, modality2data: ModalityToDataMapping, metadata: Dict[str, str]):
         pass
 
     @abstractmethod

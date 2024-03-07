@@ -57,7 +57,7 @@ images/1.jpg,caption,512,512
 from DPF.configs import FilesDatasetConfig
 from DPF.dataset_reader import DatasetReader
 
-config = FilesDatasetConfig.from_paths_and_columns(
+config = FilesDatasetConfig.from_path_and_columns(
     'tests/datasets/files_correct/data.csv',
     image_path_col='image_path',
     caption_col='caption'
@@ -96,10 +96,10 @@ image_name, caption
 from DPF.configs import ShardsDatasetConfig
 from DPF.dataset_reader import DatasetReader
 
-config = ShardsDatasetConfig.from_paths_and_columns(
-    'tests/datasets/shards_correct',
-    image_name_col='image_name',
-    caption_col='caption'
+config = ShardsDatasetConfig.from_path_and_columns(
+  'tests/datasets/shards_correct',
+  image_name_col='image_name',
+  caption_col='caption'
 )
 
 reader = DatasetReader()
@@ -132,10 +132,10 @@ processor = reader.read_from_config(config)
 from DPF.configs import ShardedFilesDatasetConfig
 from DPF.dataset_reader import DatasetReader
 
-config = ShardedFilesDatasetConfig.from_paths_and_columns(
-    'tests/datasets/shards_correct',
-    image_name_col='image_name',
-    caption_col='caption'
+config = ShardedFilesDatasetConfig.from_path_and_columns(
+  'tests/datasets/shards_correct',
+  image_name_col='image_name',
+  caption_col='caption'
 )
 
 reader = DatasetReader()
@@ -151,7 +151,7 @@ processor = reader.read_from_config(config)
 ```python
 from DPF.configs import ShardsDatasetConfig
 
-config = ShardsDatasetConfig.from_paths_and_columns(
+config = ShardsDatasetConfig.from_path_and_columns(
   'examples/example_dataset/',  # путь к датасету
   image_name_col='image_name',  # название колонки в csv с названием изображения
   video_name_col='video_name',  # название колонки в csv с названием видео
@@ -166,10 +166,10 @@ config = ShardsDatasetConfig.from_paths_and_columns(
 from DPF.configs import ShardsDatasetConfig
 from DPF.dataset_reader import DatasetReader
 
-config = ShardsDatasetConfig.from_paths_and_columns(
-    'examples/example_dataset/',
-    image_name_col='image_name',
-    caption_col='caption'
+config = ShardsDatasetConfig.from_path_and_columns(
+  'examples/example_dataset/',
+  image_name_col='image_name',
+  caption_col='caption'
 )
 
 reader = DatasetReader()
@@ -180,10 +180,10 @@ processor = reader.read_from_config(config)
 ```python
 from DPF.configs import ShardedFilesDatasetConfig
 
-config = ShardedFilesDatasetConfig.from_paths_and_columns(
-    'examples/example_video_dataset/',
-    video_name_col='image_name',
-    caption_col='caption'
+config = ShardedFilesDatasetConfig.from_path_and_columns(
+  'examples/example_video_dataset/',
+  video_name_col='image_name',
+  caption_col='caption'
 )
 
 reader = DatasetReader()
@@ -201,8 +201,9 @@ processor = reader.read_from_config(config)
 processor.df
 ```
 Вывести саммари о датасете:
+
 ```python
-processor.summary()
+processor.print_summary()
 ```
 Обновить существующие или добавить новые колонки:
 ```python
@@ -297,21 +298,23 @@ processor.apply_transform(transforms)
 #### Конвертация между форматами
 
 Конвертация в формат _shards_:
+
 ```python
-processor.to_shards(
+processor.save_to_shards(
   'destination/dir/',
-  filenaming="counter", # or "uuid"
-  keys_mapping={"text": "caption"},
+  filenaming="counter",  # or "uuid"
+  rename_columns={"text": "caption"},
   workers=4
 )
 ```
 
 Конвертация в формат _sharded files_
+
 ```python
-processor.to_sharded_files(
-  'destination/dir/',
-  filenaming="counter", # or "uuid"
-  keys_mapping={"text": "caption"},
-  workers=4
+processor.save_to_sharded_files(
+    'destination/dir/',
+    filenaming="counter",  # or "uuid"
+    rename_columns={"text": "caption"},
+    workers=4
 )
 ```

@@ -28,7 +28,7 @@ class ShardedDatasetProcessor(DatasetProcessor, ABC):
         pass
 
     def get_datafile_path(self, split_name: str) -> str:
-        return self.config.path+'/'+split_name+'.'+self.config.datafiles_ext
+        return self.config.path+'/'+split_name+'.'+self.config.datafiles_ext  # type: ignore
 
     def rename_columns(self, column_map: Dict[str, str], workers: int = 16) -> List[str]:
         splits = self.df['split_name'].unique().tolist()
@@ -67,7 +67,7 @@ class ShardedDatasetProcessor(DatasetProcessor, ABC):
         assert key_column is not None, "Cant find key column to use for update"
         assert key_column not in columns, f'Cant update key column "{key_column}"'
 
-        def _add_key_column(data):
+        def _add_key_column(data: pd.DataFrame) -> pd.DataFrame:
             data[key_column] = data[path_column].apply(os.path.basename)
             return data
 

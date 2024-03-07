@@ -6,17 +6,21 @@ from DPF.configs import ShardedFilesDatasetConfig
 from DPF.dataloaders import FilesDataset, identical_preprocess_function
 from DPF.datatypes import ColumnDataType, ShardedDataType
 from DPF.filesystems import FileSystem
-from DPF.modalities import MODALITIES
-from DPF.transforms import BaseFilesTransforms
 from DPF.validators.format_validators import (
     ShardedFilesValidator,
     ShardedValidationResult,
 )
 
+from .processor_mixins import ApplyTransformProcessorMixin
 from .sharded_processor import ShardedDatasetProcessor
+from DPF.modalities import ModalityName
+from DPF.types import ModalityToDataMapping
 
 
-class ShardedFilesDatasetProcessor(ShardedDatasetProcessor):
+class ShardedFilesDatasetProcessor(ShardedDatasetProcessor, ApplyTransformProcessorMixin):
+    filesystem: FileSystem
+    df: pd.DataFrame
+    config: ShardedFilesDatasetConfig
 
     def __init__(
         self,
@@ -53,11 +57,11 @@ class ShardedFilesDatasetProcessor(ShardedDatasetProcessor):
             pbar=pbar
         )
 
-    def get_torch_dataset(
+    def _get_torch_dataset(
         self,
-        modalities: List[str],
-        meta_columns: Optional[List[str]] = None,
-        preprocess_f: Callable[[dict, dict], Any] = identical_preprocess_function,
+        modalities: List[ModalityName],
+        columns_to_use: Optional[List[str]] = None,
+        preprocess_f: Callable[[ModalityToDataMapping, Dict[str, str]], Any] = identical_preprocess_function,
         return_none_on_error: bool = False
     ) -> FilesDataset:
         assert len(set(modalities)) == len(list(modalities))
@@ -65,18 +69,18 @@ class ShardedFilesDatasetProcessor(ShardedDatasetProcessor):
         return FilesDataset(
             self.filesystem,
             self._df,
-            datatypes_to_load,
-            meta_columns=meta_columns,
+            datatypes_to_load,  # type: ignore
+            metadata_columns=columns_to_use,
             preprocess_function=preprocess_f,
             return_none_on_error=return_none_on_error
         )
 
-    def _read_files_from_sample(
+    def _read_sample_data(
         self,
         sample: Dict[str, str]
-    ) -> Dict[str, Union[bytes, str]]:
-        path_column2modality: Dict[str, str] = {}
-        column2modality: Dict[str, str] = {}
+    ) -> ModalityToDataMapping:
+        path_column2modality: Dict[str, ModalityName] = {}
+        column2modality: Dict[str, ModalityName] = {}
         for d in self.config.datatypes:
             if isinstance(d, ColumnDataType):
                 column2modality[d.column_name] = d.modality.name
@@ -85,7 +89,7 @@ class ShardedFilesDatasetProcessor(ShardedDatasetProcessor):
             else:
                 raise ValueError()
 
-        modality2data: Dict[str, Union[bytes, str]] = {}
+        modality2data: ModalityToDataMapping = {}
         # read files
         for col in path_column2modality.keys():
             modality = path_column2modality[col]
@@ -96,26 +100,3 @@ class ShardedFilesDatasetProcessor(ShardedDatasetProcessor):
             modality = column2modality[col]
             modality2data[modality] = sample[col]
         return modality2data
-
-    def apply_transform(self, transforms: Union[BaseFilesTransforms]) -> None:
-        assert transforms.modality in self.config.modality2datatype
-
-        filepath_column = MODALITIES[transforms.modality].path_column
-        filepaths = self.df[filepath_column].tolist()
-
-        metadata_lists = None
-        if len(transforms.required_metadata) > 0:
-            metadata_lists = {
-                col: self.df[col].tolist()
-                for col in transforms.required_metadata
-            }
-
-        transformed_metadata = transforms.run(filepaths, metadata_lists=metadata_lists)
-        for data in transformed_metadata:
-            data.metadata[filepath_column] = data.filepath
-        df_to_merge = pd.DataFrame([data.metadata for data in transformed_metadata])
-
-        # drop metadata columns from original df to replace them
-        self._df.drop(columns=transforms.metadata_to_change, errors='ignore', inplace=True)
-
-        self._df = pd.merge(self._df, df_to_merge, on=filepath_column, how='left')

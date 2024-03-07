@@ -10,6 +10,8 @@ from DPF.dataloaders.dataloader_utils import (
 )
 from DPF.datatypes import ColumnDataType, FileDataType, ShardedDataType
 from DPF.filesystems.filesystem import FileSystem
+from DPF.modalities import ModalityName
+from DPF.types import ModalityToDataMapping
 
 
 class FilesDataset(Dataset[Tuple[bool, Any]]):
@@ -22,8 +24,8 @@ class FilesDataset(Dataset[Tuple[bool, Any]]):
         filesystem: FileSystem,
         df: pd.DataFrame,
         datatypes: List[Union[ShardedDataType, FileDataType, ColumnDataType]],
-        meta_columns: Optional[List[str]] = None,
-        preprocess_function: Callable[[Dict[str, Union[bytes, Any]], Dict[str, str]], Any] = identical_preprocess_function,
+        metadata_columns: Optional[List[str]] = None,
+        preprocess_function: Callable[[ModalityToDataMapping, Dict[str, str]], Any] = identical_preprocess_function,
         # TODO(review) - на ошибке надо выбрасывать ошибку, а не возвращать None, и в дальнейшем эту ошибку обрабатывать прикладом, использующим этот класс
         return_none_on_error: bool = False
     ):
@@ -36,20 +38,20 @@ class FilesDataset(Dataset[Tuple[bool, Any]]):
             Dataset dataframe from DatasetProcessor
         datatypes: List[Union[ShardedDataType, FileDataType, ColumnDataType]]
             List of datatypes to read
-        meta_columns: Optional[List[str]] = None
+        metadata_columns: Optional[List[str]] = None
             List of dataframe columns to return from dataloader
-        preprocess_function: Callable[[Dict[str, bytes], Dict[str, str]], Any] = default_preprocess
+        preprocess_function: Callable[[ModalityToDataMapping, Any] = default_preprocess
             Preprocessing function for data. First argument of the preprocess_f is mapping from modality name to bytes
             and the second argument is mapping from meta_column name to its value.
         return_none_on_error: bool = False
-            Whether to return None if error during reading file occures
+            Whether to return None if error during reading file occurs
         """
         self.filesystem = filesystem
 
         self.datatypes = datatypes
         assert all(isinstance(d, (ShardedDataType, FileDataType, ColumnDataType)) for d in self.datatypes)
 
-        self.meta_columns = meta_columns if meta_columns else []
+        self.meta_columns = metadata_columns if metadata_columns else []
 
         # mapping columns with path to modality name
         self.path_column2modality = get_paths_columns_to_modality_mapping(
