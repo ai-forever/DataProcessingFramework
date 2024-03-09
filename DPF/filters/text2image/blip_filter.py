@@ -83,7 +83,7 @@ class BlipFilter(T2IFilter):
         text_tensors: List[torch.Tensor]
         keys, image_tensors, text_tensors = list(zip(*batch))  # type: ignore
 
-        sample: Dict[str, Union[torch.Tensor | List[torch.Tensor]]] = {}
+        sample: Dict[str, Union[torch.Tensor, List[torch.Tensor]]] = {}
         with torch.no_grad():
             image_tensors = [t.to(self.device) for t in image_tensors]
             sample['image'] = pad_sequence(image_tensors, batch_first=True)

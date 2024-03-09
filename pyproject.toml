@@ -21,7 +21,7 @@ dependencies = [
   "tqdm",
   "pandas",
   "pandarallel",
-  "opencv-python",
+  "opencv-python==4.8.0.76",
   "fsspec>=2023.1.0",
   "s3fs==0.4.2",
   "imageio",

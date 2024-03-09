@@ -14,9 +14,9 @@ try:
 except ImportError:
     from torch.utils.data import default_collate
 
-import autokeras as ak
-import tensorflow as tf
-from tensorflow.keras.models import load_model
+import autokeras as ak  # typing: ignore
+import tensorflow as tf  # typing: ignore
+from tensorflow.keras.models import load_model  # typing: ignore
 
 from DPF.utils import read_image_rgb_from_bytes
 
