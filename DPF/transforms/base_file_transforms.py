@@ -5,6 +5,9 @@ from typing import Any, Dict, Iterable, List, Literal, Optional
 from tqdm.contrib.concurrent import process_map, thread_map
 
 
+PoolOptions = Literal['processes', 'threads']
+
+
 @dataclass
 class TransformsFileData:
     filepath: str
@@ -15,7 +18,7 @@ class BaseFilesTransforms(ABC):
 
     def __init__(
         self,
-        pool_type: Literal['processes', 'threads'],
+        pool_type: PoolOptions,
         workers: int = 16,
         pbar: bool = True
     ):
@@ -62,7 +65,7 @@ class BaseFilesTransforms(ABC):
                 arg = TransformsFileData(fp, {k: v[i] for k, v in metadata_lists.items()})
                 yield arg
 
-        transformed_metadata = pool_map(
+        transformed_metadata: List[TransformsFileData] = pool_map(
             self._process_filepath,
             data_iterator(),
             total=len(paths),

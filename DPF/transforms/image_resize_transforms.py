@@ -2,8 +2,8 @@ from typing import List
 
 from PIL import Image
 
-from DPF.transforms.base_file_transforms import BaseFilesTransforms, TransformsFileData
-from DPF.transforms.image_video_resizer import Resizer
+from DPF.transforms.base_file_transforms import BaseFilesTransforms, TransformsFileData, PoolOptions
+from DPF.transforms.resizer import Resizer
 
 
 class ImageResizeTransforms(BaseFilesTransforms):
@@ -12,7 +12,7 @@ class ImageResizeTransforms(BaseFilesTransforms):
         self,
         resizer: Resizer,
         img_format: str = 'JPEG',
-        pool_type: str = 'processes',
+        pool_type: PoolOptions = 'processes',
         workers: int = 16,
         pbar: bool = True
     ):

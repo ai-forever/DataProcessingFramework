@@ -16,22 +16,18 @@ class Resizer:
 
     def __init__(
         self,
-        mode: int,
-        fixed_size: Optional[Tuple[int, int]] = None,
-        size: Optional[int] = None,
+        mode: ResizerModes,
+        fixed_size: Tuple[int, int] = (512, 512),
+        size: int = 512,
         downscale_only: bool = True
     ):
         self.mode = mode
+        assert self.mode in [ResizerModes.FIXED, ResizerModes.MIN_SIZE, ResizerModes.MAX_SIZE], \
+            f"Invalid resizer mode: {self.mode}. Use mode from ResizerModes"
+
         self.fixed_size = fixed_size
         self.size = size
         self.downscale_only = downscale_only
-
-        if self.mode == ResizerModes.FIXED:
-            assert len(self.fixed_size) == 2 and all(isinstance(v, int) for v in self.fixed_size)
-        elif self.mode in [ResizerModes.MIN_SIZE, ResizerModes.MAX_SIZE]:
-            assert isinstance(self.size, int)
-        else:
-            raise ValueError(f"Invalid resizer mode: {self.mode}. Use mode from ResizerModes")
 
     def get_new_size(self, width: int, height: int) -> Tuple[int, int]:
         if self.mode == ResizerModes.FIXED:

@@ -3,11 +3,11 @@ import subprocess
 import uuid
 from typing import List
 
-from DPF.transforms.base_file_transforms import BaseFilesTransforms, TransformsFileData
-from DPF.transforms.image_video_resizer import Resizer
+from DPF.transforms.base_file_transforms import BaseFilesTransforms, TransformsFileData, PoolOptions
+from DPF.transforms.resizer import Resizer
 
 
-def is_ffmpeg_installed():
+def is_ffmpeg_installed() -> bool:
     try:
         subprocess.run('ffmpeg -version', shell=True, capture_output=True, check=True)
         return True
@@ -21,7 +21,7 @@ class VideoResizeTransforms(BaseFilesTransforms):
         self,
         resizer: Resizer,
         ffmpeg_preset: str = 'fast',
-        pool_type: str = 'processes',
+        pool_type: PoolOptions = 'processes',
         workers: int = 16,
         pbar: bool = True
     ):
