@@ -3,11 +3,12 @@ from typing import Any, Callable, Dict, List, Optional, Union
 
 import pandas as pd
 
-from DPF.configs import ShardedDatasetConfig
+from DPF.configs import ShardedDatasetConfig, ShardsDatasetConfig
 from DPF.dataloaders import ShardsDataset, identical_preprocess_function
 from DPF.datatypes import ColumnDataType, ShardedDataType
 from DPF.filesystems import FileSystem
-from DPF.validators.format_validators import ShardedValidationResult, ShardsValidator
+from DPF.validators.format_validators import ShardsValidator
+from DPF.validators import ValidationResult
 
 from .sharded_processor import ShardedDatasetProcessor
 from DPF.modalities import ModalityName
@@ -15,6 +16,7 @@ from DPF.types import ModalityToDataMapping
 
 
 class ShardsDatasetProcessor(ShardedDatasetProcessor):
+    config: ShardsDatasetConfig
 
     def __init__(
         self,
@@ -25,19 +27,19 @@ class ShardsDatasetProcessor(ShardedDatasetProcessor):
         super().__init__(filesystem, df, config)
 
     def get_container_path(self, split_name: str) -> str:
-        return self.config.path + '/' + split_name + '.' + self.config.archives_ext  # type: ignore
+        return self.config.path + '/' + split_name + '.' + self.config.archives_ext
 
     def validate(
         self,
         validate_filestructure: bool = True,
-        validate_shards: bool = True,
+        validate_metadata: bool = True,
         columns_to_check: Optional[List[str]] = None,
         workers: int = 1,
         pbar: bool = True
-    ) -> ShardedValidationResult:
+    ) -> ValidationResult:
         if columns_to_check is None:
             columns_to_check = []
-        validator = ShardsValidator(  # type: ignore
+        validator = ShardsValidator(
             self.df,
             self.filesystem,
             self.config,
@@ -45,7 +47,7 @@ class ShardsDatasetProcessor(ShardedDatasetProcessor):
         )
         return validator.validate(
             validate_filestructure=validate_filestructure,
-            validate_shards=validate_shards,
+            validate_metadata=validate_metadata,
             workers=workers,
             pbar=pbar
         )

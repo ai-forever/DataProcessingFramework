@@ -1,29 +1,37 @@
 import os
-from typing import List
+from typing import List, Tuple, Sequence
 
 import pandas as pd
 
+from DPF.configs import ShardedFilesDatasetConfig
 from DPF.datatypes import ShardedDataType
+from DPF.filesystems import FileSystem
 from DPF.validators.format_validators.errors import (
     DataFrameError,
     FileStructureError,
     MissingValueError,
-    NoSuchFileError,
+    NoSuchFileError, FileStructureErrorType, DataFrameErrorType,
 )
 from DPF.validators.format_validators.sharded_validator import ShardedValidator
 
 
 class ShardedFilesValidator(ShardedValidator):
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        merged_df: pd.DataFrame,
+        filesystem: FileSystem,
+        config: ShardedFilesDatasetConfig,
+        columns_to_check: List[str]
+    ):
+        super().__init__(merged_df, filesystem, config, columns_to_check)
 
-    def _validate_files(self, filepaths: List[str]) -> List[FileStructureError]:
+    def _validate_files(self, filepaths: List[str]) -> List[FileStructureErrorType]:
         datafiles_ext = '.' + self.config.datafiles_ext.lstrip('.')
         datafiles_set = {f for f in filepaths if f.endswith(datafiles_ext)}
         folders_set = {f.rstrip('/') for f in filepaths if f not in datafiles_set}
 
-        errors = []
+        errors: List[FileStructureErrorType] = []
         for datafile in datafiles_set:
             folder_path = datafile.replace(datafiles_ext, '')
             if folder_path not in folders_set:
@@ -39,9 +47,9 @@ class ShardedFilesValidator(ShardedValidator):
         self,
         dataframe_path: str,
         df: pd.DataFrame
-    ) -> (List[FileStructureError], List[DataFrameError]):
-        errors = []
-        errors_df = []
+    ) -> Tuple[List[FileStructureErrorType], List[DataFrameErrorType]]:
+        errors: List[FileStructureErrorType] = []
+        errors_df: List[DataFrameErrorType] = []
         folder_path = dataframe_path.replace('.'+self.config.datafiles_ext.lstrip('.'), '')
 
         filenames_in_folder_set = set(self.filesystem.listdir(folder_path, filenames_only=True))

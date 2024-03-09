@@ -6,15 +6,13 @@ from DPF.configs import ShardedFilesDatasetConfig
 from DPF.dataloaders import FilesDataset, identical_preprocess_function
 from DPF.datatypes import ColumnDataType, ShardedDataType
 from DPF.filesystems import FileSystem
-from DPF.validators.format_validators import (
-    ShardedFilesValidator,
-    ShardedValidationResult,
-)
+from DPF.validators.format_validators import ShardedFilesValidator
 
 from .processor_mixins import ApplyTransformProcessorMixin
 from .sharded_processor import ShardedDatasetProcessor
 from DPF.modalities import ModalityName
 from DPF.types import ModalityToDataMapping
+from DPF.validators import ValidationResult
 
 
 class ShardedFilesDatasetProcessor(ShardedDatasetProcessor, ApplyTransformProcessorMixin):
@@ -36,15 +34,15 @@ class ShardedFilesDatasetProcessor(ShardedDatasetProcessor, ApplyTransformProces
     def validate(
         self,
         validate_filestructure: bool = True,
-        validate_shards: bool = True,
+        validate_metadata: bool = True,
         columns_to_check: Optional[List[str]] = None,
         workers: int = 1,
         pbar: bool = True
-    ) -> ShardedValidationResult:
+    ) -> ValidationResult:
         if columns_to_check is None:
             columns_to_check = []
 
-        validator = ShardedFilesValidator(  # type: ignore
+        validator = ShardedFilesValidator(
             self.df,
             self.filesystem,
             self.config,
@@ -52,7 +50,7 @@ class ShardedFilesDatasetProcessor(ShardedDatasetProcessor, ApplyTransformProces
         )
         return validator.validate(
             validate_filestructure=validate_filestructure,
-            validate_shards=validate_shards,
+            validate_metadata=validate_metadata,
             workers=workers,
             pbar=pbar
         )

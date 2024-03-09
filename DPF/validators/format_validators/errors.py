@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import List
+from typing import List, TypeVar, Union
 
 
 class DataFrameError:
@@ -67,3 +67,11 @@ class IsNotKeyError(FileStructureError):
 
     def __repr__(self) -> str:
         return f"Expected column {self.key_column} to be absolute key"
+
+
+FileStructureErrorType = Union[
+    NoSuchFileError, FileNotInDataError, IsNotKeyError
+]
+DataFrameErrorType = Union[
+    MissedColumnsError, MissingValueError, DuplicatedValuesError
+]

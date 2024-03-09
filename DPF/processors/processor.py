@@ -228,6 +228,7 @@ class DatasetProcessor(ABC):
     def validate(
         self,
         validate_filestructure: bool = True,
+        validate_metadata: bool = True,
         columns_to_check: Optional[List[str]] = None,
         workers: int = 1,
         pbar: bool = True
@@ -238,6 +239,8 @@ class DatasetProcessor(ABC):
         ----------
         validate_filestructure: bool = True
             Whether to validate the filestructure of a dataset
+        validate_metadata: bool = True
+            Whether to validate the metadata (or dataframes) of a dataset
         columns_to_check: Optional[List[str]] = None
             List of column names that should be in a dataset
         workers: int = 1

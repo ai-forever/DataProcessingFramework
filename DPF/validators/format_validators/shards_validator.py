@@ -1,30 +1,39 @@
 import os
-from typing import List
+from typing import List, Tuple
 
 import pandas as pd
 
+from DPF.configs import ShardsDatasetConfig
 from DPF.datatypes import ShardedDataType
+from DPF.filesystems import FileSystem
 from DPF.validators.format_validators.errors import (
     DataFrameError,
     FileStructureError,
     MissingValueError,
-    NoSuchFileError,
+    NoSuchFileError, DataFrameErrorType, FileStructureErrorType
 )
 from DPF.validators.format_validators.sharded_validator import ShardedValidator
 
 
 class ShardsValidator(ShardedValidator):
+    config: ShardsDatasetConfig
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        merged_df: pd.DataFrame,
+        filesystem: FileSystem,
+        config: ShardsDatasetConfig,
+        columns_to_check: List[str]
+    ):
+        super().__init__(merged_df, filesystem, config, columns_to_check)
 
-    def _validate_files(self, filepaths: List[str]) -> List[FileStructureError]:
+    def _validate_files(self, filepaths: List[str]) -> List[FileStructureErrorType]:
         datafiles_ext = '.' + self.config.datafiles_ext
         archives_ext = '.' + self.config.archives_ext
         datafiles_set = {f for f in filepaths if f.endswith(datafiles_ext)}
         archives_set = {f for f in filepaths if f.endswith(archives_ext)}
 
-        errors = []
+        errors: List[FileStructureErrorType] = []
         for datafile in datafiles_set:
             archive_path = datafile.replace(datafiles_ext, archives_ext)
             if archive_path not in archives_set:
@@ -40,9 +49,9 @@ class ShardsValidator(ShardedValidator):
         self,
         dataframe_path: str,
         df: pd.DataFrame
-    ) -> (List[FileStructureError], List[DataFrameError]):
-        errors = []
-        errors_df = []
+    ) -> Tuple[List[FileStructureErrorType], List[DataFrameErrorType]]:
+        errors: List[FileStructureErrorType] = []
+        errors_df: List[DataFrameErrorType] = []
         archive_path = dataframe_path.replace(self.config.datafiles_ext, self.config.archives_ext)
 
         tar = self.filesystem.read_tar(archive_path)

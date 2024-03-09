@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import Dict, List, Sequence, Tuple
 
 import pandas as pd
 
@@ -12,24 +12,8 @@ from DPF.validators.format_validators.errors import (
     DuplicatedValuesError,
     FileStructureError,
     IsNotKeyError,
-    MissedColumnsError,
+    MissedColumnsError, FileStructureErrorType, DataFrameErrorType,
 )
-
-
-@dataclass
-class FilesValidationResult(ValidationResult):
-    filestructure_errors: List[FileStructureError]
-    dataframe_errors: Dict[str, List[DataFrameError]]
-
-    def __repr__(self):
-        s = "FilesValidationResult:"
-        s += f"\nfilestructure_errors = {self.filestructure_errors}"
-        s += f"\ndataframe_errors = {self.dataframe_errors}"
-        return s
-
-    @property
-    def total_errors(self) -> int:
-        return len(self.filestructure_errors) + sum(map(len, self.dataframe_errors.values()))
 
 
 class FilesValidator(Validator):
@@ -46,8 +30,8 @@ class FilesValidator(Validator):
         self.config = config
         self.columns_to_check = columns_to_check
 
-    def _validate_filestructure(self) -> List[FileStructureError]:
-        errors = []
+    def _validate_filestructure(self) -> List[FileStructureErrorType]:
+        errors: List[FileStructureErrorType] = []
 
         for datatype in self.config.datatypes:
             if isinstance(datatype, FileDataType):
@@ -57,8 +41,8 @@ class FilesValidator(Validator):
 
         return errors
 
-    def _validate_df(self, df: pd.DataFrame) -> (List[DataFrameError], List[FileStructureError]):
-        dataframe_errors = []
+    def _validate_df(self, df: pd.DataFrame) -> List[DataFrameErrorType]:
+        dataframe_errors: List[DataFrameErrorType] = []
 
         # validate dataframe
         missed_columns = set(self.columns_to_check).difference(set(df.columns))
@@ -72,7 +56,7 @@ class FilesValidator(Validator):
                 has_duplicates = filepaths.duplicated().any()
                 if has_duplicates:
                     dataframe_errors.append(
-                        DuplicatedValuesError(self.config.table_path, datatype.user_basename_column_name)
+                        DuplicatedValuesError(self.config.table_path, datatype.user_path_column_name)
                     )
 
         return dataframe_errors
@@ -80,18 +64,19 @@ class FilesValidator(Validator):
     def validate(
         self,
         validate_filestructure: bool = True,
+        validate_metadata: bool = True,
         workers: int = 4,
         pbar: bool = True
-    ) -> FilesValidationResult:
-        filestructure_errors = []
-        dataframe2errors = {}
+    ) -> ValidationResult:
+        filestructure_errors: List[FileStructureErrorType] = []
+        dataframe2errors: Dict[str, List[DataFrameErrorType]] = {}
 
         if validate_filestructure:
             filestructure_errors.extend(self._validate_filestructure())
+        if validate_metadata:
+            df = self.filesystem.read_dataframe(self.config.table_path)
+            dataframe_errors = self._validate_df(df)
+            if len(dataframe_errors) > 0:
+                dataframe2errors[self.config.table_path] = dataframe_errors
 
-        df = self.filesystem.read_dataframe(self.config.table_path)
-        dataframe_errors = self._validate_df(df)
-        if len(dataframe_errors) > 0:
-            dataframe2errors[self.config.table_path] = dataframe_errors
-
-        return FilesValidationResult(filestructure_errors, dataframe2errors)
+        return ValidationResult(filestructure_errors, dataframe2errors)

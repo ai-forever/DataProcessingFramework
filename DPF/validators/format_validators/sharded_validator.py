@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import Dict, List, Tuple, Sequence, Iterable
 
 import pandas as pd
 from tqdm.contrib.concurrent import thread_map
@@ -14,24 +14,8 @@ from DPF.validators.format_validators.errors import (
     DuplicatedValuesError,
     FileStructureError,
     IsNotKeyError,
-    MissedColumnsError,
+    MissedColumnsError, FileStructureErrorType, DataFrameErrorType
 )
-
-
-@dataclass
-class ShardedValidationResult(ValidationResult):
-    filestructure_errors: List[FileStructureError]
-    dataframe_errors: Dict[str, List[DataFrameError]]
-
-    def __repr__(self):
-        s = "ShardedValidationResult:"
-        s += f"\nfilestructure_errors = {self.filestructure_errors}"
-        s += f"\ndataframe_errors = {self.dataframe_errors}"
-        return s
-
-    @property
-    def total_errors(self) -> int:
-        return len(self.filestructure_errors) + sum(map(len, self.dataframe_errors.values()))
 
 
 class ShardedValidator(Validator, ABC):
@@ -49,11 +33,11 @@ class ShardedValidator(Validator, ABC):
         self.columns_to_check = columns_to_check
 
     @abstractmethod
-    def _validate_files(self, filepaths: List[str]) -> List[FileStructureError]:
+    def _validate_files(self, filepaths: List[str]) -> List[FileStructureErrorType]:
         pass
 
-    def _validate_filestructure(self, filepaths: List[str]) -> List[FileStructureError]:
-        errors = []
+    def _validate_filestructure(self, filepaths: List[str]) -> List[FileStructureErrorType]:
+        errors: List[FileStructureErrorType] = []
 
         for datatype in self.config.datatypes:
             if isinstance(datatype, ShardedDataType):
@@ -69,12 +53,12 @@ class ShardedValidator(Validator, ABC):
         self,
         dataframe_path: str,
         df: pd.DataFrame
-    ) -> (List[FileStructureError], List[DataFrameError]):
+    ) -> Tuple[List[FileStructureErrorType], List[DataFrameErrorType]]:
         pass
 
-    def _validate_shard(self, path: str) -> (List[DataFrameError], List[FileStructureError]):
+    def _validate_shard(self, path: str) -> Tuple[str, List[DataFrameErrorType], List[FileStructureErrorType]]:
         df = self.filesystem.read_dataframe(path)
-        dataframe_errors = []
+        dataframe_errors: List[DataFrameErrorType] = []
 
         # validate dataframe
         missed_columns = set(self.columns_to_check).difference(set(df.columns))
@@ -98,7 +82,7 @@ class ShardedValidator(Validator, ABC):
         filepaths: List[str],
         workers: int = 4,
         pbar: bool = True
-    ) -> (Dict[str, List[DataFrameError]], List[FileStructureError]):
+    ) -> Tuple[Dict[str, List[DataFrameErrorType]], List[FileStructureErrorType]]:
         datafiles = [f for f in filepaths if f.endswith('.'+self.config.datafiles_ext)]
 
         results = thread_map(
@@ -118,21 +102,23 @@ class ShardedValidator(Validator, ABC):
     def validate(
         self,
         validate_filestructure: bool = True,
-        validate_shards: bool = True,
+        validate_metadata: bool = True,
         workers: int = 4,
         pbar: bool = True
-    ) -> ShardedValidationResult:
+    ) -> ValidationResult:
         filepaths = self.filesystem.listdir(self.config.path)
-        filestructure_errors = []
-        dataframe2errors = {}
+        filestructure_errors: List[FileStructureErrorType] = []
+        dataframe2errors: Dict[str, List[DataFrameErrorType]] = {}
 
         if validate_filestructure:
             filestructure_errors.extend(self._validate_filestructure(filepaths))
-        if validate_shards:
+        if validate_filestructure or validate_metadata:
             _dataframe2errors, _filestructure_errors = self._validate_shards(filepaths, workers, pbar)
-            filestructure_errors.extend(_filestructure_errors)
-            for path, errors in _dataframe2errors.items():
-                if len(errors) > 0:
-                    dataframe2errors[path] = errors
+            if validate_filestructure:
+                filestructure_errors.extend(_filestructure_errors)
+            if validate_metadata:
+                for path, errors in _dataframe2errors.items():
+                    if len(errors) > 0:
+                        dataframe2errors[path] = errors
 
-        return ShardedValidationResult(filestructure_errors, dataframe2errors)
+        return ValidationResult(filestructure_errors, dataframe2errors)

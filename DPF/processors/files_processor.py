@@ -6,12 +6,13 @@ from DPF.configs import FilesDatasetConfig
 from DPF.dataloaders import FilesDataset, identical_preprocess_function
 from DPF.datatypes import ColumnDataType, FileDataType
 from DPF.filesystems import FileSystem
-from DPF.validators.format_validators import FilesValidationResult, FilesValidator
+from DPF.validators.format_validators import FilesValidator
 
 from .processor import DatasetProcessor
 from .processor_mixins import ApplyTransformProcessorMixin
 from DPF.modalities import ModalityName
 from DPF.types import ModalityToDataMapping
+from DPF.validators import ValidationResult
 
 
 class FilesDatasetProcessor(DatasetProcessor, ApplyTransformProcessorMixin):
@@ -85,11 +86,11 @@ class FilesDatasetProcessor(DatasetProcessor, ApplyTransformProcessorMixin):
     def validate(
         self,
         validate_filestructure: bool = True,
-        validate_dataframes: bool = True,
+        validate_metadata: bool = True,
         columns_to_check: Optional[List[str]] = None,
         workers: int = 1,
         pbar: bool = True
-    ) -> FilesValidationResult:
+    ) -> ValidationResult:
         if columns_to_check is None:
             columns_to_check = []
         validator = FilesValidator(
@@ -100,6 +101,7 @@ class FilesDatasetProcessor(DatasetProcessor, ApplyTransformProcessorMixin):
         )
         return validator.validate(
             validate_filestructure=validate_filestructure,
+            validate_metadata=validate_metadata,
             workers=workers,
             pbar=pbar
         )
