@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Dict, Any
 
 import numpy as np
 import pandas as pd
@@ -28,11 +28,11 @@ class ColumnFilter(ABC):
         pass
 
     @abstractmethod
-    def process(self, row: dict) -> tuple:
+    def process(self, row: Dict[str, Any]) -> List[Any]:
         pass
 
-    def __call__(self, df: pd.DataFrame) -> np.ndarray:
+    def __call__(self, df: pd.DataFrame) -> List[List[Any]]:
         pandarallel.initialize(nb_workers=self.workers)
-        res = np.array(list(df[self.columns_to_process].parallel_apply(self.process, axis=1)))
+        res = list(df[self.columns_to_process].parallel_apply(self.process, axis=1))
         return res
 

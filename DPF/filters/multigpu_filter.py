@@ -1,5 +1,5 @@
 from multiprocessing import Manager, Process
-from typing import List, Type, Union
+from typing import List, Type, Union, Dict, Any
 
 import numpy as np
 import pandas as pd
@@ -21,13 +21,13 @@ def run_one_process(
     index: pd.Series,
     results: List[pd.DataFrame],
     filter_class: Type[DataFilter],
-    filter_kwargs: dict,
-    device: str,
-    filter_run_kwargs: dict
-):
+    filter_kwargs: Dict[str, Any],
+    device: Union[str, torch.device],
+    filter_run_kwargs: Dict[str, Any]
+) -> None:
     reader = DatasetReader(filesystem=fs)
     processor = reader.from_df(config, df)
-    datafilter = filter_class(**filter_kwargs, _pbar_position=i, device=device)
+    datafilter = filter_class(**filter_kwargs, _pbar_position=i, device=device)  # type: ignore
     processor.apply_data_filter(datafilter, **filter_run_kwargs)
     res = processor.df
     res.set_index(index, inplace=True)
@@ -41,16 +41,22 @@ class MultiGPUDataFilter:
 
     def __init__(
         self,
-        devices: List[Union[torch.device | str]],
-        filter_class: type,
-        filter_params: dict
+        devices: List[Union[torch.device, str]],
+        datafilter_class: Type[DataFilter],
+        datafilter_params: Dict[str, Any]
     ):
-        self.filter_class = filter_class
-        self.filter_params = filter_params
+        self.filter_class = datafilter_class
+        self.filter_params = datafilter_params
         self.devices = devices
         self.num_parts = len(devices)
 
-    def run(self, df: pd.DataFrame, config: DatasetConfig, fs: FileSystem, filter_run_kwargs: dict) -> pd.DataFrame:
+    def run(
+        self,
+        df: pd.DataFrame,
+        config: DatasetConfig,
+        fs: FileSystem,
+        filter_run_kwargs: Dict[str, Any]
+    ) -> pd.DataFrame:
         manager = Manager()
         shared_results = manager.list()
 
@@ -63,7 +69,7 @@ class MultiGPUDataFilter:
                     fs,
                     df_splits[i],
                     i,
-                    df_splits[i].index,
+                    df_splits[i].index,  # type: ignore
                     shared_results,
                     self.filter_class,
                     self.filter_params,

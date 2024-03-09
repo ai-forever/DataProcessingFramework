@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Union, Tuple
 
 import pandas as pd
 from torch.utils.data import DataLoader, Dataset
@@ -51,24 +51,31 @@ class DataFilter(ABC):
         pass
 
     @abstractmethod
-    def preprocess(self, modality2data: ModalityToDataMapping, metadata: Dict[str, str]):
+    def preprocess_data(
+        self,
+        modality2data: ModalityToDataMapping,
+        metadata: Dict[str, str]
+    ) -> Any:
         pass
 
     @abstractmethod
-    def process_batch(self, batch) -> dict:
+    def process_batch(self, batch: List[Any]) -> Dict[str, List[Any]]:
         pass
 
     @staticmethod
-    def _add_values_from_batch(main_dict: dict, batch_dict: dict):
+    def _add_values_from_batch(
+        main_dict: Dict[str, List[Any]],
+        batch_dict: Dict[str, List[Any]]
+    ) -> None:
         for k, v in batch_dict.items():
             main_dict[k].extend(v)
 
-    def _generate_dict_from_schema(self):
+    def _get_dict_from_schema(self) -> Dict[str, List[Any]]:
         return {i: [] for i in self.schema}
 
-    def run(self, dataset: Dataset) -> pd.DataFrame:
+    def run(self, dataset: Dataset[Tuple[bool, Any]]) -> pd.DataFrame:
         dataloader = DataLoader(dataset, collate_fn=identical_collate_fn, **self.dataloader_kwargs)
-        df_labels = self._generate_dict_from_schema()
+        filter_results = self._get_dict_from_schema()
 
         for batch in tqdm(dataloader, disable=not self.pbar, position=self.pbar_position):
             # drop Nans
@@ -76,7 +83,7 @@ class DataFilter(ABC):
             if len(batch_filtered) == 0:
                 continue
 
-            df_batch_labels = self.process_batch(batch_filtered)
-            self._add_values_from_batch(df_labels, df_batch_labels)
+            filter_results_batch = self.process_batch(batch_filtered)
+            self._add_values_from_batch(filter_results, filter_results_batch)
 
-        return pd.DataFrame(df_labels)
+        return pd.DataFrame(filter_results)
