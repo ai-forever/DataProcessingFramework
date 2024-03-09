@@ -21,7 +21,8 @@ dependencies = [
   "fsspec>=2023.1.0",
   "s3fs==0.4.2",
   "imageio",
-  "imageio[pyav]"
+  "imageio[pyav]",
+  "Cython"
 ]
 
 [project.optional-dependencies]
