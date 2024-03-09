@@ -1,6 +1,6 @@
-import traceback
+from types import TracebackType
 from abc import abstractmethod
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional, Tuple, Union
 
 
 class ABSWriter:
@@ -19,8 +19,8 @@ class ABSWriter:
     @abstractmethod
     def __exit__(
         self,
-        exception_type,
-        exception_value: Optional[Exception],
-        exception_traceback: traceback,
+        exception_type: Union[type[BaseException], None],
+        exception_value: Union[BaseException, None],
+        exception_traceback: Union[TracebackType, None],
     ) -> None:
         pass

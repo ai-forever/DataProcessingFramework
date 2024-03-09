@@ -3,7 +3,8 @@ import os
 import tarfile
 import traceback
 import uuid
-from typing import Dict, List, Optional, Tuple
+from types import TracebackType
+from typing import Dict, List, Optional, Tuple, Any, Union
 
 import pandas as pd
 
@@ -23,24 +24,24 @@ class ShardsWriter(ABSWriter):
         self,
         filesystem: FileSystem,
         destination_dir: str,
-        keys_mapping: Optional[Dict[str, str]] = None,
-        max_files_in_shard: Optional[int] = 1000,
-        datafiles_ext: Optional[str] = "csv",
-        archives_ext: Optional[str] = "tar",
+        keys_to_rename: Optional[Dict[str, str]] = None,
+        max_files_in_shard: int = 1000,
+        datafiles_ext: str = "csv",
+        archives_ext: str = "tar",
         filenaming: str = "counter"
     ) -> None:
         self.filesystem = filesystem
         self.destination_dir = destination_dir
-        self.keys_mapping = keys_mapping
+        self.keys_to_rename = keys_to_rename
         self.max_files_in_shard = max_files_in_shard
         self.datafiles_ext = "." + datafiles_ext.lstrip(".")
         self.archives_ext = "." + archives_ext.lstrip(".")
         self.filenaming = filenaming
         assert self.filenaming in ["counter", "uuid"], "Invalid files naming"
 
-        self.df_raw = []
+        self.df_raw: List[Dict[str, Any]] = []
         self.tar_bytes = io.BytesIO()
-        self.tar = None
+        self.tar: tarfile.TarFile = None  # type: ignore
         self.shard_index, self.last_file_index = self._init_writer_from_last_uploaded_file()
 
     def save_sample(
@@ -61,8 +62,8 @@ class ShardsWriter(ABSWriter):
             img_tar_info, fp = self._prepare_image_for_tar_format(file_bytes, filename)
             self.tar.addfile(img_tar_info, fp)
 
-        if self.keys_mapping:
-            table_data = rename_dict_keys(table_data, self.keys_mapping)
+        if self.keys_to_rename:
+            table_data = rename_dict_keys(table_data, self.keys_to_rename)
 
         self.df_raw.append(table_data)
         self._try_close_batch()
@@ -76,20 +77,20 @@ class ShardsWriter(ABSWriter):
         img_tar_info.size = len(fp.getvalue())
         return img_tar_info, fp
 
-    def __enter__(self) -> "FileWriter":  # noqa: F821
+    def __enter__(self) -> "ShardsWriter":  # noqa: F821
         return self
 
     def __exit__(
         self,
-        exception_type,
-        exception_value: Optional[Exception],
-        exception_traceback: traceback,
+        exception_type: Union[type[BaseException], None],
+        exception_value: Union[BaseException, None],
+        exception_traceback: Union[TracebackType, None],
     ) -> None:
         if len(self.df_raw) != 0:
             self._flush(self._calculate_current_tarname())
         self.last_file_index = 0
 
-    def _init_writer_from_last_uploaded_file(self) -> (int, int):
+    def _init_writer_from_last_uploaded_file(self) -> Tuple[int, int]:
         self.filesystem.mkdir(self.destination_dir)
         list_csv = [
             int(os.path.basename(filename[: -len(self.datafiles_ext)]))
@@ -124,9 +125,12 @@ class ShardsWriter(ABSWriter):
     def get_current_filename(self, extension: str) -> str:
         extension = extension.lstrip('.')
         if self.filenaming == "counter":
-            return f"{self.last_file_index}.{extension}"
+            filename = f"{self.last_file_index}.{extension}"
         elif self.filenaming == "uuid":
-            return f"{uuid.uuid4().hex}.{extension}"
+            filename = f"{uuid.uuid4().hex}.{extension}"
+        else:
+            raise ValueError(f"Invalid filenaming type: {self.filenaming}")
+        return filename
 
     def _try_close_batch(self) -> None:
         old_tarname = self._calculate_current_tarname()
@@ -154,7 +158,7 @@ class ShardsWriter(ABSWriter):
         self.filesystem.save_file(
             self.tar_bytes, self.filesystem.join(self.destination_dir, filename), binary=True
         )
-        self.tar = None
+        self.tar = None  # type: ignore
         self.tar_bytes = io.BytesIO()
 
     def _flush(self, tarname: str) -> None:

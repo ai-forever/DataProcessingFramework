@@ -1,7 +1,8 @@
 import os
 import traceback
 import uuid
-from typing import Dict, List, Optional, Tuple
+from types import TracebackType
+from typing import Dict, List, Optional, Tuple, Any, Union
 
 import pandas as pd
 
@@ -34,9 +35,9 @@ class ShardedFilesWriter(ABSWriter):
         self.filenaming = filenaming
         assert self.filenaming in ["counter", "uuid"], "Invalid files naming"
 
-        self.df_raw = []
+        self.df_raw: List[Dict[str, Any]] = []
         self.shard_index, self.last_file_index = self._init_writer_from_last_uploaded_file()
-        self.last_path_to_dir = None
+        self.last_path_to_dir: str = None  # type: ignore
 
     def save_sample(
         self,
@@ -66,20 +67,20 @@ class ShardedFilesWriter(ABSWriter):
         self.df_raw.append(table_data)
         self._try_close_batch()
 
-    def __enter__(self) -> "FileWriter":  # noqa: F821
+    def __enter__(self) -> "ShardedFilesWriter":  # noqa: F821
         return self
 
     def __exit__(
         self,
-        exception_type: Optional[type],
-        exception_value: Optional[Exception],
-        exception_traceback: traceback,
+        exception_type: Union[type[BaseException], None],
+        exception_value: Union[BaseException, None],
+        exception_traceback: Union[TracebackType, None],
     ) -> None:
         if len(self.df_raw) != 0:
             self._flush(self._calculate_current_dirname())
         self.last_file_index = 0
 
-    def _init_writer_from_last_uploaded_file(self) -> (int, int):
+    def _init_writer_from_last_uploaded_file(self) -> Tuple[int, int]:
         self.filesystem.mkdir(self.destination_dir)
         list_dirs = [
             int(os.path.basename(filename[: -len(self.datafiles_ext)]))
@@ -109,9 +110,12 @@ class ShardedFilesWriter(ABSWriter):
     def get_current_filename(self, extension: str) -> str:
         extension = extension.lstrip('.')
         if self.filenaming == "counter":
-            return f"{self.last_file_index}.{extension}"
+            filename = f"{self.last_file_index}.{extension}"
         elif self.filenaming == "uuid":
-            return f"{uuid.uuid4().hex}.{extension}"
+            filename = f"{uuid.uuid4().hex}.{extension}"
+        else:
+            raise ValueError(f"Invalid filenaming type: {self.filenaming}")
+        return filename
 
     def _calculate_current_dirname(self) -> str:
         return str(self.shard_index)

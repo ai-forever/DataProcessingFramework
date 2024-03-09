@@ -393,7 +393,7 @@ class DatasetProcessor(ABC):
         filesystem: Optional[FileSystem] = None,
         max_files_in_shard: int = 1000,
         datafiles_ext: str = "csv",
-        archives_ext: Optional[str] = "tar",
+        archives_ext: str = "tar",
         filenaming: str = "counter",
         columns_to_save: Optional[List[str]] = None,
         rename_columns: Optional[Dict[str, str]] = None,
@@ -431,7 +431,7 @@ class DatasetProcessor(ABC):
         writer = ShardsWriter(
             filesystem,
             destination_dir,
-            keys_mapping=rename_columns,
+            keys_to_rename=rename_columns,
             max_files_in_shard=max_files_in_shard,
             datafiles_ext=datafiles_ext,
             archives_ext=archives_ext,
