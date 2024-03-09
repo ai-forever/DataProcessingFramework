@@ -6,11 +6,11 @@ import torch
 
 from DPF.utils import read_image_rgb_from_bytes
 
+from ...types import ModalityToDataMapping
 from .img_filter import ImageFilter
 from .ocr_model.dataset import AlignCollate
 from .ocr_model.model import Model
 from .ocr_model.utils import AttnLabelConverter
-from ...types import ModalityToDataMapping
 
 
 class Options:

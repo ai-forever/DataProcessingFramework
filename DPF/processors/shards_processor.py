@@ -1,5 +1,5 @@
 import os
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional
 
 import pandas as pd
 
@@ -7,12 +7,12 @@ from DPF.configs import ShardedDatasetConfig, ShardsDatasetConfig
 from DPF.dataloaders import ShardsDataset, identical_preprocess_function
 from DPF.datatypes import ColumnDataType, ShardedDataType
 from DPF.filesystems import FileSystem
-from DPF.validators.format_validators import ShardsValidator
-from DPF.validators import ValidationResult
-
-from .sharded_processor import ShardedDatasetProcessor
 from DPF.modalities import ModalityName
 from DPF.types import ModalityToDataMapping
+from DPF.validators import ValidationResult
+from DPF.validators.format_validators import ShardsValidator
+
+from .sharded_processor import ShardedDatasetProcessor
 
 
 class ShardsDatasetProcessor(ShardedDatasetProcessor):
@@ -96,7 +96,7 @@ class ShardsDatasetProcessor(ShardedDatasetProcessor):
         for col in path_column2modality.keys():
             modality = path_column2modality[col]
             filename = os.path.basename(sample[col])
-            file_bytes = tar.extractfile(filename).read()
+            file_bytes = tar.extractfile(filename).read()  # type: ignore
             modality2data[modality] = file_bytes
         # read data from columns
         for col in column2modality.keys():

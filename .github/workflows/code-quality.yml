@@ -11,6 +11,6 @@ jobs:
         python-version: "3.9"
     - run: pip install --upgrade pip
     - run: pip install mypy ruff isort
-    - run: mypy DPF/ scripts/
+    - run: mypy DPF/
     - run: ruff check DPF/ scripts/ tests/ --config pyproject.toml
     - run: isort --check DPF/ tests/ scripts/

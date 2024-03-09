@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
-import numpy as np
 import pandas as pd
 from pandarallel import pandarallel
 

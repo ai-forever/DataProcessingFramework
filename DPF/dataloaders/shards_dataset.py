@@ -14,7 +14,6 @@ from DPF.dataloaders.dataloader_utils import (
 )
 from DPF.datatypes import ColumnDataType, ShardedDataType
 from DPF.filesystems.filesystem import FileSystem
-from DPF.modalities import ModalityName
 from DPF.types import ModalityToDataMapping
 
 

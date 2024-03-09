@@ -7,8 +7,8 @@ from torch.nn.utils.rnn import pad_sequence
 
 from DPF.utils import read_image_rgb_from_bytes
 
-from .t2i_filter import T2IFilter
 from ...types import ModalityToDataMapping
+from .t2i_filter import T2IFilter
 
 
 class BlipFilter(T2IFilter):

@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import List, TypeVar, Union
+from typing import List, Union
 
 
 class DataFrameError:

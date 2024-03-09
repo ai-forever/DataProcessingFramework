@@ -373,7 +373,7 @@ class DatasetProcessor(ABC):
             Whether to show a progress bar
         """
         if filesystem is None:
-            filesystem = LocalFileSystem()  # type: ignore
+            filesystem = LocalFileSystem()
 
         writer = ShardedFilesWriter(
             filesystem,
@@ -429,7 +429,7 @@ class DatasetProcessor(ABC):
             Whether to show a progress bar
         """
         if filesystem is None:
-            filesystem = LocalFileSystem()  # type: ignore
+            filesystem = LocalFileSystem()
 
         writer = ShardsWriter(
             filesystem,

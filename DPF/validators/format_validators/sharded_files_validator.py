@@ -1,16 +1,16 @@
 import os
-from typing import List, Tuple, Sequence
+from typing import List, Tuple
 
 import pandas as pd
 
 from DPF.configs import ShardedFilesDatasetConfig
 from DPF.datatypes import ShardedDataType
 from DPF.filesystems import FileSystem
-from DPF.validators.format_validators.errors import (
-    DataFrameError,
-    FileStructureError,
+from DPF.validators.errors import (
+    DataFrameErrorType,
+    FileStructureErrorType,
     MissingValueError,
-    NoSuchFileError, FileStructureErrorType, DataFrameErrorType,
+    NoSuchFileError,
 )
 from DPF.validators.format_validators.sharded_validator import ShardedValidator
 

@@ -1,5 +1,5 @@
 from multiprocessing import Manager, Process
-from typing import List, Type, Union, Dict, Any
+from typing import Any, Dict, List, Type, Union
 
 import numpy as np
 import pandas as pd

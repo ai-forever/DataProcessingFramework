@@ -1,11 +1,11 @@
 import io
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 import imageio.v3 as iio
 
-from .video_filter import VideoFilter
 from ...types import ModalityToDataMapping
+from .video_filter import VideoFilter
 
 
 @dataclass

@@ -2,7 +2,11 @@ from typing import List
 
 from PIL import Image
 
-from DPF.transforms.base_file_transforms import BaseFilesTransforms, TransformsFileData, PoolOptions
+from DPF.transforms.base_file_transforms import (
+    BaseFilesTransforms,
+    PoolOptions,
+    TransformsFileData,
+)
 from DPF.transforms.resizer import Resizer
 
 

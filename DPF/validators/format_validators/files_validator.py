@@ -1,5 +1,4 @@
-from dataclasses import dataclass
-from typing import Dict, List, Sequence, Tuple
+from typing import Dict, List
 
 import pandas as pd
 
@@ -7,12 +6,12 @@ from DPF.configs import FilesDatasetConfig
 from DPF.datatypes import FileDataType
 from DPF.filesystems import FileSystem
 from DPF.validators import ValidationResult, Validator
-from DPF.validators.format_validators.errors import (
-    DataFrameError,
+from DPF.validators.errors import (
+    DataFrameErrorType,
     DuplicatedValuesError,
-    FileStructureError,
+    FileStructureErrorType,
     IsNotKeyError,
-    MissedColumnsError, FileStructureErrorType, DataFrameErrorType,
+    MissedColumnsError,
 )
 
 

@@ -4,11 +4,7 @@ from DPF.configs import (
     ShardedFilesDatasetConfig,
     ShardsDatasetConfig,
 )
-from DPF.validators.format_validators.errors import (
-    IsNotKeyError,
-    MissedColumnsError,
-    MissingValueError,
-)
+from DPF.validators.errors import IsNotKeyError, MissedColumnsError, MissingValueError
 
 
 def test_shards_reader():
@@ -38,13 +34,13 @@ def test_shards_wrong_columns():
     processor = reader.read_from_config(config, validate_columns=False)
 
     result = processor.validate()
-    assert len(result.dataframe_errors) == 0
+    assert len(result.metadata_errors) == 0
     assert len(result.filestructure_errors) == 1
     assert isinstance(result.filestructure_errors[0], IsNotKeyError)
 
     result = processor.validate(columns_to_check=['image_name', 'caption', 'test'])
-    assert len(result.dataframe_errors) == 1
-    assert isinstance(result.dataframe_errors[path+'/0.csv'][0], MissedColumnsError)
+    assert len(result.metadata_errors) == 1
+    assert isinstance(result.metadata_errors[path + '/0.csv'][0], MissedColumnsError)
     assert len(result.filestructure_errors) == 1
     assert isinstance(result.filestructure_errors[0], IsNotKeyError)
 
@@ -62,8 +58,8 @@ def test_shards_wrong_tar():
     result = processor.validate()
 
     print(result)
-    assert len(result.dataframe_errors) == 1
-    assert isinstance(result.dataframe_errors[path + '/0.csv'][0], MissingValueError)
+    assert len(result.metadata_errors) == 1
+    assert isinstance(result.metadata_errors[path + '/0.csv'][0], MissingValueError)
     assert len(result.filestructure_errors) == 0
 
 
@@ -94,13 +90,13 @@ def test_sharded_files_wrong_columns():
     processor = reader.read_from_config(config, validate_columns=False)
 
     result = processor.validate()
-    assert len(result.dataframe_errors) == 0
+    assert len(result.metadata_errors) == 0
     assert len(result.filestructure_errors) == 1
     assert isinstance(result.filestructure_errors[0], IsNotKeyError)
 
     result = processor.validate(columns_to_check=['image_name', 'caption', 'test'])
-    assert len(result.dataframe_errors) == 1
-    assert isinstance(result.dataframe_errors[path+'/0.csv'][0], MissedColumnsError)
+    assert len(result.metadata_errors) == 1
+    assert isinstance(result.metadata_errors[path + '/0.csv'][0], MissedColumnsError)
     assert len(result.filestructure_errors) == 1
     assert isinstance(result.filestructure_errors[0], IsNotKeyError)
 
@@ -118,8 +114,8 @@ def test_sharded_files_wrong_tar():
     result = processor.validate()
 
     print(result)
-    assert len(result.dataframe_errors) == 1
-    assert isinstance(result.dataframe_errors[path + '/0.csv'][0], MissingValueError)
+    assert len(result.metadata_errors) == 1
+    assert isinstance(result.metadata_errors[path + '/0.csv'][0], MissingValueError)
     assert len(result.filestructure_errors) == 0
 
 

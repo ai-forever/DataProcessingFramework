@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
-from typing import Dict, List, Tuple, Sequence, Iterable
+from typing import Dict, List, Tuple
 
 import pandas as pd
 from tqdm.contrib.concurrent import thread_map
@@ -9,12 +8,12 @@ from DPF.configs import ShardedDatasetConfig
 from DPF.datatypes import ShardedDataType
 from DPF.filesystems import FileSystem
 from DPF.validators import ValidationResult, Validator
-from DPF.validators.format_validators.errors import (
-    DataFrameError,
+from DPF.validators.errors import (
+    DataFrameErrorType,
     DuplicatedValuesError,
-    FileStructureError,
+    FileStructureErrorType,
     IsNotKeyError,
-    MissedColumnsError, FileStructureErrorType, DataFrameErrorType
+    MissedColumnsError,
 )
 
 

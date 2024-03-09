@@ -6,11 +6,11 @@ import pandas as pd
 from DPF.configs import ShardsDatasetConfig
 from DPF.datatypes import ShardedDataType
 from DPF.filesystems import FileSystem
-from DPF.validators.format_validators.errors import (
-    DataFrameError,
-    FileStructureError,
+from DPF.validators.errors import (
+    DataFrameErrorType,
+    FileStructureErrorType,
     MissingValueError,
-    NoSuchFileError, DataFrameErrorType, FileStructureErrorType
+    NoSuchFileError,
 )
 from DPF.validators.format_validators.sharded_validator import ShardedValidator
 

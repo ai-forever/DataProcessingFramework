@@ -1,10 +1,9 @@
 import io
 import os
 import tarfile
-import traceback
 import uuid
 from types import TracebackType
-from typing import Dict, List, Optional, Tuple, Any, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
 

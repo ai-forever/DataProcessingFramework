@@ -1,13 +1,14 @@
 import io
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Tuple
 
 import cv2
-from cv2.typing import MatLike
 import imageio.v3 as iio
 import numpy as np
+from cv2.typing import MatLike
+
+from DPF.types import ModalityToDataMapping
 
 from .video_filter import VideoFilter
-from DPF.types import ModalityToDataMapping
 
 
 def transform_frame(frame: MatLike, target_size: Tuple[int, int]) -> MatLike:

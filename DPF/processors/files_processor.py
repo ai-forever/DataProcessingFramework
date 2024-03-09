@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional
 
 import pandas as pd
 
@@ -6,13 +6,13 @@ from DPF.configs import FilesDatasetConfig
 from DPF.dataloaders import FilesDataset, identical_preprocess_function
 from DPF.datatypes import ColumnDataType, FileDataType
 from DPF.filesystems import FileSystem
+from DPF.modalities import ModalityName
+from DPF.types import ModalityToDataMapping
+from DPF.validators import ValidationResult
 from DPF.validators.format_validators import FilesValidator
 
 from .processor import DatasetProcessor
 from .processor_mixins import ApplyTransformProcessorMixin
-from DPF.modalities import ModalityName
-from DPF.types import ModalityToDataMapping
-from DPF.validators import ValidationResult
 
 
 class FilesDatasetProcessor(DatasetProcessor, ApplyTransformProcessorMixin):

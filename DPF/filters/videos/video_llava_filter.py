@@ -1,5 +1,5 @@
 from io import BytesIO
-from typing import Any, Dict, List, Union, Optional
+from typing import Any, Dict, List, Optional
 
 import torch
 from videollava.constants import DEFAULT_IMAGE_TOKEN, IMAGE_TOKEN_INDEX
@@ -7,8 +7,9 @@ from videollava.conversation import SeparatorStyle, conv_templates
 from videollava.mm_utils import KeywordsStoppingCriteria, tokenizer_image_token
 from videollava.model.builder import load_pretrained_model
 
-from .video_filter import VideoFilter
 from DPF.types import ModalityToDataMapping
+
+from .video_filter import VideoFilter
 
 try:
     from torch.utils.data.dataloader import default_collate

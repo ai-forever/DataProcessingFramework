@@ -1,5 +1,5 @@
 from enum import IntEnum
-from typing import Optional, Tuple
+from typing import Tuple
 
 
 # types of resizing logic in Resizer

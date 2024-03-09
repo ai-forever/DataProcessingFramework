@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List
 
 import torch
 from lavis.models import load_model_and_preprocess  # type: ignore

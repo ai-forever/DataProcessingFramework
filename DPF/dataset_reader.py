@@ -34,7 +34,7 @@ class DatasetReader:
             Instance of a filesystem to use. LocalFileSystem used by default
         """
         if filesystem is None:
-            filesystem = LocalFileSystem()  # type: ignore
+            filesystem = LocalFileSystem()
         self.filesystem = filesystem
 
     def _read_and_validate_dataframes(

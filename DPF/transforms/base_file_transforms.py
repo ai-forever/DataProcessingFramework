@@ -4,7 +4,6 @@ from typing import Any, Dict, Iterable, List, Literal, Optional
 
 from tqdm.contrib.concurrent import process_map, thread_map
 
-
 PoolOptions = Literal['processes', 'threads']
 
 

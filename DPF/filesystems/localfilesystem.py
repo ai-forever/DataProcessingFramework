@@ -11,9 +11,6 @@ class LocalFileSystem(FileSystem):
     Class that wraps interaction with local filesystem.
     """
 
-    def __init__(self):
-        super(LocalFileSystem).__init__()
-
     # TODO(review) - дубль кода с filesystem.py
     def read_file(self, filepath: str, binary: bool) -> io.BytesIO:
         mode = "rb" if binary else "rt"
@@ -65,5 +62,5 @@ class LocalFileSystem(FileSystem):
     def walk(self, folder_path: str) -> Iterable[Tuple[str, List[str], List[str]]]:
         yield from os.walk(folder_path)
 
-    def join(self, *args) -> str:
+    def join(self, *args: str) -> str:
         return os.path.join(*args)

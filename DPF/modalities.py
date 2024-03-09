@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from typing import Literal, Optional
 
-
 ModalityName = Literal["image", "video", "text"]
 
 

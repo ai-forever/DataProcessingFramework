@@ -13,7 +13,6 @@ class S3FileSystem(FileSystem):
     """
 
     def __init__(self, key: str, secret: str, endpoint_url: str):
-        super(S3FileSystem).__init__()
         self.endpoint_url = endpoint_url
         self.key = key
         self.secret = secret
@@ -55,7 +54,7 @@ class S3FileSystem(FileSystem):
     ) -> List[str]:
         folder_path = folder_path.lstrip("s3://").rstrip("/") + "/"  # noqa
         s3 = fsspec.filesystem("s3", **self.storage_options)
-        files = s3.ls(folder_path)
+        files: List[str] = s3.ls(folder_path)
         if folder_path in files:
             files.remove(folder_path)  # remove parent dir
         if filenames_only:
@@ -94,7 +93,7 @@ class S3FileSystem(FileSystem):
 
         yield from fs.walk(folder_path)
 
-    def join(self, *args) -> str:
+    def join(self, *args: str) -> str:
         path = ''
         for arg in args:
             if arg.endswith('/'):

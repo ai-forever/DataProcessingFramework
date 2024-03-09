@@ -1,4 +1,4 @@
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 from py3langid.langid import MODEL_FILE, LanguageIdentifier
 

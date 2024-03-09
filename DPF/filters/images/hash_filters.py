@@ -1,5 +1,4 @@
-import hashlib
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List
 
 import numpy as np
 from PIL import Image
@@ -7,8 +6,8 @@ from scipy.fftpack import dct
 
 from DPF.utils import read_image_rgb_from_bytes
 
-from .img_filter import ImageFilter
 from ...types import ModalityToDataMapping
+from .img_filter import ImageFilter
 
 
 def get_phash(pil_img: Image.Image, hash_size: int = 8, highfreq_factor: int = 4) -> str:

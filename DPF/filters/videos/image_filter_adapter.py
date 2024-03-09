@@ -1,13 +1,13 @@
 import io
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List
 
 import imageio.v3 as iio
 from PIL import Image
 
 from DPF.filters.images.img_filter import ImageFilter
 
-from .video_filter import VideoFilter
 from ...types import ModalityToDataMapping
+from .video_filter import VideoFilter
 
 
 class ImageFilterAdapter(VideoFilter):

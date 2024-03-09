@@ -3,7 +3,11 @@ import subprocess
 import uuid
 from typing import List
 
-from DPF.transforms.base_file_transforms import BaseFilesTransforms, TransformsFileData, PoolOptions
+from DPF.transforms.base_file_transforms import (
+    BaseFilesTransforms,
+    PoolOptions,
+    TransformsFileData,
+)
 from DPF.transforms.resizer import Resizer
 
 

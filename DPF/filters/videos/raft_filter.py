@@ -1,19 +1,19 @@
 import io
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Tuple
 from urllib.request import urlopen
 from zipfile import ZipFile
 
 import cv2
-from cv2.typing import MatLike
 import imageio.v3 as iio
 import numpy as np
 import torch
 import torch.nn.functional as F
+from cv2.typing import MatLike
 from torch import Tensor
 
+from ...types import ModalityToDataMapping
 from .raft_core.model import RAFT
 from .video_filter import VideoFilter
-from ...types import ModalityToDataMapping
 
 WEIGHTS_URL = 'https://dl.dropboxusercontent.com/s/4j4z58wuv8o0mfz/models.zip'
 

@@ -2,8 +2,8 @@ from typing import Dict, List, Union
 
 from DPF.datatypes import ColumnDataType, DataType, ShardedDataType
 
-from .dataset_config import DatasetConfig
 from ..modalities import ModalityName
+from .dataset_config import DatasetConfig
 
 
 class ShardedDatasetConfig(DatasetConfig):

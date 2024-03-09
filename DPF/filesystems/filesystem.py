@@ -3,7 +3,7 @@ import io
 import os
 import tarfile
 from abc import ABC, abstractmethod
-from typing import Iterable, List, Optional, Tuple, Union
+from typing import Any, Iterable, List, Optional, Tuple, Union
 
 import pandas as pd
 
@@ -74,7 +74,7 @@ class FileSystem(ABC):
         """
         pass
 
-    def read_tar(self, filepath: str):
+    def read_tar(self, filepath: str) -> tarfile.TarFile:
         """
         Reads a tar file like tarfile.open
 
@@ -86,7 +86,7 @@ class FileSystem(ABC):
         tar_bytes = self.read_file(filepath, binary=True)
         return tarfile.open(fileobj=tar_bytes, mode="r")
 
-    def read_dataframe(self, filepath: str, **kwargs) -> pd.DataFrame:
+    def read_dataframe(self, filepath: str, **kwargs: Any) -> pd.DataFrame:
         """
         Reads dataframe
 
@@ -113,7 +113,7 @@ class FileSystem(ABC):
             # TODO(review) - лучше под эту ошибку завести кастомное исключение (UnknownFileFormatException, например)
             raise NotImplementedError(f"Unknown file format: {filetype}")
 
-    def save_dataframe(self, df: pd.DataFrame, filepath: str, **kwargs) -> None:
+    def save_dataframe(self, df: pd.DataFrame, filepath: str, **kwargs: Any) -> None:
         """
         Saves dataframe
 
@@ -235,7 +235,7 @@ class FileSystem(ABC):
         pass
 
     @abstractmethod
-    def join(self, *args) -> str:
+    def join(self, *args: str) -> str:
         """
         Join paths like os.path.join
 

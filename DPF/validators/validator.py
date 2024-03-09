@@ -1,9 +1,8 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import List, Dict
+from typing import Dict, List
 
-from DPF.validators.format_validators.errors import FileStructureError, DataFrameError, FileStructureErrorType, \
-    DataFrameErrorType
+from DPF.validators.errors import DataFrameErrorType, FileStructureErrorType
 
 
 @dataclass

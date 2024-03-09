@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Any, Dict
 
 
 def rename_dict_keys(d: Dict[Any, Any], keys_mapping: Dict[Any, Any]) -> Dict[Any, Any]:

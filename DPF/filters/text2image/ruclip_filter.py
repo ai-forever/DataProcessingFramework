@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 
@@ -7,10 +7,10 @@ import ruclip  # type: ignore
 import torch
 from torch.nn.utils.rnn import pad_sequence
 
+from DPF.types import ModalityToDataMapping
 from DPF.utils import read_image_rgb_from_bytes
 
 from .t2i_filter import T2IFilter
-from DPF.types import ModalityToDataMapping
 
 
 class RuCLIPFilter(T2IFilter):

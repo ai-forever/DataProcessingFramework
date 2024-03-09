@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Union, Tuple
+from typing import Any, Dict, List, Tuple
 
 import pandas as pd
 from torch.utils.data import DataLoader, Dataset

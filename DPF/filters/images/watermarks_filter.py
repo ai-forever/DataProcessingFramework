@@ -1,5 +1,5 @@
 import os
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List
 
 import torch
 from torch import nn
@@ -18,7 +18,6 @@ from DPF.filters.utils import FP16Module
 from DPF.utils import read_image_rgb_from_bytes
 
 from .img_filter import ImageFilter
-
 
 MODELS = {
     "resnext101_32x8d-large": {
