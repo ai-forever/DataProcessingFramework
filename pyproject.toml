@@ -1,3 +1,51 @@
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = 'DPF'
+dynamic = [
+  'version'
+]
+description = ''
+readme = 'README.md'
+authors = []
+license = {file = 'LICENSE'}
+requires-python = '>=3.9'
+dependencies = [
+  "torch",
+  "numpy",
+  "scipy",
+  "pillow",
+  "tqdm",
+  "pandas",
+  "pandarallel",
+  "opencv-python",
+  "fsspec>=2023.1.0",
+  "s3fs==0.4.2",
+  "imageio",
+  "imageio[pyav]"
+]
+
+[project.optional-dependencies]
+dev = ['pytest', 'mypy', 'ruff', 'isort']
+filters = [
+    'torchvision',
+    'CLIP @ git+https://github.com/openai/CLIP.git',
+    'CRAFT @ git+https://github.com/boomb0om/CRAFT-text-detection/',
+    'salesforce-lavis',
+    'ruclip',
+    'py3langid',
+    'deep_translator',
+    'huggingface_hub'
+]
+video_llava = [
+    'videollava @ git+https://github.com/PKU-YuanGroup/Video-LLaVA',
+    'flash-attn',
+    'decord',
+    'pytorchvideo @ git+https://github.com/facebookresearch/pytorchvideo.git@28fe037d212663c6a24f373b94cc5d478c8c1a1d'
+]
+
 # mypy settings
 [tool.mypy]
 strict = true
