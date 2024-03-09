@@ -1,5 +1,9 @@
 [build-system]
-requires = ["hatchling >= 1.13.0"]
+requires = [
+    "hatchling >= 1.13.0",
+    "wheel",
+    "Cython~=3.0.5"
+]
 build-backend = "hatchling.build"
 
 [project]
@@ -21,8 +25,7 @@ dependencies = [
   "fsspec>=2023.1.0",
   "s3fs==0.4.2",
   "imageio",
-  "imageio[pyav]",
-  "Cython"
+  "imageio[pyav]"
 ]
 
 [project.optional-dependencies]
