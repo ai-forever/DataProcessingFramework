@@ -2,7 +2,7 @@ from abc import ABC
 from typing import List
 
 from DPF.filters import DataFilter
-from DPF.modalities import MODALITIES
+from DPF.modalities import MODALITIES, ModalityName
 
 
 class T2IFilter(DataFilter, ABC):
@@ -11,7 +11,7 @@ class T2IFilter(DataFilter, ABC):
     """
 
     @property
-    def modalities(self) -> List[str]:
+    def modalities(self) -> List[ModalityName]:
         return ['image', 'text']
 
     @property

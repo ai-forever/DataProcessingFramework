@@ -8,13 +8,10 @@ from scipy.fftpack import dct
 from DPF.utils import read_image_rgb_from_bytes
 
 from .img_filter import ImageFilter
+from ...types import ModalityToDataMapping
 
 
-def get_md5_hash(img_byte_arr):
-    return hashlib.md5(img_byte_arr).hexdigest()
-
-
-def get_phash(pil_img, hash_size=8, highfreq_factor=4):
+def get_phash(pil_img: Image.Image, hash_size: int = 8, highfreq_factor: int = 4) -> str:
     img_size = hash_size * highfreq_factor
     image_array = np.array(pil_img.resize((img_size, img_size), Image.LANCZOS))
 
@@ -60,15 +57,19 @@ class PHashFilter(ImageFilter):
             "drop_last": False,
         }
 
-    def preprocess(self, modality2data: Dict[str, Union[bytes, str]], metadata: dict):
+    def preprocess_data(
+        self,
+        modality2data: ModalityToDataMapping,
+        metadata: Dict[str, Any]
+    ) -> Any:
         key = metadata[self.key_column]
         img_simhash = get_phash(
             read_image_rgb_from_bytes(modality2data['image']), hash_size=self.sim_hash_size
         )
         return key, img_simhash
 
-    def process_batch(self, batch) -> dict:
-        df_batch_labels = self._generate_dict_from_schema()
+    def process_batch(self, batch: List[Any]) -> Dict[str, List[Any]]:
+        df_batch_labels = self._get_dict_from_schema()
 
         keys, img_simhashes = list(zip(*batch))
         df_batch_labels[self.key_column].extend(keys)

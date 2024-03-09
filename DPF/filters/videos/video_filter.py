@@ -2,7 +2,7 @@ from abc import ABC
 from typing import List
 
 from DPF.filters.data_filter import DataFilter
-from DPF.modalities import MODALITIES
+from DPF.modalities import MODALITIES, ModalityName
 
 
 # TODO(review) - дважды абстрактный класс (наследуется от ABC, и класса, отнаследованного от ABC). Абстрактный класс должен быть один, от него наследуются конкретные реализации
@@ -12,7 +12,7 @@ class VideoFilter(DataFilter, ABC):
     """
 
     @property
-    def modalities(self) -> List[str]:
+    def modalities(self) -> List[ModalityName]:
         return ['video']
 
     @property

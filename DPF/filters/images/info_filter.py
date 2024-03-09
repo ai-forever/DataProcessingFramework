@@ -6,19 +6,20 @@ import numpy as np
 from PIL import Image
 
 from .img_filter import ImageFilter
+from ...types import ModalityToDataMapping
 
 
 @dataclass
 class ImageInfo:
     key: str
     is_correct: bool
-    width: int
-    height: int
-    channels: int
+    width: Optional[int]
+    height: Optional[int]
+    channels: Optional[int]
     error: Optional[str]
 
 
-def get_image_info(img_bytes, data, key_column) -> ImageInfo:
+def get_image_info(img_bytes: bytes, data: Dict[str, Any], key_column: str) -> ImageInfo:
     """
     Get image path, read status, width, height, num channels, read error
     """
@@ -72,11 +73,15 @@ class ImageInfoFilter(ImageFilter):
             "drop_last": False,
         }
 
-    def preprocess(self, modality2data: Dict[str, Union[bytes, str]], metadata: dict) -> ImageInfo:
+    def preprocess_data(
+        self,
+        modality2data: ModalityToDataMapping,
+        metadata: Dict[str, Any]
+    ) -> Any:
         return get_image_info(modality2data['image'], metadata, self.key_column)
 
-    def process_batch(self, batch) -> dict:
-        df_batch_labels = self._generate_dict_from_schema()
+    def process_batch(self, batch: List[Any]) -> Dict[str, List[Any]]:
+        df_batch_labels = self._get_dict_from_schema()
 
         for image_info in batch:
             df_batch_labels[self.key_column].append(image_info.key)

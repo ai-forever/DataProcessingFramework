@@ -3,13 +3,14 @@ from typing import Any, Dict, List, Optional, Union
 import numpy as np
 
 # TODO(review) - зависимость отсутствует в requirements.txt
-import ruclip
+import ruclip  # type: ignore
 import torch
 from torch.nn.utils.rnn import pad_sequence
 
 from DPF.utils import read_image_rgb_from_bytes
 
 from .t2i_filter import T2IFilter
+from DPF.types import ModalityToDataMapping
 
 
 class RuCLIPFilter(T2IFilter):
@@ -82,17 +83,22 @@ class RuCLIPFilter(T2IFilter):
             "drop_last": False,
         }
 
-    def preprocess(self, modality2data: Dict[str, Union[bytes, str]], metadata: dict):
+    def preprocess_data(
+        self,
+        modality2data: ModalityToDataMapping,
+        metadata: Dict[str, Any]
+    ) -> Any:
         key = metadata[self.key_column]
         text = modality2data['text']
         pil_img = read_image_rgb_from_bytes(modality2data['image'])
         img_tensor = self.ruclip_processor.image_transform(pil_img)
         return key, img_tensor, text
 
-    def process_batch(self, batch) -> dict:
-        df_batch_labels = self._generate_dict_from_schema()
+    def process_batch(self, batch: List[Any]) -> Dict[str, List[Any]]:
+        df_batch_labels = self._get_dict_from_schema()
 
-        keys, image_tensors, batch_labels = list(zip(*batch))
+        image_tensors: List[torch.Tensor]
+        keys, image_tensors, batch_labels = list(zip(*batch))  # type: ignore
 
         with torch.no_grad():
             image_tensors = [t.to(self.device) for t in image_tensors]
@@ -106,7 +112,7 @@ class RuCLIPFilter(T2IFilter):
 
         return df_batch_labels
 
-    def get_similarity(self, inputs, text_latents):
+    def get_similarity(self, inputs: Dict[str, torch.Tensor], text_latents: torch.Tensor) -> np.ndarray[Any, Any]:
         with torch.no_grad():
             logit_scale = self.ruclip_model.logit_scale.exp()
             image_latents = self.ruclip_model.encode_image(inputs["pixel_values"])

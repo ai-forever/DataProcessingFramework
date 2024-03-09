@@ -4,20 +4,33 @@ from urllib.request import urlopen
 from zipfile import ZipFile
 
 import cv2
+from cv2.typing import MatLike
 import imageio.v3 as iio
 import numpy as np
 import torch
 import torch.nn.functional as F
+from torch import Tensor
 
 from .raft_core.model import RAFT
 from .video_filter import VideoFilter
+from ...types import ModalityToDataMapping
 
 WEIGHTS_URL = 'https://dl.dropboxusercontent.com/s/4j4z58wuv8o0mfz/models.zip'
 
 
+def transform_frame(frame: MatLike, target_size: Tuple[int, int]) -> Tensor:
+    frame = cv2.resize(frame, dsize=(target_size[0], target_size[1]), interpolation=cv2.INTER_LINEAR)
+    frame_tensor = torch.from_numpy(frame).permute(2, 0, 1).float()[None]
+
+    padder = InputPadder(frame_tensor.shape)  # type: ignore
+    frame_tensor = padder.pad(frame_tensor)[0]
+    return frame_tensor
+
+
 class InputPadder:
     """ Pads images such that dimensions are divisible by 8 """
-    def __init__(self, dims, mode='sintel'):
+
+    def __init__(self, dims: List[int], mode: str = 'sintel'):
         self.ht, self.wd = dims[-2:]
         pad_ht = (((self.ht // 8) + 1) * 8 - self.ht) % 8
         pad_wd = (((self.wd // 8) + 1) * 8 - self.wd) % 8
@@ -28,22 +41,13 @@ class InputPadder:
             self._pad = [pad_wd // 2, pad_wd - pad_wd // 2,
                          0, pad_ht]
 
-    def pad(self, *inputs):
+    def pad(self, *inputs) -> List[Tensor]:  # type: ignore
         return [F.pad(x, self._pad, mode='replicate') for x in inputs]
 
-    def unpad(self, x):
+    def unpad(self, x: Tensor) -> Tensor:
         ht, wd = x.shape[-2:]
         c = [self._pad[2], ht - self._pad[3], self._pad[0], wd - self._pad[1]]
         return x[..., c[0]:c[1], c[2]:c[3]]
-
-
-def transform_frame(frame: np.ndarray, target_size: Tuple, device: str):
-    frame = cv2.resize(frame, dsize=(target_size[0], target_size[1]), interpolation=cv2.INTER_LINEAR)
-    frame = torch.from_numpy(frame).permute(2, 0, 1).float()[None]
-
-    padder = InputPadder(frame.shape)
-    frame = padder.pad(frame)[0]
-    return frame
 
 
 class RAFTOpticalFlowFilter(VideoFilter):
@@ -103,28 +107,35 @@ class RAFTOpticalFlowFilter(VideoFilter):
             "drop_last": False,
         }
 
-    def preprocess(self, modality2data: Dict[str, Union[bytes, str]], metadata: dict):
+    def preprocess_data(
+        self,
+        modality2data: ModalityToDataMapping,
+        metadata: Dict[str, Any]
+    ) -> Any:
         key = metadata[self.key_column]
         video_file = modality2data['video']
 
         frames = iio.imread(io.BytesIO(video_file), plugin="pyav")
 
         if frames.shape[1] > frames.shape[2]:
-            frames = [transform_frame(frame=frames[i],
-                                      target_size=(450, 800),
-                                      device=self.device) for i in range(self.pass_frames, len(frames), self.pass_frames)]
+            frames_resized = [
+                transform_frame(frame=frames[i], target_size=(450, 800))
+                for i in range(self.pass_frames, len(frames), self.pass_frames)
+            ]
         elif frames.shape[2] > frames.shape[1]:
-            frames = [transform_frame(frame=frames[i],
-                                      target_size=(800, 450),
-                                      device=self.device) for i in range(self.pass_frames, len(frames), self.pass_frames)]
+            frames_resized = [
+                transform_frame(frame=frames[i], target_size=(800, 450))
+                for i in range(self.pass_frames, len(frames), self.pass_frames)
+            ]
         else:
-            frames = [transform_frame(frame=frames[i],
-                                      targe_size=(450, 450),
-                                      device=self.device) for i in range(self.pass_frames, len(frames), self.pass_frames)]
-        return key, frames
+            frames_resized = [
+                transform_frame(frame=frames[i], target_size=(450, 450))
+                for i in range(self.pass_frames, len(frames), self.pass_frames)
+            ]
+        return key, frames_resized
 
-    def process_batch(self, batch) -> dict:
-        df_batch_labels = self._generate_dict_from_schema()
+    def process_batch(self, batch: List[Any]) -> Dict[str, List[Any]]:
+        df_batch_labels = self._get_dict_from_schema()
 
         mean_magnitudes = []
         for data in batch:

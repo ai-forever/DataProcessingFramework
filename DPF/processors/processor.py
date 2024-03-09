@@ -165,7 +165,7 @@ class DatasetProcessor(ABC):
         dataset = self._get_torch_dataset(
             modalities=datafilter.modalities,
             columns_to_use=datafilter.metadata_columns + [datafilter.key_column],
-            preprocess_f=datafilter.preprocess,
+            preprocess_f=datafilter.preprocess_data,
             return_none_on_error=return_none_on_error
         )
         df_result = datafilter.run(dataset)

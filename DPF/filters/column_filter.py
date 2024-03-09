@@ -28,11 +28,11 @@ class ColumnFilter(ABC):
         pass
 
     @abstractmethod
-    def process(self, row: Dict[str, Any]) -> List[Any]:
+    def process_sample(self, sample: Dict[str, Any]) -> List[Any]:
         pass
 
     def __call__(self, df: pd.DataFrame) -> List[List[Any]]:
         pandarallel.initialize(nb_workers=self.workers)
-        res = list(df[self.columns_to_process].parallel_apply(self.process, axis=1))
+        res = list(df[self.columns_to_process].parallel_apply(self.process_sample, axis=1))
         return res
 

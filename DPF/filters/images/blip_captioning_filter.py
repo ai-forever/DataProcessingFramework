@@ -1,7 +1,9 @@
 from typing import Any, Dict, List, Union
 
 import torch
-from lavis.models import load_model_and_preprocess
+from lavis.models import load_model_and_preprocess  # type: ignore
+
+from DPF.types import ModalityToDataMapping
 
 try:
     from torch.utils.data.dataloader import default_collate
@@ -52,19 +54,23 @@ class BLIPCaptioningFilter(ImageFilter):
             "drop_last": False,
         }
 
-    def preprocess(self, modality2data: Dict[str, Union[bytes, str]], metadata: dict):
+    def preprocess_data(
+        self,
+        modality2data: ModalityToDataMapping,
+        metadata: Dict[str, Any]
+    ) -> Any:
         key = metadata[self.key_column]
         pil_img = read_image_rgb_from_bytes(modality2data['image'])
         img_tensor = self.blip_processor(pil_img)
         return key, img_tensor
 
-    def process_batch(self, batch) -> dict:
-        df_batch_labels = self._generate_dict_from_schema()
+    def process_batch(self, batch: List[Any]) -> Dict[str, List[Any]]:
+        df_batch_labels = self._get_dict_from_schema()
 
         keys, image_tensors = list(zip(*batch))
 
         with torch.no_grad():
-            batch = default_collate(image_tensors).to(self.device)
+            batch = default_collate(image_tensors).to(self.device)  # type: ignore
             captions = self.blip_model.generate({"image": batch})
 
         df_batch_labels["blip_caption"].extend(captions)

@@ -54,7 +54,7 @@ class DataFilter(ABC):
     def preprocess_data(
         self,
         modality2data: ModalityToDataMapping,
-        metadata: Dict[str, str]
+        metadata: Dict[str, Any]
     ) -> Any:
         pass
 

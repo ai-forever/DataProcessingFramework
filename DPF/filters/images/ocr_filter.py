@@ -10,6 +10,7 @@ from .img_filter import ImageFilter
 from .ocr_model.dataset import AlignCollate
 from .ocr_model.model import Model
 from .ocr_model.utils import AttnLabelConverter
+from ...types import ModalityToDataMapping
 
 
 class Options:
@@ -84,19 +85,23 @@ class OCRFilter(ImageFilter):
         return {
             "num_workers": self.num_workers,
             "batch_size": self.batch_size,
-            "preprocess_f": self.preprocess,
+            "preprocess_f": self.preprocess_data,
             "drop_last": False,
             "cols_to_return": [self.text_box_col],
         }
 
-    def preprocess(self, img_bytes: bytes, data: dict):
-        image_path = data["image_path"]
-        boxes = json.loads(data[self.text_box_col])
-        pil_img = read_image_rgb_from_bytes(img_bytes)._convert('L')
+    def preprocess_data(
+        self,
+        modality2data: ModalityToDataMapping,
+        metadata: Dict[str, Any]
+    ) -> Any:
+        image_path = metadata["image_path"]
+        boxes = json.loads(metadata[self.text_box_col])
+        pil_img = read_image_rgb_from_bytes(modality2data['image']).convert('L')
         return image_path, pil_img, boxes
 
-    def process_batch(self, batch) -> dict:
-        df_batch_labels = self._generate_dict_from_schema()
+    def process_batch(self, batch: List[Any]) -> Dict[str, List[Any]]:
+        df_batch_labels = self._get_dict_from_schema()
         image_path, pil_img, boxes = batch[0]
         w, h = pil_img.size
 

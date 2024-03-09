@@ -7,6 +7,8 @@ import clip
 import torch
 from torch import nn
 
+from DPF.types import ModalityToDataMapping
+
 try:
     from torch.utils.data.dataloader import default_collate
 except ImportError:
@@ -17,7 +19,7 @@ from DPF.utils import read_image_rgb_from_bytes
 from .img_filter import ImageFilter
 
 
-def get_aesthetic_model(clip_model, cache_folder):
+def get_aesthetic_model(clip_model: str, cache_folder: str) -> torch.nn.Module:
     """
     Load the aethetic model
     """
@@ -89,17 +91,21 @@ class AestheticFilter(ImageFilter):
             "drop_last": False,
         }
 
-    def preprocess(self, modality2data: Dict[str, Union[bytes, str]], metadata: dict):
+    def preprocess_data(
+        self,
+        modality2data: ModalityToDataMapping,
+        metadata: Dict[str, Any]
+    ) -> Any:
         key = metadata[self.key_column]
         pil_img = read_image_rgb_from_bytes(modality2data['image'])
         img_tensor = self.clip_transforms(pil_img)
         return key, img_tensor
 
-    def process_batch(self, batch) -> dict:
-        df_batch_labels = self._generate_dict_from_schema()
+    def process_batch(self, batch: List[Any]) -> Dict[str, List[Any]]:
+        df_batch_labels = self._get_dict_from_schema()
 
         keys, image_tensors = list(zip(*batch))
-        batch = default_collate(image_tensors).to(self.device)
+        batch = default_collate(image_tensors).to(self.device)  # type: ignore [arg-type]
 
         with torch.no_grad():
             inputs = self.clip_model.encode_image(batch)

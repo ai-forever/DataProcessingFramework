@@ -3,6 +3,8 @@ from typing import Any, Dict, List, Optional, Union
 import clip
 import torch
 
+from ...types import ModalityToDataMapping
+
 try:
     from torch.utils.data.dataloader import default_collate
 except ImportError:
@@ -85,7 +87,7 @@ class CLIPLabelsFilter(ImageFilter):
             "drop_last": False,
         }
 
-    def get_text_features(self):
+    def get_text_features(self) -> torch.Tensor:
         text_features = []
 
         for template in self.templates:
@@ -93,24 +95,28 @@ class CLIPLabelsFilter(ImageFilter):
                 [template.format(class_label.strip()) for class_label in self.labels]
             )
             text_features.append(self.clip_model.encode_text(texts.to(self.device)))
-        text_features = torch.stack(text_features).mean(0)
-        text_features = text_features / text_features.norm(dim=-1, keepdim=True)
-        return text_features
+        text_features_tensor = torch.stack(text_features).mean(0)
+        text_features_tensor = text_features_tensor / text_features_tensor.norm(dim=-1, keepdim=True)
+        return text_features_tensor
 
-    def preprocess(self, modality2data: Dict[str, Union[bytes, str]], metadata: dict):
+    def preprocess_data(
+        self,
+        modality2data: ModalityToDataMapping,
+        metadata: Dict[str, Any]
+    ) -> Any:
         key = metadata[self.key_column]
         pil_img = read_image_rgb_from_bytes(modality2data['image'])
 
         img_tensor = self.clip_processor(pil_img)
         return key, img_tensor
 
-    def process_batch(self, batch) -> dict:
-        df_batch_labels = self._generate_dict_from_schema()
+    def process_batch(self, batch: List[Any]) -> Dict[str, List[Any]]:
+        df_batch_labels = self._get_dict_from_schema()
 
         keys, image_tensors = list(zip(*batch))
 
         with torch.no_grad():
-            batch = default_collate(image_tensors).to(self.device)
+            batch = default_collate(image_tensors).to(self.device)  # type: ignore
             image_features = self.clip_model.encode_image(batch)
             image_features = image_features / image_features.norm(dim=-1, keepdim=True)
             logits_per_image = torch.matmul(image_features, self.text_features.t())

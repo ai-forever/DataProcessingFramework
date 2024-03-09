@@ -27,11 +27,11 @@ LOGGERS_CONFIG = {
 }
 
 
-def init_logger(filename, logger_name="filter_logger", logging_dir="./logs/"):
+def init_logger(filename: str, logger_name: str = "filter_logger", logging_dir: str = "./logs/") -> logging.Logger:
     os.makedirs(logging_dir, exist_ok=True)
 
-    LOGGERS_CONFIG["handlers"]["file"]["filename"] = os.path.join(logging_dir, filename)
-    LOGGERS_CONFIG["loggers"][logger_name] = {
+    LOGGERS_CONFIG["handlers"]["file"]["filename"] = os.path.join(logging_dir, filename)  # type: ignore [index]
+    LOGGERS_CONFIG["loggers"][logger_name] = {  # type: ignore [index]
         "handlers": ["console", "file"],
         "level": logging.DEBUG,
     }

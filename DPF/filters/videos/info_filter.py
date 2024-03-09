@@ -5,20 +5,21 @@ from typing import Any, Dict, List, Optional, Union
 import imageio.v3 as iio
 
 from .video_filter import VideoFilter
+from ...types import ModalityToDataMapping
 
 
 @dataclass
 class VideoInfo:
     key: str
     is_correct: bool
-    width: int
-    height: int
-    fps: float
-    duration: float
+    width: Optional[int]
+    height: Optional[int]
+    fps: Optional[float]
+    duration: Optional[float]
     error: Optional[str]
 
 
-def get_video_info(video_bytes, data, key_column) -> VideoInfo:
+def get_video_info(video_bytes: bytes, data: Dict[str, Any], key_column: str) -> VideoInfo:
     """
     Get image path, read status, width, height, num channels, read error
     """
@@ -65,11 +66,15 @@ class VideoInfoFilter(VideoFilter):
             "drop_last": False,
         }
 
-    def preprocess(self, modality2data: Dict[str, Union[bytes, str]], metadata: dict) -> VideoInfo:
+    def preprocess_data(
+        self,
+        modality2data: ModalityToDataMapping,
+        metadata: Dict[str, Any]
+    ) -> Any:
         return get_video_info(modality2data['video'], metadata, self.key_column)
 
-    def process_batch(self, batch) -> dict:
-        df_batch_labels = self._generate_dict_from_schema()
+    def process_batch(self, batch: List[Any]) -> Dict[str, List[Any]]:
+        df_batch_labels = self._get_dict_from_schema()
 
         for video_info in batch:
             df_batch_labels[self.key_column].append(video_info.name)

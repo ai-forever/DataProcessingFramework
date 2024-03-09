@@ -2,13 +2,15 @@ import io
 from typing import Any, Dict, List, Tuple, Union
 
 import cv2
+from cv2.typing import MatLike
 import imageio.v3 as iio
 import numpy as np
 
 from .video_filter import VideoFilter
+from DPF.types import ModalityToDataMapping
 
 
-def transform_frame(frame: np.ndarray, target_size: Tuple):
+def transform_frame(frame: MatLike, target_size: Tuple[int, int]) -> MatLike:
     frame = cv2.resize(frame, dsize=(target_size[0], target_size[1]), interpolation=cv2.INTER_LINEAR)
     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     return frame
@@ -86,25 +88,35 @@ class GunnarFarnebackFilter(VideoFilter):
             "drop_last": False,
         }
 
-    def preprocess(self, modality2data: Dict[str, Union[bytes, str]], metadata: dict):
+    def preprocess_data(
+        self,
+        modality2data: ModalityToDataMapping,
+        metadata: Dict[str, Any]
+    ) -> Any:
         key = metadata[self.key_column]
         video_file = modality2data['video']
 
         frames = iio.imread(io.BytesIO(video_file), plugin="pyav")
 
         if frames.shape[1] > frames.shape[2]:
-            frames = [transform_frame(frame=frames[i],
-                                      target_size=(450, 800)) for i in range(self.pass_frames, len(frames), self.pass_frames)]
+            frames_resized = [
+                transform_frame(frame=frames[i], target_size=(450, 800))
+                for i in range(self.pass_frames, len(frames), self.pass_frames)
+            ]
         elif frames.shape[2] > frames.shape[1]:
-            frames = [transform_frame(frame=frames[i],
-                                      target_size=(800, 450)) for i in range(self.pass_frames, len(frames), self.pass_frames)]
+            frames_resized = [
+                transform_frame(frame=frames[i], target_size=(800, 450))
+                for i in range(self.pass_frames, len(frames), self.pass_frames)
+            ]
         else:
-            frames = [transform_frame(frame=frames[i],
-                                      targe_size=(450, 450)) for i in range(self.pass_frames, len(frames), self.pass_frames)]
-        return key, frames
+            frames_resized = [
+                transform_frame(frame=frames[i], target_size=(450, 450))
+                for i in range(self.pass_frames, len(frames), self.pass_frames)
+            ]
+        return key, frames_resized
 
-    def process_batch(self, batch) -> dict:
-        df_batch_labels = self._generate_dict_from_schema()
+    def process_batch(self, batch: List[Any]) -> Dict[str, List[Any]]:
+        df_batch_labels = self._get_dict_from_schema()
 
         mean_magnitudes = []
         for data in batch:

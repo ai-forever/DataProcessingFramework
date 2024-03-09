@@ -6,6 +6,7 @@ from CRAFT import CRAFTModel, boxes_area, preprocess_image
 from DPF.utils import read_image_rgb_from_bytes
 
 from .img_filter import ImageFilter
+from ...types import ModalityToDataMapping
 
 
 class CRAFTFilter(ImageFilter):
@@ -40,14 +41,18 @@ class CRAFTFilter(ImageFilter):
             "drop_last": False,
         }
 
-    def preprocess(self, modality2data: Dict[str, Union[bytes, str]], metadata: dict):
+    def preprocess_data(
+        self,
+        modality2data: ModalityToDataMapping,
+        metadata: Dict[str, Any]
+    ) -> Any:
         key = metadata[self.key_column]
         pil_img = read_image_rgb_from_bytes(modality2data['image'])
         img_tensor, ratio_w, ratio_h = preprocess_image(np.array(pil_img), self.model.canvas_size, self.model.mag_ratio)
         return key, img_tensor, ratio_w, ratio_h, pil_img.size
 
-    def process_batch(self, batch) -> dict:
-        df_batch_labels = self._generate_dict_from_schema()
+    def process_batch(self, batch: List[Any]) -> Dict[str, List[Any]]:
+        df_batch_labels = self._get_dict_from_schema()
 
         key, img_tensor, ratio_w, ratio_h, orig_size = batch[0]
 

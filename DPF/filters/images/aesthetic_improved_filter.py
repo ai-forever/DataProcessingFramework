@@ -7,6 +7,8 @@ import numpy as np
 import torch
 import torch.nn as nn
 
+from DPF.types import ModalityToDataMapping
+
 try:
     from torch.utils.data.dataloader import default_collate
 except ImportError:
@@ -18,7 +20,7 @@ from .img_filter import ImageFilter
 
 
 class MLP(nn.Module):
-    def __init__(self, input_size, xcol='emb', ycol='avg_rating'):
+    def __init__(self, input_size: int, xcol: str = 'emb', ycol: str = 'avg_rating'):
         super().__init__()
         self.input_size = input_size
         self.xcol = xcol
@@ -34,17 +36,17 @@ class MLP(nn.Module):
             nn.Linear(16, 1)
         )
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> Any:
         return self.layers(x)
 
 
-def normalized(a, axis=-1, order=2):
+def normalized(a: np.ndarray[Any, Any], axis: int = -1, order: int = 2) -> Any:
     l2 = np.atleast_1d(np.linalg.norm(a, order, axis))
     l2[l2 == 0] = 1
     return a / np.expand_dims(l2, axis)
 
 
-def get_improved_aesthetic_model(cache_folder):
+def get_improved_aesthetic_model(cache_folder: str) -> MLP:
     """
     Load the aesthetic model
     """
@@ -107,7 +109,11 @@ class ImprovedAestheticFilter(ImageFilter):
             "drop_last": False,
         }
 
-    def preprocess(self, modality2data: Dict[str, Union[bytes, str]], metadata: dict):
+    def preprocess_data(
+        self,
+        modality2data: ModalityToDataMapping,
+        metadata: Dict[str, Any]
+    ) -> Any:
         key = metadata[self.key_column]
         pil_image = read_image_rgb_from_bytes(modality2data['image'])
 
@@ -115,15 +121,15 @@ class ImprovedAestheticFilter(ImageFilter):
 
         return key, image
 
-    def process_batch(self, batch) -> dict:
-        df_batch_labels = self._generate_dict_from_schema()
+    def process_batch(self, batch: List[Any]) -> Dict[str, List[Any]]:
+        df_batch_labels = self._get_dict_from_schema()
 
         keys, image_tensors = list(zip(*batch))
-        batch = default_collate(image_tensors).to(self.device)
+        batch = default_collate(image_tensors).to(self.device)  # type: ignore
         with torch.no_grad():
             inputs = self.clip_model.encode_image(batch)
             inputs = normalized(inputs.cpu().detach().numpy())
-            outputs = self.aesthetic_model(torch.from_numpy(inputs).to(self.device).type(torch.cuda.FloatTensor))
+            outputs = self.aesthetic_model(torch.from_numpy(inputs).to(self.device).type(torch.cuda.FloatTensor))  # type: ignore [attr-defined]
 
         df_batch_labels["improved_aesthetic_score_ViT-L/14"].extend(outputs.cpu().reshape(-1).tolist())
         df_batch_labels[self.key_column].extend(keys)

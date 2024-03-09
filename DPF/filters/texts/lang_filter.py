@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict, Any
 
 from py3langid.langid import MODEL_FILE, LanguageIdentifier
 
@@ -25,6 +25,6 @@ class LangFilter(ColumnFilter):
     def schema(self) -> List[str]:
         return ["lang", "lang_score"]
 
-    def process(self, row: dict) -> tuple:
-        lg, score = self.lang_identifier.classify(row[self.text_column_name])
-        return lg, round(score, 2)
+    def process_sample(self, sample: Dict[str, Any]) -> List[Any]:
+        lg, score = self.lang_identifier.classify(sample[self.text_column_name])
+        return [lg, round(score, 2)]

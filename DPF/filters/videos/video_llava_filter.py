@@ -1,5 +1,5 @@
 from io import BytesIO
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Union, Optional
 
 import torch
 from videollava.constants import DEFAULT_IMAGE_TOKEN, IMAGE_TOKEN_INDEX
@@ -8,6 +8,7 @@ from videollava.mm_utils import KeywordsStoppingCriteria, tokenizer_image_token
 from videollava.model.builder import load_pretrained_model
 
 from .video_filter import VideoFilter
+from DPF.types import ModalityToDataMapping
 
 try:
     from torch.utils.data.dataloader import default_collate
@@ -15,12 +16,12 @@ except ImportError:
     from torch.utils.data import default_collate
 
 
-def disable_torch_init():
+def disable_torch_init() -> None:
     """
     Disable the redundant torch default initialization to accelerate model creation.
     """
-    torch.nn.Linear.reset_parameters = lambda self: None
-    torch.nn.LayerNorm.reset_parameters = lambda self: None
+    torch.nn.Linear.reset_parameters = lambda self: None  # type: ignore
+    torch.nn.LayerNorm.reset_parameters = lambda self: None  # type: ignore
 
 
 class VideoLLaVAFilter(VideoFilter):
@@ -32,7 +33,7 @@ class VideoLLaVAFilter(VideoFilter):
         self,
         model_path: str = "LanguageBind/Video-LLaVA-7B",
         model_name: str = "Video-LLaVA-7B",
-        model_base: str = None,
+        model_base: Optional[str] = None,
         cache_path: str = "cache_dir",
         prompt: str = "detailed_video",
         temperature: float = 0.2,
@@ -100,19 +101,23 @@ class VideoLLaVAFilter(VideoFilter):
             "drop_last": False,
         }
 
-    def preprocess(self, modality2data: Dict[str, Union[bytes, str]], metadata: dict):
+    def preprocess_data(
+        self,
+        modality2data: ModalityToDataMapping,
+        metadata: Dict[str, Any]
+    ) -> Any:
         key = metadata[self.key_column]
         video_file = BytesIO(modality2data['video'])
         video_file = self.video_processor(video_file, return_tensors='pt')['pixel_values'][0].half()
         return key, video_file
 
-    def process_batch(self, batch) -> dict:
-        df_batch_labels = self._generate_dict_from_schema()
+    def process_batch(self, batch: List[Any]) -> Dict[str, List[Any]]:
+        df_batch_labels = self._get_dict_from_schema()
 
         keys, video_tensors = list(zip(*batch))
-        video_tensors = default_collate(video_tensors).to(self.device)
+        video_tensors = default_collate(video_tensors).to(self.device)  # type: ignore
 
-        input_ids_batch = self.input_ids.repeat_interleave(video_tensors.shape[0], 0).to(self.device)
+        input_ids_batch = self.input_ids.repeat_interleave(video_tensors.shape[0], 0).to(self.device)  # type: ignore
 
         with torch.inference_mode():
             output_ids = self.model.generate(

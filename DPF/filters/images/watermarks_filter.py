@@ -4,6 +4,8 @@ from typing import Any, Dict, List, Union
 import torch
 from torch import nn
 
+from DPF.types import ModalityToDataMapping
+
 try:
     from torch.utils.data.dataloader import default_collate
 except ImportError:
@@ -16,6 +18,7 @@ from DPF.filters.utils import FP16Module
 from DPF.utils import read_image_rgb_from_bytes
 
 from .img_filter import ImageFilter
+
 
 MODELS = {
     "resnext101_32x8d-large": {
@@ -36,9 +39,10 @@ def get_watermarks_detection_model(
     device: str = "cuda:0",
     fp16: bool = True,
     cache_dir: str = "/tmp/datasets_utils",
-):
+) -> Any:
     assert name in MODELS
     config = MODELS[name]
+
     model_ft = config["resnet"](pretrained=False)
     num_ftrs = model_ft.fc.in_features
     model_ft.fc = nn.Linear(num_ftrs, 2)
@@ -51,7 +55,7 @@ def get_watermarks_detection_model(
     model_ft.load_state_dict(weights)
 
     if fp16:
-        model_ft = FP16Module(model_ft)
+        model_ft = FP16Module(model_ft)  # type: ignore
 
     model_ft.eval()
     model_ft = model_ft.to(device)
@@ -120,17 +124,21 @@ class WatermarksFilter(ImageFilter):
             "drop_last": False,
         }
 
-    def preprocess(self, modality2data: Dict[str, Union[bytes, str]], metadata: dict):
+    def preprocess_data(
+        self,
+        modality2data: ModalityToDataMapping,
+        metadata: Dict[str, Any]
+    ) -> Any:
         key = metadata[self.key_column]
         pil_img = read_image_rgb_from_bytes(modality2data['image'])
         img_tensor = self.resnet_transforms(pil_img)
         return key, img_tensor
 
-    def process_batch(self, batch) -> dict:
-        df_batch_labels = self._generate_dict_from_schema()
+    def process_batch(self, batch: List[Any]) -> Dict[str, List[Any]]:
+        df_batch_labels = self._get_dict_from_schema()
 
         keys, image_tensors = list(zip(*batch))
-        batch = default_collate(image_tensors).to(self.device)
+        batch = default_collate(image_tensors).to(self.device)  # type: ignore
 
         with torch.no_grad():
             outputs = self.model(batch)

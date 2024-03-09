@@ -7,6 +7,7 @@ from PIL import Image
 from DPF.filters.images.img_filter import ImageFilter
 
 from .video_filter import VideoFilter
+from ...types import ModalityToDataMapping
 
 
 class ImageFilterAdapter(VideoFilter):
@@ -42,7 +43,11 @@ class ImageFilterAdapter(VideoFilter):
             "drop_last": False,
         }
 
-    def preprocess(self, modality2data: Dict[str, Union[bytes, str]], metadata: dict):
+    def preprocess_data(
+        self,
+        modality2data: ModalityToDataMapping,
+        metadata: Dict[str, Any]
+    ) -> Any:
         key = metadata[self.key_column]
 
         video_bytes = modality2data['video']
@@ -57,10 +62,10 @@ class ImageFilterAdapter(VideoFilter):
         Image.fromarray(frame).convert('RGB').save(buff, format='JPEG', quality=95)
         modality2data['image'] = buff.getvalue()
         metadata[self.image_filter.key_column] = ''
-        return key, self.image_filter.preprocess(modality2data, metadata)
+        return key, self.image_filter.preprocess_data(modality2data, metadata)
 
-    def process_batch(self, batch) -> dict:
-        df_batch_labels = self._generate_dict_from_schema()
+    def process_batch(self, batch: List[Any]) -> Dict[str, List[Any]]:
+        df_batch_labels = self._get_dict_from_schema()
 
         for key, data in batch:
             df_batch_labels_images = self.image_filter.process_batch([data])
