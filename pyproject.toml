@@ -1,16 +1,13 @@
 [build-system]
-requires = ["setuptools >= 61.0"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling >= 1.13.0"]
+build-backend = "hatchling.build"
 
 [project]
 name = 'DPF'
 dynamic = [
   'version'
 ]
-description = ''
 readme = 'README.md'
-authors = []
-license = {file = 'LICENSE'}
 requires-python = '>=3.9'
 dependencies = [
   "torch",
@@ -45,6 +42,12 @@ video_llava = [
     'decord',
     'pytorchvideo @ git+https://github.com/facebookresearch/pytorchvideo.git@28fe037d212663c6a24f373b94cc5d478c8c1a1d'
 ]
+
+[tool.hatch.version]
+path = "DPF/__init__.py"
+
+[tool.hatch.metadata]
+allow-direct-references = true
 
 # mypy settings
 [tool.mypy]
