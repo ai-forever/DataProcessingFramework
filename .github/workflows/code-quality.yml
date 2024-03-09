@@ -10,6 +10,7 @@ jobs:
       with:
         python-version: "3.9"
     - run: pip install --upgrade pip
+    - run: pip install Cython
     - run: pip install .
     - run: pip install .[dev,filters]
     - run: mypy DPF/
