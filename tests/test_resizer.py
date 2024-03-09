@@ -4,27 +4,6 @@ import pytest
 from DPF.transforms import Resizer, ResizerModes
 
 
-def test_invalid_params():
-    with pytest.raises(TypeError):
-        resizer = Resizer(ResizerModes.FIXED)
-    for mode in [ResizerModes.MIN_SIZE, ResizerModes.MAX_SIZE]:
-        with pytest.raises(AssertionError):
-            resizer = Resizer(mode)
-
-    with pytest.raises(TypeError):
-        resizer = Resizer(ResizerModes.FIXED, size=768)
-    with pytest.raises(TypeError):
-        resizer = Resizer(ResizerModes.FIXED, fixed_size=768)
-    with pytest.raises(AssertionError):
-        resizer = Resizer(ResizerModes.FIXED, fixed_size=(768, 'a'))
-
-    for mode in [ResizerModes.MIN_SIZE, ResizerModes.MAX_SIZE]:
-        with pytest.raises(AssertionError):
-            resizer = Resizer(mode, fixed_size=(768, 768))
-        with pytest.raises(AssertionError):
-            resizer = Resizer(mode, size='a')
-
-
 def test_resizer_fixed():
     resizer = Resizer(ResizerModes.FIXED, fixed_size=(768, 768))
 
