@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import pandas as pd
 from tqdm.contrib.concurrent import thread_map
@@ -11,7 +11,7 @@ class DataFramesChanger:
 
     def __init__(
         self,
-        datafile_paths: List[str],
+        datafile_paths: list[str],
         filesystem: FileSystem,
         config: DatasetConfig
     ):
@@ -27,22 +27,22 @@ class DataFramesChanger:
             errname = f"Error during saving file {path}: {err}"
         return errname
 
-    def validate_path_for_delete(self, columns_to_delete: List[str], path: str) -> None:
+    def validate_path_for_delete(self, columns_to_delete: list[str], path: str) -> None:
         df = self.filesystem.read_dataframe(path)
         for col in columns_to_delete:
             assert col in df.columns, f'Dataframe {path} dont have "{col}" column'
 
-    def delete_columns_for_path(self, columns_to_delete: List[str], path: str) -> Optional[str]:
+    def delete_columns_for_path(self, columns_to_delete: list[str], path: str) -> Optional[str]:
         df = self.filesystem.read_dataframe(path)
         df.drop(columns=columns_to_delete, inplace=True)
         return self._save_dataframe(df, path, index=False)
 
     def delete_columns(
         self,
-        columns_to_delete: List[str],
+        columns_to_delete: list[str],
         max_threads: int = 16,
         pbar: bool = True
-    ) -> List[str]:
+    ) -> list[str]:
         # validate all files before modifying them
         thread_map(
             lambda p: self.validate_path_for_delete(columns_to_delete, p),
@@ -59,23 +59,23 @@ class DataFramesChanger:
         )
         return [err for err in errors if err is not None]
 
-    def validate_path_for_rename(self, column_map: Dict[str, str], path: str) -> None:
+    def validate_path_for_rename(self, column_map: dict[str, str], path: str) -> None:
         df = self.filesystem.read_dataframe(path)
         for col_old, col_new in column_map.items():
             assert col_old in df.columns, f'Dataframe {path} dont have "{col_old}" column'
             assert col_new not in df.columns, f'Dataframe {path} already have "{col_new}" column'
 
-    def rename_columns_for_path(self, column_map: Dict[str, str], path: str) -> Optional[str]:
+    def rename_columns_for_path(self, column_map: dict[str, str], path: str) -> Optional[str]:
         df = self.filesystem.read_dataframe(path)
         df.rename(columns=column_map, inplace=True)
         return self._save_dataframe(df, path, index=False)
 
     def rename_columns(
         self,
-        column_map: Dict[str, str],
+        column_map: dict[str, str],
         max_threads: int = 16,
         pbar: bool = True
-    ) -> List[str]:
+    ) -> list[str]:
         # validate all files before modifying them
         thread_map(
             lambda p: self.validate_path_for_rename(column_map, p),
@@ -95,7 +95,7 @@ class DataFramesChanger:
     def validate_path_for_update(
         self,
         key_column: str,
-        df_new: List[Dict[str, Any]],
+        df_new: list[dict[str, Any]],
         path: str
     ) -> None:
         df_new = pd.DataFrame(df_new)
@@ -114,7 +114,7 @@ class DataFramesChanger:
     def update_columns_for_path(
         self,
         key_column: str,
-        df_new: List[Dict[str, Any]],
+        df_new: list[dict[str, Any]],
         path: str
     ) -> Optional[str]:
         df_new = pd.DataFrame(df_new)
@@ -132,10 +132,10 @@ class DataFramesChanger:
     def update_columns(
         self,
         key_column: str,
-        path2df: Dict[str, List[Dict[str, Any]]],
+        path2df: dict[str, list[dict[str, Any]]],
         max_threads: int = 16,
         pbar: bool = True
-    ) -> List[str]:
+    ) -> list[str]:
         # validate all files before modifying them
         thread_map(
             lambda p: self.validate_path_for_update(key_column, path2df[p], p),

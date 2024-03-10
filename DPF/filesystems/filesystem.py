@@ -3,7 +3,8 @@ import io
 import os
 import tarfile
 from abc import ABC, abstractmethod
-from typing import Any, Iterable, List, Optional, Tuple, Union
+from collections.abc import Iterable
+from typing import Any, Optional, Union
 
 import pandas as pd
 
@@ -140,7 +141,7 @@ class FileSystem(ABC):
     # TODO(review) - нет смысла листить директорию, вернув только имена файлов, это разные операции. На выходе из листинга должны быть абсолютные пути до файлов
     # Логику с именами файлов (без абсолютного пути) лучше вынести в отдельный метод
     @abstractmethod
-    def listdir(self, folder_path: str, filenames_only: bool = False) -> List[str]:
+    def listdir(self, folder_path: str, filenames_only: bool = False) -> list[str]:
         """
         Returns the contents of folder
 
@@ -161,7 +162,7 @@ class FileSystem(ABC):
     # TODO(review) - не совсем понятна логика листинга вместе с расширением файла, оно должно возвращаться всегда, иначе операцию листинга нельза назвать операцией листинга директории
     def listdir_with_ext(
         self, folder_path: str, ext: str, filenames_only: bool = False
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Returns all files in folder with provided extinsion
 
@@ -188,7 +189,7 @@ class FileSystem(ABC):
 
      # TODO(review) - третья логика листинга в классе, нужно это дело совместить в 1 метод, и параметризовать вывод (с помощью bool-значений на входе в метод)
     @abstractmethod
-    def listdir_meta(self, folder_path: str) -> List[FileData]:
+    def listdir_meta(self, folder_path: str) -> list[FileData]:
         """
         Returns the contents of folder with meta information (datetime created, etc)
 
@@ -218,7 +219,7 @@ class FileSystem(ABC):
         pass
 
     @abstractmethod
-    def walk(self, folder_path: str) -> Iterable[Tuple[str, List[str], List[str]]]:
+    def walk(self, folder_path: str) -> Iterable[tuple[str, list[str], list[str]]]:
         """
         Recursively get contents of folder in os.walk style
 

@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import clip
 import numpy as np
@@ -38,7 +38,7 @@ class CLIPFilter(T2IFilter):
         self,
         clip_version: str,
         weights_folder: str,
-        templates: Optional[List[str]] = None,
+        templates: Optional[list[str]] = None,
         device: str = "cuda:0",
         workers: int = 16,
         batch_size: int = 64,
@@ -62,11 +62,11 @@ class CLIPFilter(T2IFilter):
         )
 
     @property
-    def schema(self) -> List[str]:
+    def schema(self) -> list[str]:
         return [self.key_column, f"clip_{self.clip_version}_similarity"]
 
     @property
-    def dataloader_kwargs(self) -> Dict[str, Any]:
+    def dataloader_kwargs(self) -> dict[str, Any]:
         return {
             "num_workers": self.num_workers,
             "batch_size": self.batch_size,
@@ -76,7 +76,7 @@ class CLIPFilter(T2IFilter):
     def preprocess_data(
         self,
         modality2data: ModalityToDataMapping,
-        metadata: Dict[str, Any]
+        metadata: dict[str, Any]
     ) -> Any:
         key = metadata[self.key_column]
         text = modality2data['text']
@@ -84,10 +84,10 @@ class CLIPFilter(T2IFilter):
         img_tensor = self.clip_processor(pil_img)
         return key, img_tensor, text
 
-    def process_batch(self, batch: List[Any]) -> Dict[str, List[Any]]:
+    def process_batch(self, batch: list[Any]) -> dict[str, list[Any]]:
         df_batch_labels = self._get_dict_from_schema()
 
-        image_tensors: List[torch.Tensor]
+        image_tensors: list[torch.Tensor]
         keys, image_tensors, batch_labels = list(zip(*batch))  # type: ignore
 
         with torch.no_grad():
@@ -110,7 +110,7 @@ class CLIPFilter(T2IFilter):
 
         return df_batch_labels
 
-    def get_similarity(self, inputs: Dict[str, torch.Tensor], text_latents: torch.Tensor) -> np.ndarray[Any, Any]:
+    def get_similarity(self, inputs: dict[str, torch.Tensor], text_latents: torch.Tensor) -> np.ndarray[Any, Any]:
         with torch.no_grad():
             image_latents = self.clip_model.encode_image(inputs["pixel_values"])
             image_latents = image_latents / image_latents.norm(dim=-1, keepdim=True)

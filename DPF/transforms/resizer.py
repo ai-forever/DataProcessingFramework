@@ -1,5 +1,4 @@
 from enum import IntEnum
-from typing import Tuple
 
 
 # types of resizing logic in Resizer
@@ -17,7 +16,7 @@ class Resizer:
     def __init__(
         self,
         mode: ResizerModes,
-        fixed_size: Tuple[int, int] = (512, 512),
+        fixed_size: tuple[int, int] = (512, 512),
         size: int = 512,
         downscale_only: bool = True
     ):
@@ -29,7 +28,7 @@ class Resizer:
         self.size = size
         self.downscale_only = downscale_only
 
-    def get_new_size(self, width: int, height: int) -> Tuple[int, int]:
+    def get_new_size(self, width: int, height: int) -> tuple[int, int]:
         if self.mode == ResizerModes.FIXED:
             new_w, new_h = self.fixed_size
         elif self.mode == ResizerModes.MIN_SIZE:

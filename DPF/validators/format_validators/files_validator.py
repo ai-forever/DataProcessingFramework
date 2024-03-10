@@ -1,4 +1,3 @@
-from typing import Dict, List
 
 import pandas as pd
 
@@ -22,15 +21,15 @@ class FilesValidator(Validator):
         merged_df: pd.DataFrame,
         filesystem: FileSystem,
         config: FilesDatasetConfig,
-        columns_to_check: List[str]
+        columns_to_check: list[str]
     ):
         self.merged_df = merged_df
         self.filesystem = filesystem
         self.config = config
         self.columns_to_check = columns_to_check
 
-    def _validate_filestructure(self) -> List[FileStructureErrorType]:
-        errors: List[FileStructureErrorType] = []
+    def _validate_filestructure(self) -> list[FileStructureErrorType]:
+        errors: list[FileStructureErrorType] = []
 
         for datatype in self.config.datatypes:
             if isinstance(datatype, FileDataType):
@@ -40,8 +39,8 @@ class FilesValidator(Validator):
 
         return errors
 
-    def _validate_df(self, df: pd.DataFrame) -> List[DataFrameErrorType]:
-        dataframe_errors: List[DataFrameErrorType] = []
+    def _validate_df(self, df: pd.DataFrame) -> list[DataFrameErrorType]:
+        dataframe_errors: list[DataFrameErrorType] = []
 
         # validate dataframe
         missed_columns = set(self.columns_to_check).difference(set(df.columns))
@@ -67,8 +66,8 @@ class FilesValidator(Validator):
         workers: int = 4,
         pbar: bool = True
     ) -> ValidationResult:
-        filestructure_errors: List[FileStructureErrorType] = []
-        dataframe2errors: Dict[str, List[DataFrameErrorType]] = {}
+        filestructure_errors: list[FileStructureErrorType] = []
+        dataframe2errors: dict[str, list[DataFrameErrorType]] = {}
 
         if validate_filestructure:
             filestructure_errors.extend(self._validate_filestructure())

@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import List, Union
+from typing import Union
 
 
 class DataFrameError:
@@ -13,7 +13,7 @@ class DataFrameError:
 @dataclass
 class MissedColumnsError(DataFrameError):
     path: str
-    missed_columns: List[str]
+    missed_columns: list[str]
 
     def __repr__(self) -> str:
         return f"Dataframe {self.path} has missed columns: {self.missed_columns}"

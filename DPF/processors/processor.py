@@ -1,6 +1,6 @@
 import os.path
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Optional, Union
 
 import pandas as pd
 from torch.utils.data import DataLoader, Dataset
@@ -37,13 +37,13 @@ class DatasetProcessor(ABC):
         return self._df
 
     @property
-    def columns(self) -> List[str]:
+    def columns(self) -> list[str]:
         return self._df.columns.tolist()  # type: ignore
 
     def __getitem__(self, column_name: str) -> pd.Series:
         return self._df[column_name]
 
-    def __setitem__(self, key: str, value: Union[List[str], pd.Series]) -> None:
+    def __setitem__(self, key: str, value: Union[list[str], pd.Series]) -> None:
         self._df[key] = value
 
     def print_summary(self) -> None:
@@ -82,7 +82,7 @@ class DatasetProcessor(ABC):
             print('-'*len(last_s))
 
     @abstractmethod
-    def rename_columns(self, column_map: Dict[str, str], workers: int = 16) -> List[str]:
+    def rename_columns(self, column_map: dict[str, str], workers: int = 16) -> list[str]:
         """Renames columns in files of a dataset
 
         Parameters
@@ -100,7 +100,7 @@ class DatasetProcessor(ABC):
         pass
 
     @abstractmethod
-    def delete_columns(self, columns: List[str], workers: int = 16) -> List[str]:
+    def delete_columns(self, columns: list[str], workers: int = 16) -> list[str]:
         """Deletes columns in files of a dataset
 
         Parameters
@@ -118,7 +118,7 @@ class DatasetProcessor(ABC):
         pass
 
     @abstractmethod
-    def update_columns(self, columns: List[str], workers: int = 16) -> List[str]:
+    def update_columns(self, columns: list[str], workers: int = 16) -> list[str]:
         """Updates info in columns or adds new columns in files of a dataset
 
         Parameters
@@ -138,11 +138,11 @@ class DatasetProcessor(ABC):
     @abstractmethod
     def _get_torch_dataset(
         self,
-        modalities: List[ModalityName],
-        columns_to_use: Optional[List[str]] = None,
-        preprocess_f: Callable[[ModalityToDataMapping, Dict[str, str]], Any] = identical_preprocess_function,
+        modalities: list[ModalityName],
+        columns_to_use: Optional[list[str]] = None,
+        preprocess_f: Callable[[ModalityToDataMapping, dict[str, str]], Any] = identical_preprocess_function,
         return_none_on_error: bool = False
-    ) -> Dataset[Tuple[bool, Any]]:
+    ) -> Dataset[tuple[bool, Any]]:
         pass
 
     def apply_data_filter(
@@ -229,7 +229,7 @@ class DatasetProcessor(ABC):
         self,
         validate_filestructure: bool = True,
         validate_metadata: bool = True,
-        columns_to_check: Optional[List[str]] = None,
+        columns_to_check: Optional[list[str]] = None,
         workers: int = 1,
         pbar: bool = True
     ) -> ValidationResult:
@@ -258,14 +258,14 @@ class DatasetProcessor(ABC):
     @abstractmethod
     def _read_sample_data(
         self,
-        sample: Dict[str, str]
+        sample: dict[str, str]
     ) -> ModalityToDataMapping:
         pass
 
     def get_random_sample(
         self,
         df_filter: Optional[pd.Series] = None
-    ) -> Tuple[ModalityToDataMapping, Dict[str, str]]:
+    ) -> tuple[ModalityToDataMapping, dict[str, str]]:
         """Returns a random sample from dataset
 
         Parameters
@@ -298,8 +298,8 @@ class DatasetProcessor(ABC):
     def _write_dataset(
         self,
         writer: ABSWriter,
-        columns_to_save: Optional[List[str]] = None,
-        dataloader_kwargs: Optional[Dict[str, Any]] = None,
+        columns_to_save: Optional[list[str]] = None,
+        dataloader_kwargs: Optional[dict[str, Any]] = None,
         pbar: bool = True
     ) -> None:
         columns_to_save = columns_to_save or []
@@ -344,8 +344,8 @@ class DatasetProcessor(ABC):
         max_files_in_shard: int = 1000,
         datafiles_ext: str = "csv",
         filenaming: str = "counter",
-        columns_to_save: Optional[List[str]] = None,
-        rename_columns: Optional[Dict[str, str]] = None,
+        columns_to_save: Optional[list[str]] = None,
+        rename_columns: Optional[dict[str, str]] = None,
         workers: int = 8,
         pbar: bool = True
     ) -> None:
@@ -398,8 +398,8 @@ class DatasetProcessor(ABC):
         datafiles_ext: str = "csv",
         archives_ext: str = "tar",
         filenaming: str = "counter",
-        columns_to_save: Optional[List[str]] = None,
-        rename_columns: Optional[Dict[str, str]] = None,
+        columns_to_save: Optional[list[str]] = None,
+        rename_columns: Optional[dict[str, str]] = None,
         workers: int = 8,
         pbar: bool = True
     ) -> None:

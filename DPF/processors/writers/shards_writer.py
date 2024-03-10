@@ -3,7 +3,7 @@ import os
 import tarfile
 import uuid
 from types import TracebackType
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Optional, Union
 
 import pandas as pd
 
@@ -23,7 +23,7 @@ class ShardsWriter(ABSWriter):
         self,
         filesystem: FileSystem,
         destination_dir: str,
-        keys_to_rename: Optional[Dict[str, str]] = None,
+        keys_to_rename: Optional[dict[str, str]] = None,
         max_files_in_shard: int = 1000,
         datafiles_ext: str = "csv",
         archives_ext: str = "tar",
@@ -38,15 +38,15 @@ class ShardsWriter(ABSWriter):
         self.filenaming = filenaming
         assert self.filenaming in ["counter", "uuid"], "Invalid files naming"
 
-        self.df_raw: List[Dict[str, Any]] = []
+        self.df_raw: list[dict[str, Any]] = []
         self.tar_bytes = io.BytesIO()
         self.tar: tarfile.TarFile = None  # type: ignore
         self.shard_index, self.last_file_index = self._init_writer_from_last_uploaded_file()
 
     def save_sample(
         self,
-        modality2sample_data: Dict[str, Tuple[str, bytes]],
-        table_data: Optional[Dict[str, str]] = None,
+        modality2sample_data: dict[str, tuple[str, bytes]],
+        table_data: Optional[dict[str, str]] = None,
     ) -> None:
         if table_data is None:
             table_data = {}
@@ -70,7 +70,7 @@ class ShardsWriter(ABSWriter):
     @staticmethod
     def _prepare_image_for_tar_format(
         file_bytes: bytes, filename: str
-    ) -> Tuple[tarfile.TarInfo, io.BytesIO]:
+    ) -> tuple[tarfile.TarInfo, io.BytesIO]:
         fp = io.BytesIO(file_bytes)
         img_tar_info = tarfile.TarInfo(name=filename)
         img_tar_info.size = len(fp.getvalue())
@@ -89,7 +89,7 @@ class ShardsWriter(ABSWriter):
             self._flush(self._calculate_current_tarname())
         self.last_file_index = 0
 
-    def _init_writer_from_last_uploaded_file(self) -> Tuple[int, int]:
+    def _init_writer_from_last_uploaded_file(self) -> tuple[int, int]:
         self.filesystem.mkdir(self.destination_dir)
         list_csv = [
             int(os.path.basename(filename[: -len(self.datafiles_ext)]))
@@ -164,7 +164,7 @@ class ShardsWriter(ABSWriter):
         self._flush_and_upload_datafile(tarname[:-4] + self.datafiles_ext)
         self._flush_and_upload_tar(tarname)
 
-    def _rearrange_cols(self, columns: List[str]) -> List[str]:
+    def _rearrange_cols(self, columns: list[str]) -> list[str]:
         cols_first = []
         for modality in MODALITIES.values():
             if modality.sharded_file_name_column:

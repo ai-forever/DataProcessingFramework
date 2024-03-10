@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional, Union
 
 import numpy as np
 import torch
@@ -32,7 +32,7 @@ class BlipFilter(T2IFilter):
 
     def __init__(
         self,
-        templates: Optional[List[str]] = None,
+        templates: Optional[list[str]] = None,
         device: str = "cuda:0",
         workers: int = 16,
         batch_size: int = 64,
@@ -53,11 +53,11 @@ class BlipFilter(T2IFilter):
         )
 
     @property
-    def schema(self) -> List[str]:
+    def schema(self) -> list[str]:
         return [self.key_column, "blip2_ViT-L_similarity"]
 
     @property
-    def dataloader_kwargs(self) -> Dict[str, Any]:
+    def dataloader_kwargs(self) -> dict[str, Any]:
         return {
             "num_workers": self.num_workers,
             "batch_size": self.batch_size,
@@ -67,7 +67,7 @@ class BlipFilter(T2IFilter):
     def preprocess_data(
         self,
         modality2data: ModalityToDataMapping,
-        metadata: Dict[str, Any]
+        metadata: dict[str, Any]
     ) -> Any:
         key = metadata[self.key_column]
         text = modality2data['text']
@@ -76,14 +76,14 @@ class BlipFilter(T2IFilter):
         text_tensor = self.txt_processors["eval"](text)
         return key, img_tensor, text_tensor
 
-    def process_batch(self, batch: List[Any]) -> Dict[str, List[Any]]:
+    def process_batch(self, batch: list[Any]) -> dict[str, list[Any]]:
         df_batch_labels = self._get_dict_from_schema()
 
-        image_tensors: List[torch.Tensor]
-        text_tensors: List[torch.Tensor]
+        image_tensors: list[torch.Tensor]
+        text_tensors: list[torch.Tensor]
         keys, image_tensors, text_tensors = list(zip(*batch))  # type: ignore
 
-        sample: Dict[str, Union[torch.Tensor, List[torch.Tensor]]] = {}
+        sample: dict[str, Union[torch.Tensor, list[torch.Tensor]]] = {}
         with torch.no_grad():
             image_tensors = [t.to(self.device) for t in image_tensors]
             sample['image'] = pad_sequence(image_tensors, batch_first=True)

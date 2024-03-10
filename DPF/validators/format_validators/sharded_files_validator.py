@@ -1,5 +1,4 @@
 import os
-from typing import List, Tuple
 
 import pandas as pd
 
@@ -22,16 +21,16 @@ class ShardedFilesValidator(ShardedValidator):
         merged_df: pd.DataFrame,
         filesystem: FileSystem,
         config: ShardedFilesDatasetConfig,
-        columns_to_check: List[str]
+        columns_to_check: list[str]
     ):
         super().__init__(merged_df, filesystem, config, columns_to_check)
 
-    def _validate_files(self, filepaths: List[str]) -> List[FileStructureErrorType]:
+    def _validate_files(self, filepaths: list[str]) -> list[FileStructureErrorType]:
         datafiles_ext = '.' + self.config.datafiles_ext.lstrip('.')
         datafiles_set = {f for f in filepaths if f.endswith(datafiles_ext)}
         folders_set = {f.rstrip('/') for f in filepaths if f not in datafiles_set}
 
-        errors: List[FileStructureErrorType] = []
+        errors: list[FileStructureErrorType] = []
         for datafile in datafiles_set:
             folder_path = datafile.replace(datafiles_ext, '')
             if folder_path not in folders_set:
@@ -47,9 +46,9 @@ class ShardedFilesValidator(ShardedValidator):
         self,
         dataframe_path: str,
         df: pd.DataFrame
-    ) -> Tuple[List[FileStructureErrorType], List[DataFrameErrorType]]:
-        errors: List[FileStructureErrorType] = []
-        errors_df: List[DataFrameErrorType] = []
+    ) -> tuple[list[FileStructureErrorType], list[DataFrameErrorType]]:
+        errors: list[FileStructureErrorType] = []
+        errors_df: list[DataFrameErrorType] = []
         folder_path = dataframe_path.replace('.'+self.config.datafiles_ext.lstrip('.'), '')
 
         filenames_in_folder_set = set(self.filesystem.listdir(folder_path, filenames_only=True))

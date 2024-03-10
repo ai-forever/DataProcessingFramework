@@ -1,5 +1,4 @@
 from abc import ABC
-from typing import List
 
 from DPF.filters.data_filter import DataFilter
 from DPF.modalities import MODALITIES, ModalityName
@@ -12,7 +11,7 @@ class VideoFilter(DataFilter, ABC):
     """
 
     @property
-    def modalities(self) -> List[ModalityName]:
+    def modalities(self) -> list[ModalityName]:
         return ['video']
 
     @property
@@ -20,5 +19,5 @@ class VideoFilter(DataFilter, ABC):
         return MODALITIES['video'].path_column
 
     @property
-    def metadata_columns(self) -> List[str]:
+    def metadata_columns(self) -> list[str]:
         return []

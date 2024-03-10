@@ -1,6 +1,6 @@
 import io
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import imageio.v3 as iio
 
@@ -19,7 +19,7 @@ class VideoInfo:
     error: Optional[str]
 
 
-def get_video_info(video_bytes: bytes, data: Dict[str, Any], key_column: str) -> VideoInfo:
+def get_video_info(video_bytes: bytes, data: dict[str, Any], key_column: str) -> VideoInfo:
     """
     Get image path, read status, width, height, num channels, read error
     """
@@ -52,14 +52,14 @@ class VideoInfoFilter(VideoFilter):
         self.num_workers = workers
 
     @property
-    def schema(self) -> List[str]:
+    def schema(self) -> list[str]:
         return [
             self.key_column, "is_correct", "error",
             "width", "height", "fps", "duration"
         ]
 
     @property
-    def dataloader_kwargs(self) -> Dict[str, Any]:
+    def dataloader_kwargs(self) -> dict[str, Any]:
         return {
             "num_workers": self.num_workers,
             "batch_size": 1,
@@ -69,11 +69,11 @@ class VideoInfoFilter(VideoFilter):
     def preprocess_data(
         self,
         modality2data: ModalityToDataMapping,
-        metadata: Dict[str, Any]
+        metadata: dict[str, Any]
     ) -> Any:
         return get_video_info(modality2data['video'], metadata, self.key_column)
 
-    def process_batch(self, batch: List[Any]) -> Dict[str, List[Any]]:
+    def process_batch(self, batch: list[Any]) -> dict[str, list[Any]]:
         df_batch_labels = self._get_dict_from_schema()
 
         for video_info in batch:

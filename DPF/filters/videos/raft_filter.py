@@ -1,5 +1,5 @@
 import io
-from typing import Any, Dict, List, Tuple
+from typing import Any
 from urllib.request import urlopen
 from zipfile import ZipFile
 
@@ -18,7 +18,7 @@ from .video_filter import VideoFilter
 WEIGHTS_URL = 'https://dl.dropboxusercontent.com/s/4j4z58wuv8o0mfz/models.zip'
 
 
-def transform_frame(frame: MatLike, target_size: Tuple[int, int]) -> Tensor:
+def transform_frame(frame: MatLike, target_size: tuple[int, int]) -> Tensor:
     frame = cv2.resize(frame, dsize=(target_size[0], target_size[1]), interpolation=cv2.INTER_LINEAR)
     frame_tensor = torch.from_numpy(frame).permute(2, 0, 1).float()[None]
 
@@ -30,7 +30,7 @@ def transform_frame(frame: MatLike, target_size: Tuple[int, int]) -> Tensor:
 class InputPadder:
     """ Pads images such that dimensions are divisible by 8 """
 
-    def __init__(self, dims: List[int], mode: str = 'sintel'):
+    def __init__(self, dims: list[int], mode: str = 'sintel'):
         self.ht, self.wd = dims[-2:]
         pad_ht = (((self.ht // 8) + 1) * 8 - self.ht) % 8
         pad_wd = (((self.wd // 8) + 1) * 8 - self.wd) % 8
@@ -41,7 +41,7 @@ class InputPadder:
             self._pad = [pad_wd // 2, pad_wd - pad_wd // 2,
                          0, pad_ht]
 
-    def pad(self, *inputs) -> List[Tensor]:  # type: ignore
+    def pad(self, *inputs) -> list[Tensor]:  # type: ignore
         return [F.pad(x, self._pad, mode='replicate') for x in inputs]
 
     def unpad(self, x: Tensor) -> Tensor:
@@ -93,14 +93,14 @@ class RAFTOpticalFlowFilter(VideoFilter):
         self.model.eval()
 
     @property
-    def schema(self) -> List[str]:
+    def schema(self) -> list[str]:
         return [
             self.key_column,
             "mean_optical_flow_raft"
         ]
 
     @property
-    def dataloader_kwargs(self) -> Dict[str, Any]:
+    def dataloader_kwargs(self) -> dict[str, Any]:
         return {
             "num_workers": self.num_workers,
             "batch_size": self.batch_size,
@@ -110,7 +110,7 @@ class RAFTOpticalFlowFilter(VideoFilter):
     def preprocess_data(
         self,
         modality2data: ModalityToDataMapping,
-        metadata: Dict[str, Any]
+        metadata: dict[str, Any]
     ) -> Any:
         key = metadata[self.key_column]
         video_file = modality2data['video']
@@ -134,7 +134,7 @@ class RAFTOpticalFlowFilter(VideoFilter):
             ]
         return key, frames_resized
 
-    def process_batch(self, batch: List[Any]) -> Dict[str, List[Any]]:
+    def process_batch(self, batch: list[Any]) -> dict[str, list[Any]]:
         df_batch_labels = self._get_dict_from_schema()
 
         mean_magnitudes = []

@@ -1,5 +1,5 @@
 import os
-from typing import Dict, List, Optional, Union
+from typing import Optional, Union
 
 from DPF.datatypes import ColumnDataType, DataType, FileDataType
 from DPF.modalities import MODALITIES, ModalityName
@@ -12,7 +12,7 @@ class FilesDatasetConfig(DatasetConfig):
     def __init__(
         self,
         path: str,
-        datatypes: List[Union[FileDataType, ColumnDataType]],
+        datatypes: list[Union[FileDataType, ColumnDataType]],
     ):
         super().__init__(path)
         self.table_path = path
@@ -26,15 +26,15 @@ class FilesDatasetConfig(DatasetConfig):
             assert isinstance(data, (ColumnDataType, FileDataType))
 
     @property
-    def datatypes(self) -> List[DataType]:
+    def datatypes(self) -> list[DataType]:
         return self._datatypes  # type: ignore
 
     @property
-    def modality2datatype(self) -> Dict[ModalityName, DataType]:
+    def modality2datatype(self) -> dict[ModalityName, DataType]:
         return self._modality2datatype  # type: ignore
 
     @property
-    def user_column2default_column(self) -> Dict[str, str]:
+    def user_column2default_column(self) -> dict[str, str]:
         mapping = {}
         for data in self.datatypes:
             if isinstance(data, ColumnDataType):
@@ -51,7 +51,7 @@ class FilesDatasetConfig(DatasetConfig):
         video_path_col: Optional[str] = None,
         caption_col: Optional[str] = None,
     ) -> "FilesDatasetConfig":
-        datatypes: List[Union[FileDataType, ColumnDataType]] = []
+        datatypes: list[Union[FileDataType, ColumnDataType]] = []
         if image_path_col:
             datatypes.append(FileDataType(MODALITIES['image'], image_path_col))
         if video_path_col:

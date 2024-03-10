@@ -1,6 +1,5 @@
 import os
 from abc import ABC, abstractmethod
-from typing import Dict, List
 
 import pandas as pd
 
@@ -30,7 +29,7 @@ class ShardedDatasetProcessor(DatasetProcessor, ABC):
     def get_datafile_path(self, split_name: str) -> str:
         return self.config.path+'/'+split_name+'.'+self.config.datafiles_ext  # type: ignore
 
-    def rename_columns(self, column_map: Dict[str, str], workers: int = 16) -> List[str]:
+    def rename_columns(self, column_map: dict[str, str], workers: int = 16) -> list[str]:
         splits = self.df['split_name'].unique().tolist()
         datafile_paths = [self.get_datafile_path(split) for split in splits]
 
@@ -41,7 +40,7 @@ class ShardedDatasetProcessor(DatasetProcessor, ABC):
         self._df.rename(columns=column_map, inplace=True)
         return errors
 
-    def delete_columns(self, columns: List[str], workers: int = 16) -> List[str]:
+    def delete_columns(self, columns: list[str], workers: int = 16) -> list[str]:
         for col in columns:
             assert col not in self.config.user_column2default_column.keys(), \
                 f'Column "{col}" is required column for "{self.config.user_column2default_column[col]}"'
@@ -56,7 +55,7 @@ class ShardedDatasetProcessor(DatasetProcessor, ABC):
         self._df.drop(columns=columns, inplace=True)
         return errors
 
-    def update_columns(self, columns: List[str], workers: int = 16) -> List[str]:
+    def update_columns(self, columns: list[str], workers: int = 16) -> list[str]:
         key_column = None
         path_column = None
         for d in self.config.datatypes:

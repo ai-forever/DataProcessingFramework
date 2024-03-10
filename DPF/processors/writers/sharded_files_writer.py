@@ -1,7 +1,7 @@
 import os
 import uuid
 from types import TracebackType
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Optional, Union
 
 import pandas as pd
 
@@ -21,7 +21,7 @@ class ShardedFilesWriter(ABSWriter):
         self,
         filesystem: FileSystem,
         destination_dir: str,
-        keys_mapping: Optional[Dict[str, str]] = None,
+        keys_mapping: Optional[dict[str, str]] = None,
         max_files_in_shard: int = 1000,
         datafiles_ext: str = "csv",
         filenaming: str = "counter"
@@ -34,14 +34,14 @@ class ShardedFilesWriter(ABSWriter):
         self.filenaming = filenaming
         assert self.filenaming in ["counter", "uuid"], "Invalid files naming"
 
-        self.df_raw: List[Dict[str, Any]] = []
+        self.df_raw: list[dict[str, Any]] = []
         self.shard_index, self.last_file_index = self._init_writer_from_last_uploaded_file()
         self.last_path_to_dir: str = None  # type: ignore
 
     def save_sample(
         self,
-        modality2sample_data: Dict[str, Tuple[str, bytes]],
-        table_data: Optional[Dict[str, str]] = None,
+        modality2sample_data: dict[str, tuple[str, bytes]],
+        table_data: Optional[dict[str, str]] = None,
     ) -> None:
         if table_data is None:
             table_data = {}
@@ -79,7 +79,7 @@ class ShardedFilesWriter(ABSWriter):
             self._flush(self._calculate_current_dirname())
         self.last_file_index = 0
 
-    def _init_writer_from_last_uploaded_file(self) -> Tuple[int, int]:
+    def _init_writer_from_last_uploaded_file(self) -> tuple[int, int]:
         self.filesystem.mkdir(self.destination_dir)
         list_dirs = [
             int(os.path.basename(filename[: -len(self.datafiles_ext)]))
@@ -142,7 +142,7 @@ class ShardedFilesWriter(ABSWriter):
             self.filesystem.save_dataframe(df_to_save, path_to_csv_file, index=False)
         self.df_raw = []
 
-    def _rearrange_cols(self, columns: List[str]) -> List[str]:
+    def _rearrange_cols(self, columns: list[str]) -> list[str]:
         cols_first = []
         for modality in MODALITIES.values():
             if modality.sharded_file_name_column:

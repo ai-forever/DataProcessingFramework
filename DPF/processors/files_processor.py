@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Optional
 
 import pandas as pd
 
@@ -28,7 +28,7 @@ class FilesDatasetProcessor(DatasetProcessor, ApplyTransformProcessorMixin):
     ):
         super().__init__(filesystem, df, config)
 
-    def rename_columns(self, column_map: Dict[str, str], workers: int = 1) -> List[str]:
+    def rename_columns(self, column_map: dict[str, str], workers: int = 1) -> list[str]:
         df = self.filesystem.read_dataframe(self.config.table_path)
         for col_old, col_new in column_map.items():
             assert col_old in df.columns, f'Dataframe dont have "{col_old}" column'
@@ -39,7 +39,7 @@ class FilesDatasetProcessor(DatasetProcessor, ApplyTransformProcessorMixin):
         self._df.rename(columns=column_map, inplace=True)
         return []
 
-    def delete_columns(self, columns: List[str], workers: int = 1) -> List[str]:
+    def delete_columns(self, columns: list[str], workers: int = 1) -> list[str]:
         df = self.filesystem.read_dataframe(self.config.table_path)
         for col in columns:
             assert col in df.columns, f'Dataframe dont have "{col}" column'
@@ -49,7 +49,7 @@ class FilesDatasetProcessor(DatasetProcessor, ApplyTransformProcessorMixin):
         self._df.drop(columns=columns, inplace=True)
         return []
 
-    def update_columns(self, columns: List[str], workers: int = 1) -> List[str]:
+    def update_columns(self, columns: list[str], workers: int = 1) -> list[str]:
         key_column = None
         for d in self.config.datatypes:
             if isinstance(d, FileDataType):
@@ -87,7 +87,7 @@ class FilesDatasetProcessor(DatasetProcessor, ApplyTransformProcessorMixin):
         self,
         validate_filestructure: bool = True,
         validate_metadata: bool = True,
-        columns_to_check: Optional[List[str]] = None,
+        columns_to_check: Optional[list[str]] = None,
         workers: int = 1,
         pbar: bool = True
     ) -> ValidationResult:
@@ -108,9 +108,9 @@ class FilesDatasetProcessor(DatasetProcessor, ApplyTransformProcessorMixin):
 
     def _get_torch_dataset(
         self,
-        modalities: List[ModalityName],
-        columns_to_use: Optional[List[str]] = None,
-        preprocess_f: Callable[[ModalityToDataMapping, Dict[str, str]], Any] = identical_preprocess_function,
+        modalities: list[ModalityName],
+        columns_to_use: Optional[list[str]] = None,
+        preprocess_f: Callable[[ModalityToDataMapping, dict[str, str]], Any] = identical_preprocess_function,
         return_none_on_error: bool = False
     ) -> FilesDataset:
         assert len(set(modalities)) == len(list(modalities))
@@ -126,10 +126,10 @@ class FilesDatasetProcessor(DatasetProcessor, ApplyTransformProcessorMixin):
 
     def _read_sample_data(
         self,
-        sample: Dict[str, str]
+        sample: dict[str, str]
     ) -> ModalityToDataMapping:
-        path_column2modality: Dict[str, ModalityName] = {}
-        column2modality: Dict[str, ModalityName] = {}
+        path_column2modality: dict[str, ModalityName] = {}
+        column2modality: dict[str, ModalityName] = {}
         for d in self.config.datatypes:
             if isinstance(d, ColumnDataType):
                 column2modality[d.column_name] = d.modality.name

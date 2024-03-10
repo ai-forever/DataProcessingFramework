@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from typing import Dict, List
 
 from DPF.datatypes import DataType
 from DPF.modalities import ModalityName
@@ -14,25 +13,25 @@ class DatasetConfig(ABC):
 
     @property
     @abstractmethod
-    def datatypes(self) -> List[DataType]:
+    def datatypes(self) -> list[DataType]:
         pass
 
     @property
     @abstractmethod
-    def modality2datatype(self) -> Dict[ModalityName, DataType]:
+    def modality2datatype(self) -> dict[ModalityName, DataType]:
         pass
 
     @property
     @abstractmethod
-    def user_column2default_column(self) -> Dict[str, str]:
+    def user_column2default_column(self) -> dict[str, str]:
         pass
 
     @property
-    def user_column_names(self) -> List[str]:
+    def user_column_names(self) -> list[str]:
         return list(self.user_column2default_column.keys())
 
     @property
-    def user_columns_to_rename(self) -> Dict[str, str]:
+    def user_columns_to_rename(self) -> dict[str, str]:
         columns_to_rename = {}
         for k, v in self.user_column2default_column.items():
             if k != v:

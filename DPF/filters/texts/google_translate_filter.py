@@ -1,5 +1,5 @@
 import time
-from typing import Any, Dict, List
+from typing import Any
 
 import pandas as pd
 from deep_translator import GoogleTranslator
@@ -9,10 +9,10 @@ from tqdm import tqdm
 from DPF.filters import ColumnFilter
 
 
-def split_on_batches(text_list: List[str], max_symbols: int = 3000) -> List[List[str]]:
+def split_on_batches(text_list: list[str], max_symbols: int = 3000) -> list[list[str]]:
     batches = []
     count = 0
-    batch: List[str] = []
+    batch: list[str] = []
     for _, text in enumerate(text_list):
         if len(text) >= max_symbols:
             if len(batch) > 0:
@@ -34,7 +34,7 @@ def split_on_batches(text_list: List[str], max_symbols: int = 3000) -> List[List
     return batches
 
 
-def translate_batch(translator: BaseTranslator, batch: List[str], delimiter: str = '\n\n') -> Dict[str, str]:
+def translate_batch(translator: BaseTranslator, batch: list[str], delimiter: str = '\n\n') -> dict[str, str]:
     res = translator.translate(delimiter.join(batch)).split(delimiter)
     assert len(batch) == len(res)
     return {batch[i]: res[i] for i in range(len(res))}
@@ -65,17 +65,17 @@ class GoogleTranslateFilter(ColumnFilter):
         self.translator = GoogleTranslator(source=source_lang, target=target_lang)
 
     @property
-    def columns_to_process(self) -> List[str]:
+    def columns_to_process(self) -> list[str]:
         return [self.text_column_name]
 
     @property
-    def schema(self) -> List[str]:
+    def schema(self) -> list[str]:
         return [f"{self.text_column_name}_translated"]
 
-    def process_sample(self, sample: Dict[str, Any]) -> List[Any]:
+    def process_sample(self, sample: dict[str, Any]) -> list[Any]:
         return []
 
-    def __call__(self, df: pd.DataFrame) -> List[List[Any]]:
+    def __call__(self, df: pd.DataFrame) -> list[list[Any]]:
         texts_to_translate = list(set(df[self.columns_to_process[0]].tolist()))
         batches = split_on_batches(
             list(texts_to_translate),

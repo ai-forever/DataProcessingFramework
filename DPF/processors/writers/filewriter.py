@@ -1,14 +1,14 @@
 from abc import abstractmethod
 from types import TracebackType
-from typing import Dict, Optional, Tuple, Union
+from typing import Optional, Union
 
 
 class ABSWriter:
     @abstractmethod
     def save_sample(
         self,
-        modality2sample_data: Dict[str, Tuple[str, bytes]],
-        table_data: Optional[Dict[str, str]] = None,
+        modality2sample_data: dict[str, tuple[str, bytes]],
+        table_data: Optional[dict[str, str]] = None,
     ) -> None:
         pass
 

@@ -1,6 +1,7 @@
 import io
 import os
-from typing import Iterable, List, Optional, Tuple, Union
+from collections.abc import Iterable
+from typing import Optional, Union
 
 import fsspec
 
@@ -51,10 +52,10 @@ class S3FileSystem(FileSystem):
 
     def listdir(
         self, folder_path: str, filenames_only: Optional[bool] = False
-    ) -> List[str]:
+    ) -> list[str]:
         folder_path = folder_path.lstrip("s3://").rstrip("/") + "/"  # noqa
         s3 = fsspec.filesystem("s3", **self.storage_options)
-        files: List[str] = s3.ls(folder_path)
+        files: list[str] = s3.ls(folder_path)
         if folder_path in files:
             files.remove(folder_path)  # remove parent dir
         if filenames_only:
@@ -63,7 +64,7 @@ class S3FileSystem(FileSystem):
             files = ["s3://" + f for f in files]
         return files
 
-    def listdir_meta(self, folder_path: str) -> List[FileData]:
+    def listdir_meta(self, folder_path: str) -> list[FileData]:
         folder_path = folder_path.lstrip("s3://").rstrip("/") + "/"  # noqa
         s3 = fsspec.filesystem("s3", **self.storage_options)
         files_data = s3.ls(folder_path, detail=True)
@@ -88,7 +89,7 @@ class S3FileSystem(FileSystem):
         # but it's ok because directories being created automatically when upload files
         s3.makedirs(folder_path, exist_ok=True)
 
-    def walk(self, folder_path: str) -> Iterable[Tuple[str, List[str], List[str]]]:
+    def walk(self, folder_path: str) -> Iterable[tuple[str, list[str], list[str]]]:
         fs = fsspec.filesystem("s3", **self.storage_options)
 
         yield from fs.walk(folder_path)

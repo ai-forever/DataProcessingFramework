@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import Optional
 
 import pandas as pd
 
@@ -7,9 +7,9 @@ from DPF.filesystems import FileSystem
 
 def read_and_validate_df(
     filesystem: FileSystem,
-    required_columns: Optional[List[str]],
+    required_columns: Optional[list[str]],
     path: str
-) -> Tuple[str, pd.DataFrame]:
+) -> tuple[str, pd.DataFrame]:
     df = filesystem.read_dataframe(path)
 
     if required_columns:

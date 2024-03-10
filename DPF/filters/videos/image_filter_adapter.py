@@ -1,5 +1,5 @@
 import io
-from typing import Any, Dict, List
+from typing import Any
 
 import imageio.v3 as iio
 from PIL import Image
@@ -29,14 +29,14 @@ class ImageFilterAdapter(VideoFilter):
         self.num_workers = workers
 
     @property
-    def schema(self) -> List[str]:
+    def schema(self) -> list[str]:
         return [
             self.key_column,
             *self.image_filter.schema[1:]
         ]
 
     @property
-    def dataloader_kwargs(self) -> Dict[str, Any]:
+    def dataloader_kwargs(self) -> dict[str, Any]:
         return {
             "num_workers": self.num_workers,
             "batch_size": 1,
@@ -46,7 +46,7 @@ class ImageFilterAdapter(VideoFilter):
     def preprocess_data(
         self,
         modality2data: ModalityToDataMapping,
-        metadata: Dict[str, Any]
+        metadata: dict[str, Any]
     ) -> Any:
         key = metadata[self.key_column]
 
@@ -64,7 +64,7 @@ class ImageFilterAdapter(VideoFilter):
         metadata[self.image_filter.key_column] = ''
         return key, self.image_filter.preprocess_data(modality2data, metadata)
 
-    def process_batch(self, batch: List[Any]) -> Dict[str, List[Any]]:
+    def process_batch(self, batch: list[Any]) -> dict[str, list[Any]]:
         df_batch_labels = self._get_dict_from_schema()
 
         for key, data in batch:

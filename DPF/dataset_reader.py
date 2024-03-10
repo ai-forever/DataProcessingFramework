@@ -1,5 +1,5 @@
 from functools import partial
-from typing import List, Optional, Tuple, Type, Union
+from typing import Optional, Union
 
 import pandas as pd
 from tqdm.contrib.concurrent import process_map
@@ -39,19 +39,19 @@ class DatasetReader:
 
     def _read_and_validate_dataframes(
         self,
-        datafiles: List[str],
+        datafiles: list[str],
         config: DatasetConfig,
         validate_columns: bool = True,
         processes: int = 1,
         progress_bar: bool = False,
-    ) -> List[Tuple[str, pd.DataFrame]]:
+    ) -> list[tuple[str, pd.DataFrame]]:
         if len(datafiles) == 0:
             raise ValueError("No datafiles in this path")
 
         required_columns = config.user_column_names if validate_columns else None
 
         worker_co = partial(read_and_validate_df, self.filesystem, required_columns)
-        paths_dataframes: List[Tuple[str, pd.DataFrame]] = process_map(
+        paths_dataframes: list[tuple[str, pd.DataFrame]] = process_map(
             worker_co, datafiles,
             max_workers=processes,
             chunksize=1,
@@ -65,7 +65,7 @@ class DatasetReader:
     @staticmethod
     def _validate_dataframes_columns(
         config: DatasetConfig,
-        paths_dataframes: List[Tuple[str, pd.DataFrame]],
+        paths_dataframes: list[tuple[str, pd.DataFrame]],
     ) -> None:
         required_columns = config.user_column_names
 
@@ -117,7 +117,7 @@ class DatasetReader:
         return df[columns]
 
     @staticmethod
-    def _merge_sharded_dataframes(paths_dataframes: List[Tuple[str, pd.DataFrame]]) -> pd.DataFrame:
+    def _merge_sharded_dataframes(paths_dataframes: list[tuple[str, pd.DataFrame]]) -> pd.DataFrame:
         for path, df in paths_dataframes:
             df_name = get_path_filename(path)
             df.insert(loc=1, column='split_name', value=df_name)
@@ -127,7 +127,7 @@ class DatasetReader:
         self,
         split_suffix: str,
         config: Union[ShardedFilesDatasetConfig, ShardsDatasetConfig],
-        paths_dataframes: List[Tuple[str, pd.DataFrame]]
+        paths_dataframes: list[tuple[str, pd.DataFrame]]
     ) -> pd.DataFrame:
         df = self._merge_sharded_dataframes(paths_dataframes)
 
@@ -333,7 +333,7 @@ class DatasetReader:
         DatasetProcessor
             Instance of DatasetProcessor dataset
         """
-        processor_class: Type[DatasetProcessor]
+        processor_class: type[DatasetProcessor]
         if isinstance(config, ShardsDatasetConfig):
             processor_class = ShardsDatasetProcessor
         elif isinstance(config, ShardedFilesDatasetConfig):

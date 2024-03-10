@@ -1,6 +1,6 @@
-from typing import Any, Dict, Union
+from typing import Any, Union
 
 from DPF.modalities import ModalityName
 
 # for data with different modalities
-ModalityToDataMapping = Dict[ModalityName, Union[bytes, Any]]
+ModalityToDataMapping = dict[ModalityName, Union[bytes, Any]]

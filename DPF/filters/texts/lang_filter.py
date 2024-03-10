@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any
 
 from py3langid.langid import MODEL_FILE, LanguageIdentifier
 
@@ -18,13 +18,13 @@ class LangFilter(ColumnFilter):
         self.text_column_name = text_column_name
 
     @property
-    def columns_to_process(self) -> List[str]:
+    def columns_to_process(self) -> list[str]:
         return [self.text_column_name]
 
     @property
-    def schema(self) -> List[str]:
+    def schema(self) -> list[str]:
         return ["lang", "lang_score"]
 
-    def process_sample(self, sample: Dict[str, Any]) -> List[Any]:
+    def process_sample(self, sample: dict[str, Any]) -> list[Any]:
         lg, score = self.lang_identifier.classify(sample[self.text_column_name])
         return [lg, round(score, 2)]

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 import pandas as pd
 from torch.utils.data import DataLoader, Dataset
@@ -22,19 +22,19 @@ class DataFilter(ABC):
 
     @property
     @abstractmethod
-    def schema(self) -> List[str]:
+    def schema(self) -> list[str]:
         """List of result columns that filter adds to a DataFrame"""
         pass
 
     @property
     @abstractmethod
-    def dataloader_kwargs(self) -> Dict[str, Any]:
+    def dataloader_kwargs(self) -> dict[str, Any]:
         """Parameters for dataloader"""
         pass
 
     @property
     @abstractmethod
-    def modalities(self) -> List[ModalityName]:
+    def modalities(self) -> list[ModalityName]:
         """List of modalities used in filter. For example, ["image"] or ["video", "text"]."""
         pass
 
@@ -46,7 +46,7 @@ class DataFilter(ABC):
 
     @property
     @abstractmethod
-    def metadata_columns(self) -> List[str]:
+    def metadata_columns(self) -> list[str]:
         """Additional column names needed by filter (will be passed to preprocess method)"""
         pass
 
@@ -54,26 +54,26 @@ class DataFilter(ABC):
     def preprocess_data(
         self,
         modality2data: ModalityToDataMapping,
-        metadata: Dict[str, Any]
+        metadata: dict[str, Any]
     ) -> Any:
         pass
 
     @abstractmethod
-    def process_batch(self, batch: List[Any]) -> Dict[str, List[Any]]:
+    def process_batch(self, batch: list[Any]) -> dict[str, list[Any]]:
         pass
 
     @staticmethod
     def _add_values_from_batch(
-        main_dict: Dict[str, List[Any]],
-        batch_dict: Dict[str, List[Any]]
+        main_dict: dict[str, list[Any]],
+        batch_dict: dict[str, list[Any]]
     ) -> None:
         for k, v in batch_dict.items():
             main_dict[k].extend(v)
 
-    def _get_dict_from_schema(self) -> Dict[str, List[Any]]:
+    def _get_dict_from_schema(self) -> dict[str, list[Any]]:
         return {i: [] for i in self.schema}
 
-    def run(self, dataset: Dataset[Tuple[bool, Any]]) -> pd.DataFrame:
+    def run(self, dataset: Dataset[tuple[bool, Any]]) -> pd.DataFrame:
         dataloader = DataLoader(dataset, collate_fn=identical_collate_fn, **self.dataloader_kwargs)
         filter_results = self._get_dict_from_schema()
 

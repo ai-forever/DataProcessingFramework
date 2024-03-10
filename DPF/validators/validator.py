@@ -1,14 +1,13 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Dict, List
 
 from DPF.validators.errors import DataFrameErrorType, FileStructureErrorType
 
 
 @dataclass
 class ValidationResult:
-    filestructure_errors: List[FileStructureErrorType]
-    metadata_errors: Dict[str, List[DataFrameErrorType]]
+    filestructure_errors: list[FileStructureErrorType]
+    metadata_errors: dict[str, list[DataFrameErrorType]]
 
     def __repr__(self) -> str:
         s = f"{self.__class__.__name__}:"

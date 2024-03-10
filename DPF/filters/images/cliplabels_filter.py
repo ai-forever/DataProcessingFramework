@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import clip
 import torch
@@ -43,10 +43,10 @@ class CLIPLabelsFilter(ImageFilter):
     def __init__(
         self,
         clip_model: str,
-        labels: List[str],
+        labels: list[str],
         weights_folder: str,
         device: str = "cuda:0",
-        templates: Optional[List[str]] = None,
+        templates: Optional[list[str]] = None,
         workers: int = 16,
         batch_size: int = 64,
         pbar: bool = True,
@@ -76,11 +76,11 @@ class CLIPLabelsFilter(ImageFilter):
         }
 
     @property
-    def schema(self) -> List[str]:
+    def schema(self) -> list[str]:
         return [self.key_column] + [self.label2column[label] for label in self.labels]
 
     @property
-    def dataloader_kwargs(self) -> Dict[str, Any]:
+    def dataloader_kwargs(self) -> dict[str, Any]:
         return {
             "num_workers": self.num_workers,
             "batch_size": self.batch_size,
@@ -102,7 +102,7 @@ class CLIPLabelsFilter(ImageFilter):
     def preprocess_data(
         self,
         modality2data: ModalityToDataMapping,
-        metadata: Dict[str, Any]
+        metadata: dict[str, Any]
     ) -> Any:
         key = metadata[self.key_column]
         pil_img = read_image_rgb_from_bytes(modality2data['image'])
@@ -110,7 +110,7 @@ class CLIPLabelsFilter(ImageFilter):
         img_tensor = self.clip_processor(pil_img)
         return key, img_tensor
 
-    def process_batch(self, batch: List[Any]) -> Dict[str, List[Any]]:
+    def process_batch(self, batch: list[Any]) -> dict[str, list[Any]]:
         df_batch_labels = self._get_dict_from_schema()
 
         keys, image_tensors = list(zip(*batch))

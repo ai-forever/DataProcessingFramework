@@ -1,5 +1,5 @@
 from io import BytesIO
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import torch
 from videollava.constants import DEFAULT_IMAGE_TOKEN, IMAGE_TOKEN_INDEX
@@ -91,11 +91,11 @@ class VideoLLaVAFilter(VideoFilter):
         self.stopping_criteria = KeywordsStoppingCriteria(keywords, self.tokenizer, self.input_ids)
 
     @property
-    def schema(self) -> List[str]:
+    def schema(self) -> list[str]:
         return [self.key_column, f"caption {self.model_name} prompt {self.prompt_to_use}"]
 
     @property
-    def dataloader_kwargs(self) -> Dict[str, Any]:
+    def dataloader_kwargs(self) -> dict[str, Any]:
         return {
             "num_workers": self.num_workers,
             "batch_size": self.batch_size,
@@ -105,14 +105,14 @@ class VideoLLaVAFilter(VideoFilter):
     def preprocess_data(
         self,
         modality2data: ModalityToDataMapping,
-        metadata: Dict[str, Any]
+        metadata: dict[str, Any]
     ) -> Any:
         key = metadata[self.key_column]
         video_file = BytesIO(modality2data['video'])
         video_file = self.video_processor(video_file, return_tensors='pt')['pixel_values'][0].half()
         return key, video_file
 
-    def process_batch(self, batch: List[Any]) -> Dict[str, List[Any]]:
+    def process_batch(self, batch: list[Any]) -> dict[str, list[Any]]:
         df_batch_labels = self._get_dict_from_schema()
 
         keys, video_tensors = list(zip(*batch))

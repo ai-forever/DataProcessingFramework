@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any
 
 import numpy as np
 from CRAFT import CRAFTModel, boxes_area, preprocess_image
@@ -30,11 +30,11 @@ class CRAFTFilter(ImageFilter):
         self.model = CRAFTModel(weights_folder, device, use_refiner=False, fp16=True)
 
     @property
-    def schema(self) -> List[str]:
+    def schema(self) -> list[str]:
         return [self.key_column, "text_boxes", "num_text_boxes", "text_area"]
 
     @property
-    def dataloader_kwargs(self) -> Dict[str, Any]:
+    def dataloader_kwargs(self) -> dict[str, Any]:
         return {
             "num_workers": self.num_workers,
             "batch_size": self.batch_size,
@@ -44,14 +44,14 @@ class CRAFTFilter(ImageFilter):
     def preprocess_data(
         self,
         modality2data: ModalityToDataMapping,
-        metadata: Dict[str, Any]
+        metadata: dict[str, Any]
     ) -> Any:
         key = metadata[self.key_column]
         pil_img = read_image_rgb_from_bytes(modality2data['image'])
         img_tensor, ratio_w, ratio_h = preprocess_image(np.array(pil_img), self.model.canvas_size, self.model.mag_ratio)
         return key, img_tensor, ratio_w, ratio_h, pil_img.size
 
-    def process_batch(self, batch: List[Any]) -> Dict[str, List[Any]]:
+    def process_batch(self, batch: list[Any]) -> dict[str, list[Any]]:
         df_batch_labels = self._get_dict_from_schema()
 
         key, img_tensor, ratio_w, ratio_h, orig_size = batch[0]

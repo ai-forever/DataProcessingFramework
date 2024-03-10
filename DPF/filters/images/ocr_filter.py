@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import torch
 
@@ -77,11 +77,11 @@ class OCRFilter(ImageFilter):
         self.ocr_col = f"OCR_{self.model_name}"
 
     @property
-    def schema(self) -> List[str]:
+    def schema(self) -> list[str]:
         return ["image_path", self.ocr_col]
 
     @property
-    def dataloader_kwargs(self) -> Dict[str, Any]:
+    def dataloader_kwargs(self) -> dict[str, Any]:
         return {
             "num_workers": self.num_workers,
             "batch_size": self.batch_size,
@@ -93,14 +93,14 @@ class OCRFilter(ImageFilter):
     def preprocess_data(
         self,
         modality2data: ModalityToDataMapping,
-        metadata: Dict[str, Any]
+        metadata: dict[str, Any]
     ) -> Any:
         image_path = metadata["image_path"]
         boxes = json.loads(metadata[self.text_box_col])
         pil_img = read_image_rgb_from_bytes(modality2data['image']).convert('L')
         return image_path, pil_img, boxes
 
-    def process_batch(self, batch: List[Any]) -> Dict[str, List[Any]]:
+    def process_batch(self, batch: list[Any]) -> dict[str, list[Any]]:
         df_batch_labels = self._get_dict_from_schema()
         image_path, pil_img, boxes = batch[0]
         w, h = pil_img.size

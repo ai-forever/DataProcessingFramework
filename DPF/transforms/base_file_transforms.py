@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Any, Dict, Iterable, List, Literal, Optional
+from typing import Any, Literal, Optional
 
 from tqdm.contrib.concurrent import process_map, thread_map
 
@@ -10,7 +11,7 @@ PoolOptions = Literal['processes', 'threads']
 @dataclass
 class TransformsFileData:
     filepath: str
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
 
 
 class BaseFilesTransforms(ABC):
@@ -33,19 +34,19 @@ class BaseFilesTransforms(ABC):
 
     @property
     @abstractmethod
-    def required_metadata(self) -> List[str]:
+    def required_metadata(self) -> list[str]:
         pass
 
     @property
     @abstractmethod
-    def metadata_to_change(self) -> List[str]:
+    def metadata_to_change(self) -> list[str]:
         pass
 
     @abstractmethod
     def _process_filepath(self, data: TransformsFileData) -> TransformsFileData:
         pass
 
-    def run(self, paths: List[str], metadata_lists: Optional[Dict[str, List[Any]]] = None) -> List[TransformsFileData]:
+    def run(self, paths: list[str], metadata_lists: Optional[dict[str, list[Any]]] = None) -> list[TransformsFileData]:
         if self.pool_type == 'threads':
             pool_map = thread_map
         else:
@@ -64,7 +65,7 @@ class BaseFilesTransforms(ABC):
                 arg = TransformsFileData(fp, {k: v[i] for k, v in metadata_lists.items()})
                 yield arg
 
-        transformed_metadata: List[TransformsFileData] = pool_map(
+        transformed_metadata: list[TransformsFileData] = pool_map(
             self._process_filepath,
             data_iterator(),
             total=len(paths),

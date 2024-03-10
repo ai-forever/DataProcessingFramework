@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from typing import Dict, List, Tuple
 
 import pandas as pd
 from tqdm.contrib.concurrent import thread_map
@@ -24,7 +23,7 @@ class ShardedValidator(Validator, ABC):
         merged_df: pd.DataFrame,
         filesystem: FileSystem,
         config: ShardedDatasetConfig,
-        columns_to_check: List[str]
+        columns_to_check: list[str]
     ):
         self.merged_df = merged_df
         self.filesystem = filesystem
@@ -32,11 +31,11 @@ class ShardedValidator(Validator, ABC):
         self.columns_to_check = columns_to_check
 
     @abstractmethod
-    def _validate_files(self, filepaths: List[str]) -> List[FileStructureErrorType]:
+    def _validate_files(self, filepaths: list[str]) -> list[FileStructureErrorType]:
         pass
 
-    def _validate_filestructure(self, filepaths: List[str]) -> List[FileStructureErrorType]:
-        errors: List[FileStructureErrorType] = []
+    def _validate_filestructure(self, filepaths: list[str]) -> list[FileStructureErrorType]:
+        errors: list[FileStructureErrorType] = []
 
         for datatype in self.config.datatypes:
             if isinstance(datatype, ShardedDataType):
@@ -52,12 +51,12 @@ class ShardedValidator(Validator, ABC):
         self,
         dataframe_path: str,
         df: pd.DataFrame
-    ) -> Tuple[List[FileStructureErrorType], List[DataFrameErrorType]]:
+    ) -> tuple[list[FileStructureErrorType], list[DataFrameErrorType]]:
         pass
 
-    def _validate_shard(self, path: str) -> Tuple[str, List[DataFrameErrorType], List[FileStructureErrorType]]:
+    def _validate_shard(self, path: str) -> tuple[str, list[DataFrameErrorType], list[FileStructureErrorType]]:
         df = self.filesystem.read_dataframe(path)
-        dataframe_errors: List[DataFrameErrorType] = []
+        dataframe_errors: list[DataFrameErrorType] = []
 
         # validate dataframe
         missed_columns = set(self.columns_to_check).difference(set(df.columns))
@@ -78,10 +77,10 @@ class ShardedValidator(Validator, ABC):
 
     def _validate_shards(
         self,
-        filepaths: List[str],
+        filepaths: list[str],
         workers: int = 4,
         pbar: bool = True
-    ) -> Tuple[Dict[str, List[DataFrameErrorType]], List[FileStructureErrorType]]:
+    ) -> tuple[dict[str, list[DataFrameErrorType]], list[FileStructureErrorType]]:
         datafiles = [f for f in filepaths if f.endswith('.'+self.config.datafiles_ext)]
 
         results = thread_map(
@@ -106,8 +105,8 @@ class ShardedValidator(Validator, ABC):
         pbar: bool = True
     ) -> ValidationResult:
         filepaths = self.filesystem.listdir(self.config.path)
-        filestructure_errors: List[FileStructureErrorType] = []
-        dataframe2errors: Dict[str, List[DataFrameErrorType]] = {}
+        filestructure_errors: list[FileStructureErrorType] = []
+        dataframe2errors: dict[str, list[DataFrameErrorType]] = {}
 
         if validate_filestructure:
             filestructure_errors.extend(self._validate_filestructure(filepaths))

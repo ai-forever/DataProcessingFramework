@@ -1,5 +1,5 @@
 import os
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Optional
 
 import pandas as pd
 
@@ -33,7 +33,7 @@ class ShardsDatasetProcessor(ShardedDatasetProcessor):
         self,
         validate_filestructure: bool = True,
         validate_metadata: bool = True,
-        columns_to_check: Optional[List[str]] = None,
+        columns_to_check: Optional[list[str]] = None,
         workers: int = 1,
         pbar: bool = True
     ) -> ValidationResult:
@@ -54,9 +54,9 @@ class ShardsDatasetProcessor(ShardedDatasetProcessor):
 
     def _get_torch_dataset(
         self,
-        modalities: List[ModalityName],
-        columns_to_use: Optional[List[str]] = None,
-        preprocess_f: Callable[[ModalityToDataMapping, Dict[str, str]], Any] = identical_preprocess_function,
+        modalities: list[ModalityName],
+        columns_to_use: Optional[list[str]] = None,
+        preprocess_f: Callable[[ModalityToDataMapping, dict[str, str]], Any] = identical_preprocess_function,
         return_none_on_error: bool = False
     ) -> ShardsDataset:
         assert len(set(modalities)) == len(list(modalities))
@@ -76,11 +76,11 @@ class ShardsDatasetProcessor(ShardedDatasetProcessor):
 
     def _read_sample_data(
         self,
-        sample: Dict[str, str]
+        sample: dict[str, str]
     ) -> ModalityToDataMapping:
         tar_path = self.get_container_path(sample['split_name'])
-        path_column2modality: Dict[str, ModalityName] = {}
-        column2modality: Dict[str, ModalityName] = {}
+        path_column2modality: dict[str, ModalityName] = {}
+        column2modality: dict[str, ModalityName] = {}
         for d in self.config.datatypes:
             if isinstance(d, ColumnDataType):
                 column2modality[d.column_name] = d.modality.name

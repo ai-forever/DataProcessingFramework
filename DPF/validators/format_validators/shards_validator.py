@@ -1,5 +1,4 @@
 import os
-from typing import List, Tuple
 
 import pandas as pd
 
@@ -23,17 +22,17 @@ class ShardsValidator(ShardedValidator):
         merged_df: pd.DataFrame,
         filesystem: FileSystem,
         config: ShardsDatasetConfig,
-        columns_to_check: List[str]
+        columns_to_check: list[str]
     ):
         super().__init__(merged_df, filesystem, config, columns_to_check)
 
-    def _validate_files(self, filepaths: List[str]) -> List[FileStructureErrorType]:
+    def _validate_files(self, filepaths: list[str]) -> list[FileStructureErrorType]:
         datafiles_ext = '.' + self.config.datafiles_ext
         archives_ext = '.' + self.config.archives_ext
         datafiles_set = {f for f in filepaths if f.endswith(datafiles_ext)}
         archives_set = {f for f in filepaths if f.endswith(archives_ext)}
 
-        errors: List[FileStructureErrorType] = []
+        errors: list[FileStructureErrorType] = []
         for datafile in datafiles_set:
             archive_path = datafile.replace(datafiles_ext, archives_ext)
             if archive_path not in archives_set:
@@ -49,9 +48,9 @@ class ShardsValidator(ShardedValidator):
         self,
         dataframe_path: str,
         df: pd.DataFrame
-    ) -> Tuple[List[FileStructureErrorType], List[DataFrameErrorType]]:
-        errors: List[FileStructureErrorType] = []
-        errors_df: List[DataFrameErrorType] = []
+    ) -> tuple[list[FileStructureErrorType], list[DataFrameErrorType]]:
+        errors: list[FileStructureErrorType] = []
+        errors_df: list[DataFrameErrorType] = []
         archive_path = dataframe_path.replace(self.config.datafiles_ext, self.config.archives_ext)
 
         tar = self.filesystem.read_tar(archive_path)

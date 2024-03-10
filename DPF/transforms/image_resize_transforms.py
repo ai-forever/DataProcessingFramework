@@ -1,4 +1,3 @@
-from typing import List
 
 from PIL import Image
 
@@ -25,11 +24,11 @@ class ImageResizeTransforms(BaseFilesTransforms):
         self.img_format = img_format
 
     @property
-    def required_metadata(self) -> List[str]:
+    def required_metadata(self) -> list[str]:
         return []
 
     @property
-    def metadata_to_change(self) -> List[str]:
+    def metadata_to_change(self) -> list[str]:
         return ['width', 'height']
 
     @property

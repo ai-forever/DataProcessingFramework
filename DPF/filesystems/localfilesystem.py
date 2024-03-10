@@ -1,7 +1,8 @@
 import io
 import os
+from collections.abc import Iterable
 from datetime import datetime
-from typing import Iterable, List, Optional, Tuple, Union
+from typing import Optional, Union
 
 from .filesystem import FileData, FileSystem
 
@@ -36,14 +37,14 @@ class LocalFileSystem(FileSystem):
 
     def listdir(
         self, folder_path: str, filenames_only: Optional[bool] = False
-    ) -> List[str]:
+    ) -> list[str]:
         folder_path = folder_path.rstrip("/") + "/"
         files = os.listdir(folder_path)
         if not filenames_only:
             files = [folder_path + f for f in files]
         return files
 
-    def listdir_meta(self, folder_path: str) -> List[FileData]:
+    def listdir_meta(self, folder_path: str) -> list[FileData]:
         folder_path = folder_path.rstrip("/") + "/"
         results = []
         for fd in os.scandir(folder_path):
@@ -59,7 +60,7 @@ class LocalFileSystem(FileSystem):
         folder_path = folder_path.rstrip("/") + "/"
         os.makedirs(folder_path, exist_ok=True)
 
-    def walk(self, folder_path: str) -> Iterable[Tuple[str, List[str], List[str]]]:
+    def walk(self, folder_path: str) -> Iterable[tuple[str, list[str], list[str]]]:
         yield from os.walk(folder_path)
 
     def join(self, *args: str) -> str:

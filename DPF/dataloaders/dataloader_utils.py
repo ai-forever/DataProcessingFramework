@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Union
+from typing import Any, Union
 
 from DPF.datatypes import ColumnDataType, FileDataType, ShardedDataType
 from DPF.modalities import ModalityName
@@ -7,7 +7,7 @@ from DPF.types import ModalityToDataMapping
 
 # TODO(review) - логика работы непонятна совсем, для чего метод нужен, нужны пояснения + рефактор (выглядит как что-то ненужное)
 # default identical preprocessing function for FilesDataset and ShardsDataset
-def identical_preprocess_function(modality2data: ModalityToDataMapping, metadata: Dict[str, str]) -> Any:
+def identical_preprocess_function(modality2data: ModalityToDataMapping, metadata: dict[str, str]) -> Any:
     return modality2data, metadata
 
 
@@ -17,8 +17,8 @@ def identical_collate_fn(x: Any) -> Any:
 
 
 def get_paths_columns_to_modality_mapping(
-    datatypes: List[Union[ShardedDataType, FileDataType]]
-) -> Dict[str, ModalityName]:
+    datatypes: list[Union[ShardedDataType, FileDataType]]
+) -> dict[str, ModalityName]:
     return {
         datatype.modality.path_column: datatype.modality.name
         for datatype in datatypes
@@ -26,8 +26,8 @@ def get_paths_columns_to_modality_mapping(
 
 
 def get_columns_to_modality_mapping(
-    datatypes: List[ColumnDataType]
-) -> Dict[str, ModalityName]:
+    datatypes: list[ColumnDataType]
+) -> dict[str, ModalityName]:
     return {
         datatype.column_name: datatype.modality.name
         for datatype in datatypes

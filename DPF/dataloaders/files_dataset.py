@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Optional, Union
 
 import pandas as pd
 from torch.utils.data import Dataset
@@ -13,7 +13,7 @@ from DPF.filesystems.filesystem import FileSystem
 from DPF.types import ModalityToDataMapping
 
 
-class FilesDataset(Dataset[Tuple[bool, Any]]):
+class FilesDataset(Dataset[tuple[bool, Any]]):
     """
     Dataset class to read "raw" files
     """
@@ -22,9 +22,9 @@ class FilesDataset(Dataset[Tuple[bool, Any]]):
         self,
         filesystem: FileSystem,
         df: pd.DataFrame,
-        datatypes: List[Union[ShardedDataType, FileDataType, ColumnDataType]],
-        metadata_columns: Optional[List[str]] = None,
-        preprocess_function: Callable[[ModalityToDataMapping, Dict[str, str]], Any] = identical_preprocess_function,
+        datatypes: list[Union[ShardedDataType, FileDataType, ColumnDataType]],
+        metadata_columns: Optional[list[str]] = None,
+        preprocess_function: Callable[[ModalityToDataMapping, dict[str, str]], Any] = identical_preprocess_function,
         # TODO(review) - на ошибке надо выбрасывать ошибку, а не возвращать None, и в дальнейшем эту ошибку обрабатывать прикладом, использующим этот класс
         return_none_on_error: bool = False
     ):
@@ -71,7 +71,7 @@ class FilesDataset(Dataset[Tuple[bool, Any]]):
     def __len__(self) -> int:
         return len(self.data_to_iterate)
 
-    def __getitem__(self, idx: int) -> Tuple[bool, Any]:
+    def __getitem__(self, idx: int) -> tuple[bool, Any]:
         row_sample_data = {
             self.all_columns[c]: item for c, item in enumerate(self.data_to_iterate[idx])
         }

@@ -1,4 +1,4 @@
-from typing import Dict, List, Union
+from typing import Union
 
 from DPF.datatypes import ColumnDataType, DataType, ShardedDataType
 
@@ -11,7 +11,7 @@ class ShardedDatasetConfig(DatasetConfig):
     def __init__(
         self,
         path: str,
-        datatypes: List[Union[ShardedDataType, ColumnDataType]],
+        datatypes: list[Union[ShardedDataType, ColumnDataType]],
         datafiles_ext: str = "csv",
     ):
         super().__init__(path)
@@ -25,15 +25,15 @@ class ShardedDatasetConfig(DatasetConfig):
             assert isinstance(data, (ColumnDataType, ShardedDataType))
 
     @property
-    def datatypes(self) -> List[DataType]:
+    def datatypes(self) -> list[DataType]:
         return self._datatypes  # type: ignore
 
     @property
-    def modality2datatype(self) -> Dict[ModalityName, DataType]:
+    def modality2datatype(self) -> dict[ModalityName, DataType]:
         return self._modality2datatype  # type: ignore
 
     @property
-    def user_column2default_column(self) -> Dict[str, str]:
+    def user_column2default_column(self) -> dict[str, str]:
         mapping = {}
         for data in self.datatypes:
             if isinstance(data, ColumnDataType):

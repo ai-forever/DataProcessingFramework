@@ -1,7 +1,6 @@
 import shutil
 import subprocess
 import uuid
-from typing import List
 
 from DPF.transforms.base_file_transforms import (
     BaseFilesTransforms,
@@ -36,11 +35,11 @@ class VideoResizeTransforms(BaseFilesTransforms):
         assert is_ffmpeg_installed(), "Please install ffmpeg"
 
     @property
-    def required_metadata(self) -> List[str]:
+    def required_metadata(self) -> list[str]:
         return ['width', 'height']
 
     @property
-    def metadata_to_change(self) -> List[str]:
+    def metadata_to_change(self) -> list[str]:
         return ['width', 'height']
 
     @property

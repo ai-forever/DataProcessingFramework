@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any
 
 import numpy as np
 from PIL import Image
@@ -45,11 +45,11 @@ class PHashFilter(ImageFilter):
         self.sim_hash_size = sim_hash_size
 
     @property
-    def schema(self) -> List[str]:
+    def schema(self) -> list[str]:
         return [self.key_column, f"image_phash_{self.sim_hash_size}"]
 
     @property
-    def dataloader_kwargs(self) -> Dict[str, Any]:
+    def dataloader_kwargs(self) -> dict[str, Any]:
         return {
             "num_workers": self.num_workers,
             "batch_size": 1,
@@ -59,7 +59,7 @@ class PHashFilter(ImageFilter):
     def preprocess_data(
         self,
         modality2data: ModalityToDataMapping,
-        metadata: Dict[str, Any]
+        metadata: dict[str, Any]
     ) -> Any:
         key = metadata[self.key_column]
         img_simhash = get_phash(
@@ -67,7 +67,7 @@ class PHashFilter(ImageFilter):
         )
         return key, img_simhash
 
-    def process_batch(self, batch: List[Any]) -> Dict[str, List[Any]]:
+    def process_batch(self, batch: list[Any]) -> dict[str, list[Any]]:
         df_batch_labels = self._get_dict_from_schema()
 
         keys, img_simhashes = list(zip(*batch))

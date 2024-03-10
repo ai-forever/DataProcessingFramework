@@ -1,5 +1,5 @@
 from multiprocessing import Manager, Process
-from typing import Any, Dict, List, Type, Union
+from typing import Any, Union
 
 import numpy as np
 import pandas as pd
@@ -19,11 +19,11 @@ def run_one_process(
     df: pd.DataFrame,
     i: int,
     index: pd.Series,
-    results: List[pd.DataFrame],
-    filter_class: Type[DataFilter],
-    filter_kwargs: Dict[str, Any],
+    results: list[pd.DataFrame],
+    filter_class: type[DataFilter],
+    filter_kwargs: dict[str, Any],
     device: Union[str, torch.device],
-    filter_run_kwargs: Dict[str, Any]
+    filter_run_kwargs: dict[str, Any]
 ) -> None:
     reader = DatasetReader(filesystem=fs)
     processor = reader.from_df(config, df)
@@ -41,9 +41,9 @@ class MultiGPUDataFilter:
 
     def __init__(
         self,
-        devices: List[Union[torch.device, str]],
-        datafilter_class: Type[DataFilter],
-        datafilter_params: Dict[str, Any]
+        devices: list[Union[torch.device, str]],
+        datafilter_class: type[DataFilter],
+        datafilter_params: dict[str, Any]
     ):
         self.filter_class = datafilter_class
         self.filter_params = datafilter_params
@@ -55,7 +55,7 @@ class MultiGPUDataFilter:
         df: pd.DataFrame,
         config: DatasetConfig,
         fs: FileSystem,
-        filter_run_kwargs: Dict[str, Any]
+        filter_run_kwargs: dict[str, Any]
     ) -> pd.DataFrame:
         manager = Manager()
         shared_results = manager.list()

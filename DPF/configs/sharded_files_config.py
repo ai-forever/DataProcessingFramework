@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 from DPF.datatypes import ColumnDataType, ShardedDataType
 from DPF.modalities import MODALITIES
@@ -11,7 +11,7 @@ class ShardedFilesDatasetConfig(ShardedDatasetConfig):
     def __init__(
         self,
         path: str,
-        datatypes: List[Union[ShardedDataType, ColumnDataType]],
+        datatypes: list[Union[ShardedDataType, ColumnDataType]],
         datafiles_ext: str = "csv",
     ):
         super().__init__(path, datatypes, datafiles_ext)
@@ -25,7 +25,7 @@ class ShardedFilesDatasetConfig(ShardedDatasetConfig):
         caption_col: Optional[str] = None,
         datafiles_ext: str = "csv",
     ) -> "ShardedFilesDatasetConfig":
-        datatypes: List[Union[ShardedDataType, ColumnDataType]] = []
+        datatypes: list[Union[ShardedDataType, ColumnDataType]] = []
         if image_name_col:
             datatypes.append(ShardedDataType(MODALITIES['image'], image_name_col))
         if video_name_col:

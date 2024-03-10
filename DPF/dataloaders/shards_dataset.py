@@ -1,7 +1,8 @@
 import itertools
 import os
 import tarfile
-from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple, Union
+from collections.abc import Iterator
+from typing import Any, Callable, Optional, Union
 
 import pandas as pd
 import torch
@@ -17,7 +18,7 @@ from DPF.filesystems.filesystem import FileSystem
 from DPF.types import ModalityToDataMapping
 
 
-class ShardsDataset(IterableDataset[Tuple[bool, Any]]):
+class ShardsDataset(IterableDataset[tuple[bool, Any]]):
     """
     Dataset class for shards format (files in tar archives)
     """
@@ -26,10 +27,10 @@ class ShardsDataset(IterableDataset[Tuple[bool, Any]]):
         self,
         filesystem: FileSystem,
         df: pd.DataFrame,
-        split2archive_path: Dict[str, str],
-        datatypes: List[Union[ShardedDataType, ColumnDataType]],
-        metadata_columns: Optional[List[str]] = None,
-        preprocess_function: Callable[[ModalityToDataMapping, Dict[str, str]], Any] = identical_preprocess_function,
+        split2archive_path: dict[str, str],
+        datatypes: list[Union[ShardedDataType, ColumnDataType]],
+        metadata_columns: Optional[list[str]] = None,
+        preprocess_function: Callable[[ModalityToDataMapping, dict[str, str]], Any] = identical_preprocess_function,
         return_none_on_error: bool = False
     ):
         """
@@ -82,7 +83,7 @@ class ShardsDataset(IterableDataset[Tuple[bool, Any]]):
     def __len__(self) -> int:
         return self.total_samples
 
-    def __iter__(self) -> Iterator[Tuple[bool, Any]]:
+    def __iter__(self) -> Iterator[tuple[bool, Any]]:
         worker_info = torch.utils.data.get_worker_info()
         worker_total_num = worker_info.num_workers if worker_info is not None else None
         worker_id = worker_info.id if worker_info is not None else None

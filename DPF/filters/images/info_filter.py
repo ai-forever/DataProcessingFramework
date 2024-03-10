@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from io import BytesIO
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import numpy as np
 from PIL import Image
@@ -19,7 +19,7 @@ class ImageInfo:
     error: Optional[str]
 
 
-def get_image_info(img_bytes: bytes, data: Dict[str, Any], key_column: str) -> ImageInfo:
+def get_image_info(img_bytes: bytes, data: dict[str, Any], key_column: str) -> ImageInfo:
     """
     Get image path, read status, width, height, num channels, read error
     """
@@ -58,7 +58,7 @@ class ImageInfoFilter(ImageFilter):
         self.num_workers = workers
 
     @property
-    def schema(self) -> List[str]:
+    def schema(self) -> list[str]:
         return [
             self.key_column,
             "is_correct", "width", "height",
@@ -66,7 +66,7 @@ class ImageInfoFilter(ImageFilter):
         ]
 
     @property
-    def dataloader_kwargs(self) -> Dict[str, Any]:
+    def dataloader_kwargs(self) -> dict[str, Any]:
         return {
             "num_workers": self.num_workers,
             "batch_size": 1,
@@ -76,11 +76,11 @@ class ImageInfoFilter(ImageFilter):
     def preprocess_data(
         self,
         modality2data: ModalityToDataMapping,
-        metadata: Dict[str, Any]
+        metadata: dict[str, Any]
     ) -> Any:
         return get_image_info(modality2data['image'], metadata, self.key_column)
 
-    def process_batch(self, batch: List[Any]) -> Dict[str, List[Any]]:
+    def process_batch(self, batch: list[Any]) -> dict[str, list[Any]]:
         df_batch_labels = self._get_dict_from_schema()
 
         for image_info in batch:

@@ -1,5 +1,5 @@
 import io
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 import cv2
 import imageio.v3 as iio
@@ -11,7 +11,7 @@ from DPF.types import ModalityToDataMapping
 from .video_filter import VideoFilter
 
 
-def transform_frame(frame: MatLike, target_size: Tuple[int, int]) -> MatLike:
+def transform_frame(frame: MatLike, target_size: tuple[int, int]) -> MatLike:
     frame = cv2.resize(frame, dsize=(target_size[0], target_size[1]), interpolation=cv2.INTER_LINEAR)
     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     return frame
@@ -75,14 +75,14 @@ class GunnarFarnebackFilter(VideoFilter):
         self.pass_frames = pass_frames
 
     @property
-    def schema(self) -> List[str]:
+    def schema(self) -> list[str]:
         return [
             self.key_column,
             "mean_optical_flow_farneback"
         ]
 
     @property
-    def dataloader_kwargs(self) -> Dict[str, Any]:
+    def dataloader_kwargs(self) -> dict[str, Any]:
         return {
             "num_workers": self.num_workers,
             "batch_size": self.batch_size,
@@ -92,7 +92,7 @@ class GunnarFarnebackFilter(VideoFilter):
     def preprocess_data(
         self,
         modality2data: ModalityToDataMapping,
-        metadata: Dict[str, Any]
+        metadata: dict[str, Any]
     ) -> Any:
         key = metadata[self.key_column]
         video_file = modality2data['video']
@@ -116,7 +116,7 @@ class GunnarFarnebackFilter(VideoFilter):
             ]
         return key, frames_resized
 
-    def process_batch(self, batch: List[Any]) -> Dict[str, List[Any]]:
+    def process_batch(self, batch: list[Any]) -> dict[str, list[Any]]:
         df_batch_labels = self._get_dict_from_schema()
 
         mean_magnitudes = []

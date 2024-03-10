@@ -1,5 +1,5 @@
 import re
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 from DPF.filters import ColumnFilter
 
@@ -19,7 +19,7 @@ class RegexFilter(ColumnFilter):
 
     def __init__(
         self,
-        regex_replacement_list: Optional[List[Tuple[str, str]]] = None,
+        regex_replacement_list: Optional[list[tuple[str, str]]] = None,
         text_column_name: str = "text",
         workers: int = 16,
         pbar: bool = True
@@ -28,7 +28,7 @@ class RegexFilter(ColumnFilter):
 
         if regex_replacement_list is None:
             regex_replacement_list = []
-        self.compiled_regex_replacement_list: List[Tuple[re.Pattern[str], str]] = []
+        self.compiled_regex_replacement_list: list[tuple[re.Pattern[str], str]] = []
 
         # compiling regexs
         for regex, replacement in regex_replacement_list:
@@ -37,17 +37,17 @@ class RegexFilter(ColumnFilter):
         self.text_column_name = text_column_name
 
     @property
-    def columns_to_process(self) -> List[str]:
+    def columns_to_process(self) -> list[str]:
         return [self.text_column_name]
 
     @property
-    def schema(self) -> List[str]:
+    def schema(self) -> list[str]:
         return ["clean_caption"]
 
     def add_regex(self, regex: str, replacement: str) -> None:
         self.compiled_regex_replacement_list.append((re.compile(regex), replacement))
 
-    def process_sample(self, sample: Dict[str, Any]) -> List[Any]:
+    def process_sample(self, sample: dict[str, Any]) -> list[Any]:
         caption = sample[self.text_column_name]
 
         for re_compiled, replacement in self.compiled_regex_replacement_list:
