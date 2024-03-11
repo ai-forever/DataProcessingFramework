@@ -28,7 +28,7 @@ class ShardedFilesDatasetProcessor(ShardedDatasetProcessor, ApplyTransformProces
     ):
         super().__init__(filesystem, df, config)
 
-    def get_container_path(self, split_name: str) -> str:
+    def get_shard_path(self, split_name: str) -> str:
         return self.config.path + '/' + split_name + '/'
 
     def validate(

@@ -23,7 +23,7 @@ class ShardedDatasetProcessor(DatasetProcessor, ABC):
         assert 'split_name' in self.columns
 
     @abstractmethod
-    def get_container_path(self, split_name: str) -> str:
+    def get_shard_path(self, split_name: str) -> str:
         pass
 
     def get_datafile_path(self, split_name: str) -> str:

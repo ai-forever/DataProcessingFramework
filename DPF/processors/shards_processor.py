@@ -26,7 +26,7 @@ class ShardsDatasetProcessor(ShardedDatasetProcessor):
     ):
         super().__init__(filesystem, df, config)
 
-    def get_container_path(self, split_name: str) -> str:
+    def get_shard_path(self, split_name: str) -> str:
         return self.config.path + '/' + split_name + '.' + self.config.archives_ext
 
     def validate(
@@ -61,7 +61,7 @@ class ShardsDatasetProcessor(ShardedDatasetProcessor):
     ) -> ShardsDataset:
         assert len(set(modalities)) == len(list(modalities))
         split2archive_path = {
-            i: self.get_container_path(i) for i in self.df['split_name'].unique().tolist()
+            i: self.get_shard_path(i) for i in self.df['split_name'].unique().tolist()
         }
         datatypes_to_load = [self.config.modality2datatype[m] for m in modalities]
         return ShardsDataset(
@@ -78,7 +78,7 @@ class ShardsDatasetProcessor(ShardedDatasetProcessor):
         self,
         sample: dict[str, str]
     ) -> ModalityToDataMapping:
-        tar_path = self.get_container_path(sample['split_name'])
+        tar_path = self.get_shard_path(sample['split_name'])
         path_column2modality: dict[str, ModalityName] = {}
         column2modality: dict[str, ModalityName] = {}
         for d in self.config.datatypes:

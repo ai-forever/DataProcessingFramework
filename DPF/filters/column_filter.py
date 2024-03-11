@@ -17,7 +17,7 @@ class ColumnFilter(ABC):
     @property
     @abstractmethod
     def columns_to_process(self) -> list[str]:
-        """List of columns in DataFrame that should be processed and passed to "process" method"""
+        """List of columns in DataFrame that should be processed and passed to "process_sample" method"""
         pass
 
     @property
@@ -28,9 +28,33 @@ class ColumnFilter(ABC):
 
     @abstractmethod
     def process_sample(self, sample: dict[str, Any]) -> list[Any]:
+        """Method that processes one sample
+
+        Parameters
+        ----------
+        sample: dict[str, Any]
+            Sample from dataset dataframe. Mapping from column name to its value
+
+        Returns
+        -------
+        list[Any]
+            Results to add (length of list is equal to length of a "schema" property)
+        """
         pass
 
     def __call__(self, df: pd.DataFrame) -> list[list[Any]]:
+        """Run filter. Rusn process_sample method on full dataframe
+
+        Parameters
+        ----------
+        df: pd.DataFrame
+            Dataset to be processed
+
+        Returns
+        -------
+        list[list[Any]]
+            List of results
+        """
         pandarallel.initialize(nb_workers=self.workers)
         res = list(df[self.columns_to_process].parallel_apply(self.process_sample, axis=1))
         return res

@@ -21,6 +21,17 @@ from DPF.validators import ValidationResult
 
 
 class DatasetProcessor(ABC):
+    """DatasetProcessor is an interface used to interact with dataset
+
+    Attributes
+    ----------
+    filesystem: FileSystem
+        Filesystem to read datasets from
+    df: pd.DataFrame
+        Dataframe with dataset samples
+    config: DatasetConfig
+        Dataset config of type DatasetConfig
+    """
 
     def __init__(
         self,
@@ -34,10 +45,12 @@ class DatasetProcessor(ABC):
 
     @property
     def df(self) -> pd.DataFrame:
+        """Dataframe with dataset samples"""
         return self._df
 
     @property
     def columns(self) -> list[str]:
+        """Columns that presented in dataframe"""
         return self._df.columns.tolist()  # type: ignore
 
     def __getitem__(self, column_name: str) -> pd.Series:
@@ -143,6 +156,7 @@ class DatasetProcessor(ABC):
         preprocess_f: Callable[[ModalityToDataMapping, dict[str, str]], Any] = identical_preprocess_function,
         return_none_on_error: bool = False
     ) -> Dataset[tuple[bool, Any]]:
+        """Method that returns torch.Dataset class for this dataset"""
         pass
 
     def apply_data_filter(
@@ -258,14 +272,26 @@ class DatasetProcessor(ABC):
     @abstractmethod
     def _read_sample_data(
         self,
-        sample: dict[str, str]
+        sample: dict[str, Any]
     ) -> ModalityToDataMapping:
+        """Reads data for one sample from dataset
+
+        Parameters
+        ----------
+        sample: dict[str, Any]
+            Sample from dataframe
+
+        Returns
+        -------
+        ModalityToDataMapping
+            Mapping from modality name to its data
+        """
         pass
 
     def get_random_sample(
         self,
         df_filter: Optional[pd.Series] = None
-    ) -> tuple[ModalityToDataMapping, dict[str, str]]:
+    ) -> tuple[ModalityToDataMapping, dict[str, Any]]:
         """Returns a random sample from dataset
 
         Parameters
@@ -275,9 +301,9 @@ class DatasetProcessor(ABC):
 
         Returns
         -------
-        Dict[str, bytes]
-            Mapping from modality name to bytes
-        Dict[str, str]
+        ModalityToDataMapping
+            Mapping from modality name to its data
+        Dict[str, Any]
             Mapping from column name to its value
         """
         if df_filter is not None:

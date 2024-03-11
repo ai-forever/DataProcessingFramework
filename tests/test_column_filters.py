@@ -10,7 +10,7 @@ def test_shards_langid_filter():
     config = ShardsDatasetConfig.from_path_and_columns(
         path,
         image_name_col="image_name",
-        caption_col="caption"
+        text_col="caption"
     )
 
     reader = DatasetReader()
@@ -28,7 +28,7 @@ def test_shards_regex_filter():
     config = ShardsDatasetConfig.from_path_and_columns(
         path,
         image_name_col="image_name",
-        caption_col="caption"
+        text_col="caption"
     )
 
     reader = DatasetReader()
@@ -45,7 +45,7 @@ def test_files_info_filter():
     config = FilesDatasetConfig.from_path_and_columns(
         path,
         image_path_col="image_path",
-        caption_col="caption"
+        text_col="caption"
     )
 
     reader = DatasetReader()
@@ -63,7 +63,7 @@ def test_files_regex_filter():
     config = FilesDatasetConfig.from_path_and_columns(
         path,
         image_path_col="image_path",
-        caption_col="caption"
+        text_col="caption"
     )
 
     reader = DatasetReader()

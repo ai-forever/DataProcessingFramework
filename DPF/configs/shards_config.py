@@ -7,6 +7,7 @@ from .sharded_config import ShardedDatasetConfig
 
 
 class ShardsDatasetConfig(ShardedDatasetConfig):
+    """Config for Shards dataset type"""
 
     def __init__(
         self,
@@ -15,6 +16,18 @@ class ShardsDatasetConfig(ShardedDatasetConfig):
         archives_ext: str = "tar",
         datafiles_ext: str = "csv",
     ):
+        """
+        Parameters
+        ----------
+        path: str
+            Path to directory with shards
+        datatypes: list[Union[ShardedDataType, ColumnDataType]]
+            List of datatypes in dataset
+        archives_ext: str = "tar"
+            Extension of archives in shards
+        datafiles_ext: str = "csv"
+            Extension of files with metadata in shards
+        """
         super().__init__(path, datatypes, datafiles_ext)
         self.archives_ext = archives_ext.lstrip('.')
 
@@ -24,17 +37,38 @@ class ShardsDatasetConfig(ShardedDatasetConfig):
         path: str,
         image_name_col: Optional[str] = None,
         video_name_col: Optional[str] = None,
-        caption_col: Optional[str] = None,
+        text_col: Optional[str] = None,
         archives_ext: str = "tar",
         datafiles_ext: str = "csv",
     ) -> "ShardsDatasetConfig":
+        """
+        Parameters
+        ----------
+        path: str
+            Path to directory with shards
+        image_name_col: Optional[str] = None
+            Name of column with image filenames in shard
+        video_name_col: Optional[str] = None
+            Name of column with video filenames in shard
+        text_col: Optional[str] = None
+            Name of column with text
+        archives_ext: str = "tar"
+            Extension of archives in shards
+        datafiles_ext: str = "csv"
+            Extension of files with metadata in shards
+
+        Returns
+        -------
+        ShardsDatasetConfig
+            Instance of itself
+        """
         datatypes: list[Union[ShardedDataType, ColumnDataType]] = []
         if image_name_col:
             datatypes.append(ShardedDataType(MODALITIES['image'], image_name_col))
         if video_name_col:
             datatypes.append(ShardedDataType(MODALITIES['video'], video_name_col))
-        if caption_col:
-            datatypes.append(ColumnDataType(MODALITIES['text'], caption_col))
+        if text_col:
+            datatypes.append(ColumnDataType(MODALITIES['text'], text_col))
         assert len(datatypes) > 0, "At least one modality should be provided"
         return cls(path, datatypes, archives_ext=archives_ext, datafiles_ext=datafiles_ext)
 

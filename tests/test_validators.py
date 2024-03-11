@@ -12,7 +12,7 @@ def test_shards_reader():
     config = ShardsDatasetConfig.from_path_and_columns(
         path,
         image_name_col="image_name",
-        caption_col="caption"
+        text_col="caption"
     )
 
     reader = DatasetReader()
@@ -27,7 +27,7 @@ def test_shards_wrong_columns():
     config = ShardsDatasetConfig.from_path_and_columns(
         path,
         image_name_col="image_name",
-        caption_col="caption"
+        text_col="caption"
     )
 
     reader = DatasetReader()
@@ -50,7 +50,7 @@ def test_shards_wrong_tar():
     config = ShardsDatasetConfig.from_path_and_columns(
         path,
         image_name_col="image_name",
-        caption_col="caption"
+        text_col="caption"
     )
     reader = DatasetReader()
     processor = reader.read_from_config(config)
@@ -68,7 +68,7 @@ def test_sharded_files_reader():
     config = ShardedFilesDatasetConfig.from_path_and_columns(
         path,
         image_name_col="image_name",
-        caption_col="caption"
+        text_col="caption"
     )
 
     reader = DatasetReader()
@@ -83,7 +83,7 @@ def test_sharded_files_wrong_columns():
     config = ShardedFilesDatasetConfig.from_path_and_columns(
         path,
         image_name_col="image_name",
-        caption_col="caption"
+        text_col="caption"
     )
 
     reader = DatasetReader()
@@ -106,7 +106,7 @@ def test_sharded_files_wrong_tar():
     config = ShardedFilesDatasetConfig.from_path_and_columns(
         path,
         image_name_col="image_name",
-        caption_col="caption"
+        text_col="caption"
     )
     reader = DatasetReader()
     processor = reader.read_from_config(config)
@@ -124,7 +124,7 @@ def test_files_reader():
     config = FilesDatasetConfig.from_path_and_columns(
         path,
         image_path_col="image_path",
-        caption_col="caption"
+        text_col="caption"
     )
 
     reader = DatasetReader()

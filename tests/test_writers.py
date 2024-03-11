@@ -14,7 +14,7 @@ def test_shards_to_shards():
     config = ShardsDatasetConfig.from_path_and_columns(
         path,
         image_name_col="image_name",
-        caption_col="caption"
+        text_col="caption"
     )
 
     reader = DatasetReader()
@@ -31,7 +31,7 @@ def test_shards_to_shards():
     config = ShardsDatasetConfig.from_path_and_columns(
         new_dir.rstrip('/'),
         image_name_col="image_name",
-        caption_col="caption"
+        text_col="caption"
     )
 
     reader = DatasetReader()
@@ -48,7 +48,7 @@ def test_shards_to_sharded_files():
     config = ShardsDatasetConfig.from_path_and_columns(
         path,
         image_name_col="image_name",
-        caption_col="caption"
+        text_col="caption"
     )
 
     reader = DatasetReader()
@@ -65,7 +65,7 @@ def test_shards_to_sharded_files():
     config = ShardedFilesDatasetConfig.from_path_and_columns(
         new_dir.rstrip('/'),
         image_name_col="image_name",
-        caption_col="caption"
+        text_col="caption"
     )
 
     reader = DatasetReader()
@@ -82,7 +82,7 @@ def test_files_to_shards():
     config = FilesDatasetConfig.from_path_and_columns(
         path,
         image_path_col="image_path",
-        caption_col="caption"
+        text_col="caption"
     )
 
     reader = DatasetReader()
@@ -99,7 +99,7 @@ def test_files_to_shards():
     config = ShardsDatasetConfig.from_path_and_columns(
         new_dir.rstrip('/'),
         image_name_col="image_name",
-        caption_col="caption"
+        text_col="caption"
     )
 
     reader = DatasetReader()
@@ -116,7 +116,7 @@ def test_files_to_sharded_files():
     config = FilesDatasetConfig.from_path_and_columns(
         path,
         image_path_col="image_path",
-        caption_col="caption"
+        text_col="caption"
     )
 
     reader = DatasetReader()
@@ -133,7 +133,7 @@ def test_files_to_sharded_files():
     config = ShardedFilesDatasetConfig.from_path_and_columns(
         new_dir.rstrip('/'),
         image_name_col="image_name",
-        caption_col="caption"
+        text_col="caption"
     )
 
     reader = DatasetReader()

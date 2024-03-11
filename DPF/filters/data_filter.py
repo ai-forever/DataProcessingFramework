@@ -12,7 +12,7 @@ from DPF.types import ModalityToDataMapping
 
 class DataFilter(ABC):
     """
-    Abstract class for all filters that use datalaaders.
+    Abstract class for all data filters.
     """
 
     def __init__(self, pbar: bool, _pbar_position: int = 0):
@@ -41,7 +41,7 @@ class DataFilter(ABC):
     @property
     @abstractmethod
     def key_column(self) -> str:
-        """Column name to use to merge results"""
+        """Column name used to merge results"""
         pass
 
     @property
@@ -56,10 +56,37 @@ class DataFilter(ABC):
         modality2data: ModalityToDataMapping,
         metadata: dict[str, Any]
     ) -> Any:
+        """Method that preprocesses data for filter.
+        This method is passed to dataloader and runs in parallel processes.
+
+        Parameters
+        ----------
+        modality2data: ModalityToDataMapping
+            Mapping of modality name to its data
+        metadata: dict[str, Any]
+            Sample data from columns, column names used from metadata_columns property
+
+        Returns
+        -------
+        Any
+            Any preprocessed data. Used in process_batch method
+        """
         pass
 
     @abstractmethod
     def process_batch(self, batch: list[Any]) -> dict[str, list[Any]]:
+        """Method that processes preprocessed data.
+
+        Parameters
+        ----------
+        batch: list[Any]
+            List of preprocessed items from preprocess_data method
+
+        Returns
+        -------
+        dict[str, list[Any]]
+            Mapping from column to its data for batch samples. Used to create new dataframe
+        """
         pass
 
     @staticmethod
@@ -74,6 +101,18 @@ class DataFilter(ABC):
         return {i: [] for i in self.schema}
 
     def run(self, dataset: Dataset[tuple[bool, Any]]) -> pd.DataFrame:
+        """Runs datafilter on a dataset and returns a dataframe with results
+
+        Parameters
+        ----------
+        dataset: Dataset[tuple[bool, Any]]
+            torch.Dataset instance with samples to process
+
+        Returns
+        -------
+        pd.DataFrame
+            Dataframe with columns from schema property
+        """
         dataloader = DataLoader(dataset, collate_fn=identical_collate_fn, **self.dataloader_kwargs)
         filter_results = self._get_dict_from_schema()
 

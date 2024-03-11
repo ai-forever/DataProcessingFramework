@@ -45,6 +45,16 @@ class MultiGPUDataFilter:
         datafilter_class: type[DataFilter],
         datafilter_params: dict[str, Any]
     ):
+        """
+        Parameters
+        ----------
+        devices: list[Union[torch.device, str]]
+            List of devices to run datafilter on
+        datafilter_class: type[DataFilter]
+            Class of datafilter to use
+        datafilter_params: dict[str, Any]
+            Parameters for datafilter_class initialization
+        """
         self.filter_class = datafilter_class
         self.filter_params = datafilter_params
         self.devices = devices
@@ -57,6 +67,24 @@ class MultiGPUDataFilter:
         fs: FileSystem,
         filter_run_kwargs: dict[str, Any]
     ) -> pd.DataFrame:
+        """Renames columns in files of a dataset
+
+        Parameters
+        ----------
+        df: pd.DataFrame
+            Dataframe to process with datafilter
+        config: DatasetConfig
+            Config of that dataset
+        fs: FileSystem
+            Filesystem to use
+        filter_run_kwargs: dict[str, Any]
+            Parameters for datafilter.run method
+
+        Returns
+        -------
+        pd.DataFrame
+            Dataframe with new columns added
+        """
         manager = Manager()
         shared_results = manager.list()
 

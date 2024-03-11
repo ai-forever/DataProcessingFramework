@@ -10,7 +10,7 @@ def test_shards_config():
     config = ShardsDatasetConfig.from_path_and_columns(
         path,
         image_name_col="image_name",
-        caption_col="caption"
+        text_col="caption"
     )
     print(config)
     assert isinstance(config, ShardsDatasetConfig)
@@ -23,7 +23,7 @@ def test_sharded_files_config():
     config = ShardedFilesDatasetConfig.from_path_and_columns(
         path,
         image_name_col="image_name",
-        caption_col="caption"
+        text_col="caption"
     )
     print(config)
     assert isinstance(config, ShardedFilesDatasetConfig)
@@ -36,7 +36,7 @@ def test_files_config():
     config = FilesDatasetConfig.from_path_and_columns(
         path,
         image_path_col="image_path",
-        caption_col="caption"
+        text_col="caption"
     )
     print(config)
     assert isinstance(config, FilesDatasetConfig)

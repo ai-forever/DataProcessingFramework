@@ -23,7 +23,13 @@ from .dataset_reader_utils import get_path_filename, read_and_validate_df
 
 
 class DatasetReader:
-    """Fabric for DPF.processors.DatasetProcessor"""
+    """Fabric for DPF.processors.DatasetProcessor
+
+    Attributes
+    ----------
+    filesystem: FileSystem
+        Filesystem to read datasets from
+    """
     filesystem: FileSystem
 
     def __init__(self, filesystem: Optional[FileSystem] = None):
@@ -300,7 +306,7 @@ class DatasetReader:
         config: DatasetConfig
             Config of DatasetConfig type
         **kwargs
-            Parameters for from_shards, from_sharded_files, from_files methods
+            Parameters for read_shards, read_sharded_files, read_files methods
 
         Returns
         -------

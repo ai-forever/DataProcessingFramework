@@ -6,6 +6,15 @@ from DPF.validators.errors import DataFrameErrorType, FileStructureErrorType
 
 @dataclass
 class ValidationResult:
+    """Result of dataset validation
+
+    Parameters
+    ----------
+    filestructure_errors: list[FileStructureErrorType]
+        Dataset filestructure errors
+    metadata_errors: dict[str, list[DataFrameErrorType]]
+        Errors in metadata dataframes
+    """
     filestructure_errors: list[FileStructureErrorType]
     metadata_errors: dict[str, list[DataFrameErrorType]]
 
@@ -30,4 +39,22 @@ class Validator(ABC):
         workers: int = 1,
         pbar: bool = True
     ) -> ValidationResult:
+        """Renames columns in files of a dataset
+
+        Parameters
+        ----------
+        validate_filestructure: bool = True
+            Whether to validate the filestructure of a dataset
+        validate_metadata: bool = True
+            Whether to validate the metadata (dataframes) of a dataset
+        workers: int = 1
+            Number of parallel threads for validation
+        pbar: bool = True
+            Whether to show progress bar or not
+
+        Returns
+        -------
+        ValidationResult
+            Information about errors and validation result
+        """
         pass

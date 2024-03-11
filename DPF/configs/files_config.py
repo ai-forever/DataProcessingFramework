@@ -8,12 +8,21 @@ from .dataset_config import DatasetConfig
 
 
 class FilesDatasetConfig(DatasetConfig):
+    """Config for Files dataset type"""
 
     def __init__(
         self,
         path: str,
         datatypes: list[Union[FileDataType, ColumnDataType]],
     ):
+        """
+        Parameters
+        ----------
+        path: str
+            Path to dataset metadata file
+        datatypes: list[Union[FileDataType, ColumnDataType]]
+            List of datatypes in dataset
+        """
         super().__init__(path)
         self.table_path = path
         self.base_path = os.path.dirname(self.table_path)
@@ -49,15 +58,32 @@ class FilesDatasetConfig(DatasetConfig):
         path: str,
         image_path_col: Optional[str] = None,
         video_path_col: Optional[str] = None,
-        caption_col: Optional[str] = None,
+        text_col: Optional[str] = None,
     ) -> "FilesDatasetConfig":
+        """
+        Parameters
+        ----------
+        path: str
+            Path to dataset metadata file
+        image_path_col: Optional[str] = None
+            Name of column with image paths
+        video_path_col: Optional[str] = None
+            Name of column with video paths
+        text_col: Optional[str] = None
+            Name of column with text
+
+        Returns
+        -------
+        FilesDatasetConfig
+            Instance of itself
+        """
         datatypes: list[Union[FileDataType, ColumnDataType]] = []
         if image_path_col:
             datatypes.append(FileDataType(MODALITIES['image'], image_path_col))
         if video_path_col:
             datatypes.append(FileDataType(MODALITIES['video'], video_path_col))
-        if caption_col:
-            datatypes.append(ColumnDataType(MODALITIES['text'], caption_col))
+        if text_col:
+            datatypes.append(ColumnDataType(MODALITIES['text'], text_col))
         assert len(datatypes) > 0, "At least one modality should be provided"
         return cls(path, datatypes)
 

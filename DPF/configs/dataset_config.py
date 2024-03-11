@@ -14,11 +14,13 @@ class DatasetConfig(ABC):
     @property
     @abstractmethod
     def datatypes(self) -> list[DataType]:
+        """List of datatypes of a dataset"""
         pass
 
     @property
     @abstractmethod
     def modality2datatype(self) -> dict[ModalityName, DataType]:
+        """Mapping modality to its datatype"""
         pass
 
     @property

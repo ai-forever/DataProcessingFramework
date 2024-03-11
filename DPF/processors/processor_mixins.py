@@ -1,4 +1,3 @@
-from typing import Union
 
 import pandas as pd
 
@@ -8,10 +7,18 @@ from DPF.transforms import BaseFilesTransforms
 
 
 class ApplyTransformProcessorMixin:
+    """Mixin for DatasetProcessor. Enables the ability to use DPF.transforms. Works only for files datasets"""
     config: DatasetConfig
     _df: pd.DataFrame
 
-    def apply_transform(self, transforms: Union[BaseFilesTransforms]) -> None:
+    def apply_transform(self, transforms: BaseFilesTransforms) -> None:
+        """Applies a transformation for dataset`s files. Files are overwritten.
+
+        Parameters
+        ----------
+        transforms: BaseFilesTransforms
+            Instance of a BaseFilesTransforms to apply
+        """
         assert transforms.modality in self.config.modality2datatype
 
         filepath_column = MODALITIES[transforms.modality].path_column

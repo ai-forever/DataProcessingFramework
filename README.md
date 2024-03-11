@@ -60,7 +60,7 @@ from DPF.dataset_reader import DatasetReader
 config = FilesDatasetConfig.from_path_and_columns(
     'tests/datasets/files_correct/data.csv',
     image_path_col='image_path',
-    caption_col='caption'
+    text_col='caption'
 )
 
 reader = DatasetReader()
@@ -99,7 +99,7 @@ from DPF.dataset_reader import DatasetReader
 config = ShardsDatasetConfig.from_path_and_columns(
   'tests/datasets/shards_correct',
   image_name_col='image_name',
-  caption_col='caption'
+  text_col='caption'
 )
 
 reader = DatasetReader()
@@ -135,7 +135,7 @@ from DPF.dataset_reader import DatasetReader
 config = ShardedFilesDatasetConfig.from_path_and_columns(
   'tests/datasets/shards_correct',
   image_name_col='image_name',
-  caption_col='caption'
+  text_col='caption'
 )
 
 reader = DatasetReader()
@@ -155,7 +155,7 @@ config = ShardsDatasetConfig.from_path_and_columns(
   'examples/example_dataset/',  # путь к датасету
   image_name_col='image_name',  # название колонки в csv с названием изображения
   video_name_col='video_name',  # название колонки в csv с названием видео
-  caption_col='caption'  # название колонки в csv с кэпшенами
+  text_col='caption'  # название колонки в csv с кэпшенами
 )
 ```
 
@@ -169,7 +169,7 @@ from DPF.dataset_reader import DatasetReader
 config = ShardsDatasetConfig.from_path_and_columns(
   'examples/example_dataset/',
   image_name_col='image_name',
-  caption_col='caption'
+  text_col='caption'
 )
 
 reader = DatasetReader()
@@ -183,7 +183,7 @@ from DPF.configs import ShardedFilesDatasetConfig
 config = ShardedFilesDatasetConfig.from_path_and_columns(
   'examples/example_video_dataset/',
   video_name_col='image_name',
-  caption_col='caption'
+  text_col='caption'
 )
 
 reader = DatasetReader()
