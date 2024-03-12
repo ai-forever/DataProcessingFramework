@@ -1,4 +1,5 @@
 from multiprocessing import Manager, Process
+import multiprocessing
 from typing import Any, Union
 
 import numpy as np
@@ -108,7 +109,8 @@ class MultiGPUDataFilter:
 
         processes = []
         for param in params:
-            p = Process(target=run_one_process, args=param)
+            context = multiprocessing.get_context('spawn')
+            p = context.Process(target=run_one_process, args=param)
             p.start()
             processes.append(p)
 
