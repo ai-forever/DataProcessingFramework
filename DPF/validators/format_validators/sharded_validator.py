@@ -4,8 +4,8 @@ import pandas as pd
 from tqdm.contrib.concurrent import thread_map
 
 from DPF.configs import ShardedDatasetConfig
+from DPF.connectors import Connector
 from DPF.datatypes import ShardedDataType
-from DPF.filesystems import FileSystem
 from DPF.validators import ValidationResult, Validator
 from DPF.validators.errors import (
     DataFrameErrorType,
@@ -21,12 +21,12 @@ class ShardedValidator(Validator, ABC):
     def __init__(
         self,
         merged_df: pd.DataFrame,
-        filesystem: FileSystem,
+        connector: Connector,
         config: ShardedDatasetConfig,
         columns_to_check: list[str]
     ):
         self.merged_df = merged_df
-        self.filesystem = filesystem
+        self.connector = connector
         self.config = config
         self.columns_to_check = columns_to_check
 
@@ -55,7 +55,7 @@ class ShardedValidator(Validator, ABC):
         pass
 
     def _validate_shard(self, path: str) -> tuple[str, list[DataFrameErrorType], list[FileStructureErrorType]]:
-        df = self.filesystem.read_dataframe(path)
+        df = self.connector.read_dataframe(path)
         dataframe_errors: list[DataFrameErrorType] = []
 
         # validate dataframe
@@ -104,7 +104,7 @@ class ShardedValidator(Validator, ABC):
         workers: int = 4,
         pbar: bool = True
     ) -> ValidationResult:
-        filepaths = self.filesystem.listdir(self.config.path)
+        filepaths = self.connector.listdir(self.config.path)
         filestructure_errors: list[FileStructureErrorType] = []
         dataframe2errors: dict[str, list[DataFrameErrorType]] = {}
 

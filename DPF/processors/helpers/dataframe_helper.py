@@ -4,7 +4,7 @@ import pandas as pd
 from tqdm.contrib.concurrent import thread_map
 
 from DPF.configs import DatasetConfig
-from DPF.filesystems import FileSystem
+from DPF.connectors import Connector
 
 
 class DataFramesChanger:
@@ -12,28 +12,28 @@ class DataFramesChanger:
     def __init__(
         self,
         datafile_paths: list[str],
-        filesystem: FileSystem,
+        connector: Connector,
         config: DatasetConfig
     ):
         self.datafile_paths = datafile_paths
-        self.filesystem = filesystem
+        self.connector = connector
         self.config = config
 
     def _save_dataframe(self, df: pd.DataFrame, path: str, **kwargs) -> Optional[str]:  # type: ignore
         errname = None
         try:
-            self.filesystem.save_dataframe(df, path, **kwargs)
+            self.connector.save_dataframe(df, path, **kwargs)
         except Exception as err:
             errname = f"Error during saving file {path}: {err}"
         return errname
 
     def validate_path_for_delete(self, columns_to_delete: list[str], path: str) -> None:
-        df = self.filesystem.read_dataframe(path)
+        df = self.connector.read_dataframe(path)
         for col in columns_to_delete:
             assert col in df.columns, f'Dataframe {path} dont have "{col}" column'
 
     def delete_columns_for_path(self, columns_to_delete: list[str], path: str) -> Optional[str]:
-        df = self.filesystem.read_dataframe(path)
+        df = self.connector.read_dataframe(path)
         df.drop(columns=columns_to_delete, inplace=True)
         return self._save_dataframe(df, path, index=False)
 
@@ -60,13 +60,13 @@ class DataFramesChanger:
         return [err for err in errors if err is not None]
 
     def validate_path_for_rename(self, column_map: dict[str, str], path: str) -> None:
-        df = self.filesystem.read_dataframe(path)
+        df = self.connector.read_dataframe(path)
         for col_old, col_new in column_map.items():
             assert col_old in df.columns, f'Dataframe {path} dont have "{col_old}" column'
             assert col_new not in df.columns, f'Dataframe {path} already have "{col_new}" column'
 
     def rename_columns_for_path(self, column_map: dict[str, str], path: str) -> Optional[str]:
-        df = self.filesystem.read_dataframe(path)
+        df = self.connector.read_dataframe(path)
         df.rename(columns=column_map, inplace=True)
         return self._save_dataframe(df, path, index=False)
 
@@ -99,7 +99,7 @@ class DataFramesChanger:
         path: str
     ) -> None:
         df_new = pd.DataFrame(df_new)
-        df_old = self.filesystem.read_dataframe(path)
+        df_old = self.connector.read_dataframe(path)
         assert key_column in df_old.columns, f'Dataframe {path} dont have "{key_column}" column'
         assert set(df_old[key_column]) == set(df_new[key_column]), f'Dataframe {path} has different values in "{key_column}"'  # type: ignore
 
@@ -118,7 +118,7 @@ class DataFramesChanger:
         path: str
     ) -> Optional[str]:
         df_new = pd.DataFrame(df_new)
-        df_old = self.filesystem.read_dataframe(path)
+        df_old = self.connector.read_dataframe(path)
 
         columns_to_add = [i for i in df_new.columns if i != key_column]  # type: ignore [attr-defined]
         columns_intersection = set(df_old.columns).intersection(set(columns_to_add))

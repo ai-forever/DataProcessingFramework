@@ -5,7 +5,6 @@ from DPF.modalities import ModalityName
 from DPF.types import ModalityToDataMapping
 
 
-# TODO(review) - логика работы непонятна совсем, для чего метод нужен, нужны пояснения + рефактор (выглядит как что-то ненужное)
 # default identical preprocessing function for FilesDataset and ShardsDataset
 def identical_preprocess_function(modality2data: ModalityToDataMapping, metadata: dict[str, str]) -> Any:
     return modality2data, metadata

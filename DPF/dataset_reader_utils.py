@@ -2,15 +2,15 @@ from typing import Optional
 
 import pandas as pd
 
-from DPF.filesystems import FileSystem
+from DPF.connectors import Connector
 
 
 def read_and_validate_df(
-    filesystem: FileSystem,
+    connector: Connector,
     required_columns: Optional[list[str]],
     path: str
 ) -> tuple[str, pd.DataFrame]:
-    df = filesystem.read_dataframe(path)
+    df = connector.read_dataframe(path)
 
     if required_columns:
         for col in required_columns:

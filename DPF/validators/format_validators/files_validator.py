@@ -2,8 +2,8 @@
 import pandas as pd
 
 from DPF.configs import FilesDatasetConfig
+from DPF.connectors import Connector
 from DPF.datatypes import FileDataType
-from DPF.filesystems import FileSystem
 from DPF.validators import ValidationResult, Validator
 from DPF.validators.errors import (
     DataFrameErrorType,
@@ -19,12 +19,12 @@ class FilesValidator(Validator):
     def __init__(
         self,
         merged_df: pd.DataFrame,
-        filesystem: FileSystem,
+        connector: Connector,
         config: FilesDatasetConfig,
         columns_to_check: list[str]
     ):
         self.merged_df = merged_df
-        self.filesystem = filesystem
+        self.connector = connector
         self.config = config
         self.columns_to_check = columns_to_check
 
@@ -72,7 +72,7 @@ class FilesValidator(Validator):
         if validate_filestructure:
             filestructure_errors.extend(self._validate_filestructure())
         if validate_metadata:
-            df = self.filesystem.read_dataframe(self.config.table_path)
+            df = self.connector.read_dataframe(self.config.table_path)
             dataframe_errors = self._validate_df(df)
             if len(dataframe_errors) > 0:
                 dataframe2errors[self.config.table_path] = dataframe_errors

@@ -3,9 +3,9 @@ from typing import Any, Callable, Optional
 import pandas as pd
 
 from DPF.configs import ShardedFilesDatasetConfig
+from DPF.connectors import Connector
 from DPF.dataloaders import FilesDataset, identical_preprocess_function
 from DPF.datatypes import ColumnDataType, ShardedDataType
-from DPF.filesystems import FileSystem
 from DPF.modalities import ModalityName
 from DPF.types import ModalityToDataMapping
 from DPF.validators import ValidationResult
@@ -16,17 +16,17 @@ from .sharded_processor import ShardedDatasetProcessor
 
 
 class ShardedFilesDatasetProcessor(ShardedDatasetProcessor, ApplyTransformProcessorMixin):
-    filesystem: FileSystem
+    connector: Connector
     df: pd.DataFrame
     config: ShardedFilesDatasetConfig
 
     def __init__(
         self,
-        filesystem: FileSystem,
+        connector: Connector,
         df: pd.DataFrame,
         config: ShardedFilesDatasetConfig
     ):
-        super().__init__(filesystem, df, config)
+        super().__init__(connector, df, config)
 
     def get_shard_path(self, split_name: str) -> str:
         return self.config.path + '/' + split_name + '/'
@@ -44,7 +44,7 @@ class ShardedFilesDatasetProcessor(ShardedDatasetProcessor, ApplyTransformProces
 
         validator = ShardedFilesValidator(
             self.df,
-            self.filesystem,
+            self.connector,
             self.config,
             columns_to_check
         )
@@ -65,7 +65,7 @@ class ShardedFilesDatasetProcessor(ShardedDatasetProcessor, ApplyTransformProces
         assert len(set(modalities)) == len(list(modalities))
         datatypes_to_load = [self.config.modality2datatype[m] for m in modalities]
         return FilesDataset(
-            self.filesystem,
+            self.connector,
             self._df,
             datatypes_to_load,  # type: ignore
             metadata_columns=columns_to_use,
@@ -91,7 +91,7 @@ class ShardedFilesDatasetProcessor(ShardedDatasetProcessor, ApplyTransformProces
         # read files
         for col in path_column2modality.keys():
             modality = path_column2modality[col]
-            file_bytes = self.filesystem.read_file(sample[col], binary=True).getvalue()
+            file_bytes = self.connector.read_file(sample[col], binary=True).getvalue()
             modality2data[modality] = file_bytes
         # read data from columns
         for col in column2modality.keys():

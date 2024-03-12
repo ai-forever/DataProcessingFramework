@@ -3,13 +3,13 @@ from typing import Any, Callable, Optional, Union
 import pandas as pd
 from torch.utils.data import Dataset
 
+from DPF.connectors import Connector
 from DPF.dataloaders.dataloader_utils import (
     get_columns_to_modality_mapping,
     get_paths_columns_to_modality_mapping,
     identical_preprocess_function,
 )
 from DPF.datatypes import ColumnDataType, FileDataType, ShardedDataType
-from DPF.filesystems.filesystem import FileSystem
 from DPF.types import ModalityToDataMapping
 
 
@@ -20,7 +20,7 @@ class FilesDataset(Dataset[tuple[bool, Any]]):
 
     def __init__(
         self,
-        filesystem: FileSystem,
+        connector: Connector,
         df: pd.DataFrame,
         datatypes: list[Union[ShardedDataType, FileDataType, ColumnDataType]],
         metadata_columns: Optional[list[str]] = None,
@@ -31,8 +31,8 @@ class FilesDataset(Dataset[tuple[bool, Any]]):
         """
         Parameters
         ----------
-        filesystem: FileSystem
-            Object of a DPF.filesystems.Filesystem type
+        connector: Connector
+            Object of a DPF.connectors.Connector type
         df: pd.DataFrame
             Dataset dataframe from DatasetProcessor
         datatypes: List[Union[ShardedDataType, FileDataType, ColumnDataType]]
@@ -45,7 +45,7 @@ class FilesDataset(Dataset[tuple[bool, Any]]):
         return_none_on_error: bool = False
             Whether to return None if error during reading file occurs
         """
-        self.filesystem = filesystem
+        self.connector = connector
 
         self.datatypes = datatypes
         assert all(isinstance(d, (ShardedDataType, FileDataType, ColumnDataType)) for d in self.datatypes)
@@ -83,12 +83,12 @@ class FilesDataset(Dataset[tuple[bool, Any]]):
             modality = self.path_column2modality[col]
             if self.return_none_on_error:
                 try:
-                    file_bytes = self.filesystem.read_file(row_sample_data[col], binary=True).getvalue()
+                    file_bytes = self.connector.read_file(row_sample_data[col], binary=True).getvalue()
                 except Exception:
                     file_bytes = None
                     is_ok = False
             else:
-                file_bytes = self.filesystem.read_file(row_sample_data[col], binary=True).getvalue()
+                file_bytes = self.connector.read_file(row_sample_data[col], binary=True).getvalue()
             modality2data[modality] = file_bytes
 
         # read data from columns

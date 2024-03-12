@@ -3,8 +3,8 @@ import os
 import pandas as pd
 
 from DPF.configs import ShardedFilesDatasetConfig
+from DPF.connectors import Connector
 from DPF.datatypes import ShardedDataType
-from DPF.filesystems import FileSystem
 from DPF.validators.errors import (
     DataFrameErrorType,
     FileStructureErrorType,
@@ -19,11 +19,11 @@ class ShardedFilesValidator(ShardedValidator):
     def __init__(
         self,
         merged_df: pd.DataFrame,
-        filesystem: FileSystem,
+        connector: Connector,
         config: ShardedFilesDatasetConfig,
         columns_to_check: list[str]
     ):
-        super().__init__(merged_df, filesystem, config, columns_to_check)
+        super().__init__(merged_df, connector, config, columns_to_check)
 
     def _validate_files(self, filepaths: list[str]) -> list[FileStructureErrorType]:
         datafiles_ext = '.' + self.config.datafiles_ext.lstrip('.')
@@ -51,7 +51,7 @@ class ShardedFilesValidator(ShardedValidator):
         errors_df: list[DataFrameErrorType] = []
         folder_path = dataframe_path.replace('.'+self.config.datafiles_ext.lstrip('.'), '')
 
-        filenames_in_folder_set = set(self.filesystem.listdir(folder_path, filenames_only=True))
+        filenames_in_folder_set = {os.path.basename(f) for f in self.connector.listdir(folder_path)}
 
         filename_columns = []
         for datatype in self.config.datatypes:

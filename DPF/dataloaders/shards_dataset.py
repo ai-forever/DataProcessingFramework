@@ -8,13 +8,13 @@ import pandas as pd
 import torch
 from torch.utils.data import IterableDataset
 
+from DPF.connectors import Connector
 from DPF.dataloaders.dataloader_utils import (
     get_columns_to_modality_mapping,
     get_paths_columns_to_modality_mapping,
     identical_preprocess_function,
 )
 from DPF.datatypes import ColumnDataType, ShardedDataType
-from DPF.filesystems.filesystem import FileSystem
 from DPF.types import ModalityToDataMapping
 
 
@@ -25,7 +25,7 @@ class ShardsDataset(IterableDataset[tuple[bool, Any]]):
 
     def __init__(
         self,
-        filesystem: FileSystem,
+        connector: Connector,
         df: pd.DataFrame,
         split2archive_path: dict[str, str],
         datatypes: list[Union[ShardedDataType, ColumnDataType]],
@@ -36,8 +36,8 @@ class ShardsDataset(IterableDataset[tuple[bool, Any]]):
         """
         Parameters
         ----------
-        filesystem: FileSystem
-            Object of a DPF.filesystems.Filesystem type
+        connector: Connector
+            Object of a DPF.connectors.Connector type
         df: pd.DataFrame
             Dataset dataframe from DatasetProcessor
         split2archive_path: Dict[str, str]
@@ -53,7 +53,7 @@ class ShardsDataset(IterableDataset[tuple[bool, Any]]):
             Whether to return None if error during reading file occurs
         """
         super().__init__()
-        self.filesystem = filesystem
+        self.connector = connector
 
         self.datatypes = datatypes
         self.meta_columns = metadata_columns or []
@@ -92,7 +92,7 @@ class ShardsDataset(IterableDataset[tuple[bool, Any]]):
             self.tar_to_data.keys(), worker_id, None, worker_total_num
         ):
             data_all = self.tar_to_data[tar_path]
-            tar_bytes = self.filesystem.read_file(tar_path, binary=True)
+            tar_bytes = self.connector.read_file(tar_path, binary=True)
             tar = tarfile.open(fileobj=tar_bytes, mode="r")
             for data in data_all:
                 is_ok = True

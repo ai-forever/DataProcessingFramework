@@ -10,8 +10,8 @@ from DPF.configs import (
     ShardedFilesDatasetConfig,
     ShardsDatasetConfig,
 )
+from DPF.connectors import Connector, LocalConnector
 from DPF.datatypes import FileDataType, ShardedDataType
-from DPF.filesystems import FileSystem, LocalFileSystem
 from DPF.processors import (
     DatasetProcessor,
     FilesDatasetProcessor,
@@ -27,21 +27,21 @@ class DatasetReader:
 
     Attributes
     ----------
-    filesystem: FileSystem
-        Filesystem to read datasets from
+    connector: Connector
+        Connector to read datasets from
     """
-    filesystem: FileSystem
+    connector: Connector
 
-    def __init__(self, filesystem: Optional[FileSystem] = None):
+    def __init__(self, connector: Optional[Connector] = None):
         """
         Parameters
         ----------
-        filesystem: Optional[FileSystem] = None
-            Instance of a filesystem to use. LocalFileSystem used by default
+        connector: Optional[Connector] = None
+            Instance of connector to use. LocalConnector used by default
         """
-        if filesystem is None:
-            filesystem = LocalFileSystem()
-        self.filesystem = filesystem
+        if connector is None:
+            connector = LocalConnector()
+        self.connector = connector
 
     def _read_and_validate_dataframes(
         self,
@@ -56,7 +56,7 @@ class DatasetReader:
 
         required_columns = config.user_column_names if validate_columns else None
 
-        worker_co = partial(read_and_validate_df, self.filesystem, required_columns)
+        worker_co = partial(read_and_validate_df, self.connector, required_columns)
         paths_dataframes: list[tuple[str, pd.DataFrame]] = process_map(
             worker_co, datafiles,
             max_workers=processes,
@@ -174,7 +174,7 @@ class DatasetReader:
         datafiles_ext_dot = '.' + config.datafiles_ext.lstrip(".")
         archive_ext_dot = '.' + config.archives_ext.lstrip(".")
 
-        filepaths = self.filesystem.listdir(dataset_path)
+        filepaths = self.connector.listdir(dataset_path)
         datafiles = [p for p in filepaths if p.endswith(datafiles_ext_dot)]
         archive_paths = [p for p in filepaths if p.endswith(archive_ext_dot)]
         if len(datafiles) == 0:
@@ -196,7 +196,7 @@ class DatasetReader:
         )
         df = self._post_process_sharded_dataframes(archive_ext_dot, config, paths_dataframes)
         processor = ShardsDatasetProcessor(
-            filesystem=self.filesystem,
+            connector=self.connector,
             df=df,
             config=config
         )
@@ -230,7 +230,7 @@ class DatasetReader:
         dataset_path = config.path.rstrip("/")
         datafiles_ext = config.datafiles_ext.lstrip(".")
 
-        filepaths = self.filesystem.listdir(dataset_path)
+        filepaths = self.connector.listdir(dataset_path)
         datafiles = [p for p in filepaths if p.endswith('.'+datafiles_ext)]
         if len(datafiles) == 0:
             raise ValueError("No datafiles in this path")
@@ -247,7 +247,7 @@ class DatasetReader:
         )
         df = self._post_process_sharded_dataframes('', config, paths_dataframes)
         processor = ShardedFilesDatasetProcessor(
-            filesystem=self.filesystem,
+            connector=self.connector,
             df=df,
             config=config
         )
@@ -270,7 +270,7 @@ class DatasetReader:
             Instance of FilesDatasetProcessor dataset
         """
         table_path = config.table_path.rstrip("/")
-        df = self.filesystem.read_dataframe(table_path)
+        df = self.connector.read_dataframe(table_path)
 
         required_columns = list(config.user_column2default_column.keys())
         column_set = set(df.columns.tolist())
@@ -286,10 +286,10 @@ class DatasetReader:
         for datatype in config.datatypes:
             if isinstance(datatype, FileDataType):
                 path_col = datatype.modality.path_column
-                df[path_col] = df[path_col].apply(lambda x: self.filesystem.join(config.base_path, x))
+                df[path_col] = df[path_col].apply(lambda x: self.connector.join(config.base_path, x))
 
         return FilesDatasetProcessor(
-            filesystem=self.filesystem,
+            connector=self.connector,
             df=df,
             config=config
         )
@@ -350,7 +350,7 @@ class DatasetReader:
             raise ValueError(f"Unsupported config: {config}")
 
         return processor_class(
-            filesystem=self.filesystem,
+            connector=self.connector,
             config=config,
             df=df
         )

@@ -1,19 +1,27 @@
 import io
-import os
-from collections.abc import Iterable
-from typing import Optional, Union
+from typing import Union
 
 import fsspec
 
-from .filesystem import FileData, FileSystem
+from .connector import Connector
 
 
-class S3FileSystem(FileSystem):
+class S3Connector(Connector):
     """
     Class that wraps interaction with S3.
     """
 
     def __init__(self, key: str, secret: str, endpoint_url: str):
+        """
+        Parameters
+        ----------
+        key: str
+            Access key to s3 storage
+        secret: str
+            Secret key to s3 storage
+        endpoint_url: str
+            Endpoint for s3 storage
+        """
         self.endpoint_url = endpoint_url
         self.key = key
         self.secret = secret
@@ -50,37 +58,14 @@ class S3FileSystem(FileSystem):
             else:
                 f.write(data)
 
-    def listdir(
-        self, folder_path: str, filenames_only: Optional[bool] = False
-    ) -> list[str]:
+    def listdir(self, folder_path: str) -> list[str]:
         folder_path = folder_path.lstrip("s3://").rstrip("/") + "/"  # noqa
         s3 = fsspec.filesystem("s3", **self.storage_options)
         files: list[str] = s3.ls(folder_path)
         if folder_path in files:
             files.remove(folder_path)  # remove parent dir
-        if filenames_only:
-            files = [os.path.basename(f) for f in files]
-        else:
-            files = ["s3://" + f for f in files]
+        files = ["s3://" + f for f in files]
         return files
-
-    def listdir_meta(self, folder_path: str) -> list[FileData]:
-        folder_path = folder_path.lstrip("s3://").rstrip("/") + "/"  # noqa
-        s3 = fsspec.filesystem("s3", **self.storage_options)
-        files_data = s3.ls(folder_path, detail=True)
-
-        results = []
-        for file_data in files_data:
-            if file_data['Key'] == folder_path:
-                continue
-            path = "s3://"+file_data['Key']
-            filetype = file_data['type']
-            size = None
-            last_modified = file_data.get('LastModified', None)
-            if filetype == 'file':
-                size = file_data.get('Size', None)
-            results.append(FileData(path, filetype, last_modified, size))
-        return results
 
     def mkdir(self, folder_path: str) -> None:
         folder_path = folder_path.rstrip("/") + "/"
@@ -88,11 +73,6 @@ class S3FileSystem(FileSystem):
         # for some reason doesn't create directory
         # but it's ok because directories being created automatically when upload files
         s3.makedirs(folder_path, exist_ok=True)
-
-    def walk(self, folder_path: str) -> Iterable[tuple[str, list[str], list[str]]]:
-        fs = fsspec.filesystem("s3", **self.storage_options)
-
-        yield from fs.walk(folder_path)
 
     def join(self, *args: str) -> str:
         path = ''

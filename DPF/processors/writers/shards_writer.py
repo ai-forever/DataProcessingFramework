@@ -7,7 +7,7 @@ from typing import Any, Optional, Union
 
 import pandas as pd
 
-from DPF.filesystems.filesystem import FileSystem
+from DPF.connectors import Connector
 from DPF.modalities import MODALITIES
 
 from .filewriter import ABSWriter
@@ -21,7 +21,7 @@ class ShardsWriter(ABSWriter):
 
     def __init__(
         self,
-        filesystem: FileSystem,
+        connector: Connector,
         destination_dir: str,
         keys_to_rename: Optional[dict[str, str]] = None,
         max_files_in_shard: int = 1000,
@@ -29,7 +29,7 @@ class ShardsWriter(ABSWriter):
         archives_ext: str = "tar",
         filenaming: str = "counter"
     ) -> None:
-        self.filesystem = filesystem
+        self.connector = connector
         self.destination_dir = destination_dir
         self.keys_to_rename = keys_to_rename
         self.max_files_in_shard = max_files_in_shard
@@ -90,10 +90,10 @@ class ShardsWriter(ABSWriter):
         self.last_file_index = 0
 
     def _init_writer_from_last_uploaded_file(self) -> tuple[int, int]:
-        self.filesystem.mkdir(self.destination_dir)
+        self.connector.mkdir(self.destination_dir)
         list_csv = [
             int(os.path.basename(filename[: -len(self.datafiles_ext)]))
-            for filename in self.filesystem.listdir(self.destination_dir)
+            for filename in self.connector.listdir(self.destination_dir)
             if filename.endswith(".csv")
         ]
         if len(list_csv) < 1:
@@ -101,12 +101,12 @@ class ShardsWriter(ABSWriter):
 
         last_csv_index = sorted(list_csv)[-1]
         last_csv = str(last_csv_index)
-        self.df_raw = self.filesystem.read_dataframe(
-            self.filesystem.join(self.destination_dir, last_csv + self.datafiles_ext)
+        self.df_raw = self.connector.read_dataframe(
+            self.connector.join(self.destination_dir, last_csv + self.datafiles_ext)
         ).to_dict("records")
         #
-        self.tar_bytes = self.filesystem.read_file(
-            self.filesystem.join(self.destination_dir, last_csv + self.archives_ext), binary=True
+        self.tar_bytes = self.connector.read_file(
+            self.connector.join(self.destination_dir, last_csv + self.archives_ext), binary=True
         )
         self.tar = tarfile.open(mode="a", fileobj=self.tar_bytes)
         #
@@ -147,15 +147,15 @@ class ShardsWriter(ABSWriter):
             self.df_raw,
             columns=self._rearrange_cols(list(self.df_raw[0].keys()))
         )
-        path_to_csv_file = self.filesystem.join(self.destination_dir, filename)
-        self.filesystem.save_dataframe(df_to_save, path_to_csv_file, index=False)
+        path_to_csv_file = self.connector.join(self.destination_dir, filename)
+        self.connector.save_dataframe(df_to_save, path_to_csv_file, index=False)
         self.df_raw = []
 
     def _flush_and_upload_tar(self, filename: str) -> None:
         self.tar.close()
         self.tar_bytes.seek(0)
-        self.filesystem.save_file(
-            self.tar_bytes, self.filesystem.join(self.destination_dir, filename), binary=True
+        self.connector.save_file(
+            self.tar_bytes, self.connector.join(self.destination_dir, filename), binary=True
         )
         self.tar = None  # type: ignore
         self.tar_bytes = io.BytesIO()

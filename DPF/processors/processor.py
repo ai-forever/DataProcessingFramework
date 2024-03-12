@@ -7,12 +7,12 @@ from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
 
 from DPF.configs import DatasetConfig, config2format
+from DPF.connectors import Connector, LocalConnector
 from DPF.dataloaders.dataloader_utils import (
     identical_collate_fn,
     identical_preprocess_function,
 )
 from DPF.datatypes import ColumnDataType
-from DPF.filesystems import FileSystem, LocalFileSystem
 from DPF.filters import ColumnFilter, DataFilter
 from DPF.modalities import MODALITIES, ModalityName
 from DPF.processors.writers import ABSWriter, ShardedFilesWriter, ShardsWriter
@@ -25,8 +25,8 @@ class DatasetProcessor(ABC):
 
     Attributes
     ----------
-    filesystem: FileSystem
-        Filesystem to read datasets from
+    connector: Connector
+        Connector to read datasets from
     df: pd.DataFrame
         Dataframe with dataset samples
     config: DatasetConfig
@@ -35,11 +35,11 @@ class DatasetProcessor(ABC):
 
     def __init__(
         self,
-        filesystem: FileSystem,
+        connector: Connector,
         df: pd.DataFrame,
         config: DatasetConfig,
     ):
-        self.filesystem = filesystem
+        self.connector = connector
         self._df = df
         self.config = config
 
@@ -210,7 +210,7 @@ class DatasetProcessor(ABC):
             Whether to return None on sample if there is error in dataloader
         """
         self._df = multi_gpu_datafilter.run(
-            self.df, self.config, self.filesystem,
+            self.df, self.config, self.connector,
             filter_run_kwargs={
                 "validate_filter_result": validate_filter_result,
                 "return_none_on_error": return_none_on_error
@@ -366,7 +366,7 @@ class DatasetProcessor(ABC):
     def save_to_sharded_files(
         self,
         destination_dir: str,
-        filesystem: Optional[FileSystem] = None,
+        connector: Optional[Connector] = None,
         max_files_in_shard: int = 1000,
         datafiles_ext: str = "csv",
         filenaming: str = "counter",
@@ -381,8 +381,8 @@ class DatasetProcessor(ABC):
         ----------
         destination_dir: str
             Path to directory
-        filesystem: Optional[FileSystem] = None
-            The FileSystem where this path is located. LocalFileSystem is used by default
+        connector: Optional[Connector] = None
+            The connector for where this path is located. LocalConnector is used by default
         max_files_in_shard: int = 1000
             Maximum number of files in shard
         datafiles_ext: str = "csv"
@@ -398,11 +398,11 @@ class DatasetProcessor(ABC):
         pbar: bool = True
             Whether to show a progress bar
         """
-        if filesystem is None:
-            filesystem = LocalFileSystem()
+        if connector is None:
+            connector = LocalConnector()
 
         writer = ShardedFilesWriter(
-            filesystem,
+            connector,
             destination_dir,
             keys_mapping=rename_columns,
             max_files_in_shard=max_files_in_shard,
@@ -419,7 +419,7 @@ class DatasetProcessor(ABC):
     def save_to_shards(
         self,
         destination_dir: str,
-        filesystem: Optional[FileSystem] = None,
+        connector: Optional[Connector] = None,
         max_files_in_shard: int = 1000,
         datafiles_ext: str = "csv",
         archives_ext: str = "tar",
@@ -435,8 +435,8 @@ class DatasetProcessor(ABC):
         ----------
         destination_dir: str
             Path to directory
-        filesystem: Optional[FileSystem] = None
-            The FileSystem where this path is located. LocalFileSystem is used by default
+        connector: Optional[Connector] = None
+            The connector where this path is located. LocalConnector is used by default
         max_files_in_shard: int = 1000
             Maximum number of files in shard
         datafiles_ext: str = "csv"
@@ -454,11 +454,11 @@ class DatasetProcessor(ABC):
         pbar: bool = True
             Whether to show a progress bar
         """
-        if filesystem is None:
-            filesystem = LocalFileSystem()
+        if connector is None:
+            connector = LocalConnector()
 
         writer = ShardsWriter(
-            filesystem,
+            connector,
             destination_dir,
             keys_to_rename=rename_columns,
             max_files_in_shard=max_files_in_shard,

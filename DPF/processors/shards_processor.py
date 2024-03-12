@@ -4,9 +4,9 @@ from typing import Any, Callable, Optional
 import pandas as pd
 
 from DPF.configs import ShardedDatasetConfig, ShardsDatasetConfig
+from DPF.connectors import Connector
 from DPF.dataloaders import ShardsDataset, identical_preprocess_function
 from DPF.datatypes import ColumnDataType, ShardedDataType
-from DPF.filesystems import FileSystem
 from DPF.modalities import ModalityName
 from DPF.types import ModalityToDataMapping
 from DPF.validators import ValidationResult
@@ -20,11 +20,11 @@ class ShardsDatasetProcessor(ShardedDatasetProcessor):
 
     def __init__(
         self,
-        filesystem: FileSystem,
+        connector: Connector,
         df: pd.DataFrame,
         config: ShardedDatasetConfig
     ):
-        super().__init__(filesystem, df, config)
+        super().__init__(connector, df, config)
 
     def get_shard_path(self, split_name: str) -> str:
         return self.config.path + '/' + split_name + '.' + self.config.archives_ext
@@ -41,7 +41,7 @@ class ShardsDatasetProcessor(ShardedDatasetProcessor):
             columns_to_check = []
         validator = ShardsValidator(
             self.df,
-            self.filesystem,
+            self.connector,
             self.config,
             columns_to_check
         )
@@ -65,7 +65,7 @@ class ShardsDatasetProcessor(ShardedDatasetProcessor):
         }
         datatypes_to_load = [self.config.modality2datatype[m] for m in modalities]
         return ShardsDataset(
-            self.filesystem,
+            self.connector,
             self._df,
             split2archive_path,
             datatypes_to_load,  # type: ignore
@@ -89,7 +89,7 @@ class ShardsDatasetProcessor(ShardedDatasetProcessor):
             else:
                 raise ValueError()
 
-        tar = self.filesystem.read_tar(tar_path)
+        tar = self.connector.read_tar(tar_path)
 
         modality2data: ModalityToDataMapping = {}
         # read files

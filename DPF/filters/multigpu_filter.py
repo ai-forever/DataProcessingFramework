@@ -6,8 +6,8 @@ import pandas as pd
 import torch
 
 from DPF.configs import DatasetConfig
+from DPF.connectors import Connector
 from DPF.dataset_reader import DatasetReader
-from DPF.filesystems import FileSystem
 
 from .data_filter import DataFilter
 
@@ -15,7 +15,7 @@ from .data_filter import DataFilter
 # TODO(review) - один вызов в MultiGPUFilter, нужно перенести его внутрь класса
 def run_one_process(
     config: DatasetConfig,
-    fs: FileSystem,
+    connector: Connector,
     df: pd.DataFrame,
     i: int,
     index: pd.Series,
@@ -25,7 +25,7 @@ def run_one_process(
     device: Union[str, torch.device],
     filter_run_kwargs: dict[str, Any]
 ) -> None:
-    reader = DatasetReader(filesystem=fs)
+    reader = DatasetReader(connector=connector)
     processor = reader.from_df(config, df)
     datafilter = filter_class(**filter_kwargs, _pbar_position=i, device=device)  # type: ignore
     processor.apply_data_filter(datafilter, **filter_run_kwargs)
@@ -64,7 +64,7 @@ class MultiGPUDataFilter:
         self,
         df: pd.DataFrame,
         config: DatasetConfig,
-        fs: FileSystem,
+        connector: Connector,
         filter_run_kwargs: dict[str, Any]
     ) -> pd.DataFrame:
         """Renames columns in files of a dataset
@@ -75,8 +75,8 @@ class MultiGPUDataFilter:
             Dataframe to process with datafilter
         config: DatasetConfig
             Config of that dataset
-        fs: FileSystem
-            Filesystem to use
+        connector: Connector
+            Connector to use
         filter_run_kwargs: dict[str, Any]
             Parameters for datafilter.run method
 
@@ -94,7 +94,7 @@ class MultiGPUDataFilter:
             params.append(
                 (
                     config,
-                    fs,
+                    connector,
                     df_splits[i],
                     i,
                     df_splits[i].index,  # type: ignore

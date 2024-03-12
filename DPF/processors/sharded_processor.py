@@ -4,8 +4,8 @@ from abc import ABC, abstractmethod
 import pandas as pd
 
 from DPF.configs import ShardedDatasetConfig
+from DPF.connectors import Connector
 from DPF.datatypes import ShardedDataType
-from DPF.filesystems import FileSystem
 from DPF.processors.helpers import DataFramesChanger
 
 from .processor import DatasetProcessor
@@ -15,11 +15,11 @@ class ShardedDatasetProcessor(DatasetProcessor, ABC):
 
     def __init__(
         self,
-        filesystem: FileSystem,
+        connector: Connector,
         df: pd.DataFrame,
         config: ShardedDatasetConfig,
     ):
-        super().__init__(filesystem, df, config)
+        super().__init__(connector, df, config)
         assert 'split_name' in self.columns
 
     @abstractmethod
@@ -34,7 +34,7 @@ class ShardedDatasetProcessor(DatasetProcessor, ABC):
         datafile_paths = [self.get_datafile_path(split) for split in splits]
 
         helper = DataFramesChanger(
-            datafile_paths, self.filesystem, self.config
+            datafile_paths, self.connector, self.config
         )
         errors = helper.rename_columns(column_map, max_threads=workers)
         self._df.rename(columns=column_map, inplace=True)
@@ -49,7 +49,7 @@ class ShardedDatasetProcessor(DatasetProcessor, ABC):
         datafile_paths = [self.get_datafile_path(split) for split in splits]
 
         helper = DataFramesChanger(
-            datafile_paths, self.filesystem, self.config
+            datafile_paths, self.connector, self.config
         )
         errors = helper.delete_columns(columns, max_threads=workers)
         self._df.drop(columns=columns, inplace=True)
@@ -76,7 +76,7 @@ class ShardedDatasetProcessor(DatasetProcessor, ABC):
         table_to_new_data.index = [self.get_datafile_path(i) for i in table_to_new_data.index]
 
         helper = DataFramesChanger(
-            list(table_to_new_data.keys()), self.filesystem, self.config
+            list(table_to_new_data.keys()), self.connector, self.config
         )
         errors = helper.update_columns(key_column, dict(table_to_new_data), max_threads=workers)
         return errors

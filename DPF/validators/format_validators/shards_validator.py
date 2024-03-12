@@ -3,8 +3,8 @@ import os
 import pandas as pd
 
 from DPF.configs import ShardsDatasetConfig
+from DPF.connectors import Connector
 from DPF.datatypes import ShardedDataType
-from DPF.filesystems import FileSystem
 from DPF.validators.errors import (
     DataFrameErrorType,
     FileStructureErrorType,
@@ -20,11 +20,11 @@ class ShardsValidator(ShardedValidator):
     def __init__(
         self,
         merged_df: pd.DataFrame,
-        filesystem: FileSystem,
+        connector: Connector,
         config: ShardsDatasetConfig,
         columns_to_check: list[str]
     ):
-        super().__init__(merged_df, filesystem, config, columns_to_check)
+        super().__init__(merged_df, connector, config, columns_to_check)
 
     def _validate_files(self, filepaths: list[str]) -> list[FileStructureErrorType]:
         datafiles_ext = '.' + self.config.datafiles_ext
@@ -53,7 +53,7 @@ class ShardsValidator(ShardedValidator):
         errors_df: list[DataFrameErrorType] = []
         archive_path = dataframe_path.replace(self.config.datafiles_ext, self.config.archives_ext)
 
-        tar = self.filesystem.read_tar(archive_path)
+        tar = self.connector.read_tar(archive_path)
         filenames_in_tar = []
         for member in tar:
             filenames_in_tar.append(member.name)

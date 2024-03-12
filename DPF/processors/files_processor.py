@@ -3,9 +3,9 @@ from typing import Any, Callable, Optional
 import pandas as pd
 
 from DPF.configs import FilesDatasetConfig
+from DPF.connectors import Connector
 from DPF.dataloaders import FilesDataset, identical_preprocess_function
 from DPF.datatypes import ColumnDataType, FileDataType
-from DPF.filesystems import FileSystem
 from DPF.modalities import ModalityName
 from DPF.types import ModalityToDataMapping
 from DPF.validators import ValidationResult
@@ -16,35 +16,35 @@ from .processor_mixins import ApplyTransformProcessorMixin
 
 
 class FilesDatasetProcessor(DatasetProcessor, ApplyTransformProcessorMixin):
-    filesystem: FileSystem
+    connector: Connector
     df: pd.DataFrame
     config: FilesDatasetConfig
 
     def __init__(
         self,
-        filesystem: FileSystem,
+        connector: Connector,
         df: pd.DataFrame,
         config: FilesDatasetConfig,
     ):
-        super().__init__(filesystem, df, config)
+        super().__init__(connector, df, config)
 
     def rename_columns(self, column_map: dict[str, str], workers: int = 1) -> list[str]:
-        df = self.filesystem.read_dataframe(self.config.table_path)
+        df = self.connector.read_dataframe(self.config.table_path)
         for col_old, col_new in column_map.items():
             assert col_old in df.columns, f'Dataframe dont have "{col_old}" column'
             assert col_new not in df.columns, f'Dataframe already have "{col_new}" column'
         df.rename(columns=column_map, inplace=True)
-        self.filesystem.save_dataframe(df, self.config.table_path, index=False)
+        self.connector.save_dataframe(df, self.config.table_path, index=False)
 
         self._df.rename(columns=column_map, inplace=True)
         return []
 
     def delete_columns(self, columns: list[str], workers: int = 1) -> list[str]:
-        df = self.filesystem.read_dataframe(self.config.table_path)
+        df = self.connector.read_dataframe(self.config.table_path)
         for col in columns:
             assert col in df.columns, f'Dataframe dont have "{col}" column'
         df.drop(columns=columns, inplace=True)
-        self.filesystem.save_dataframe(df, self.config.table_path, index=False)
+        self.connector.save_dataframe(df, self.config.table_path, index=False)
 
         self._df.drop(columns=columns, inplace=True)
         return []
@@ -58,7 +58,7 @@ class FilesDatasetProcessor(DatasetProcessor, ApplyTransformProcessorMixin):
         assert key_column is not None, "Cant find key column to use for update"
         assert key_column not in columns, f'Cant update key column "{key_column}"'
 
-        df_old = self.filesystem.read_dataframe(self.config.table_path)
+        df_old = self.connector.read_dataframe(self.config.table_path)
         df_new = self._df[[key_column] + columns]
         df_new.loc[:,key_column] = df_new[key_column].str.slice(len(self.config.base_path)+1)
         assert key_column in df_old.columns, f'Dataframe dont have "{key_column}" column'
@@ -80,7 +80,7 @@ class FilesDatasetProcessor(DatasetProcessor, ApplyTransformProcessorMixin):
             df_old.drop(columns=list(columns_intersection), inplace=True)
 
         df = pd.merge(df_old, df_new, on=key_column)
-        self.filesystem.save_dataframe(df, self.config.table_path, index=False)
+        self.connector.save_dataframe(df, self.config.table_path, index=False)
         return []
 
     def validate(
@@ -95,7 +95,7 @@ class FilesDatasetProcessor(DatasetProcessor, ApplyTransformProcessorMixin):
             columns_to_check = []
         validator = FilesValidator(
             self.df,
-            self.filesystem,
+            self.connector,
             self.config,
             columns_to_check
         )
@@ -116,7 +116,7 @@ class FilesDatasetProcessor(DatasetProcessor, ApplyTransformProcessorMixin):
         assert len(set(modalities)) == len(list(modalities))
         datatypes_to_load = [self.config.modality2datatype[m] for m in modalities]
         return FilesDataset(
-            self.filesystem,
+            self.connector,
             self._df,
             datatypes_to_load,  # type: ignore
             metadata_columns=columns_to_use,
@@ -142,7 +142,7 @@ class FilesDatasetProcessor(DatasetProcessor, ApplyTransformProcessorMixin):
         # read files
         for col in path_column2modality.keys():
             modality = path_column2modality[col]
-            file_bytes = self.filesystem.read_file(sample[col], binary=True).getvalue()
+            file_bytes = self.connector.read_file(sample[col], binary=True).getvalue()
             modality2data[modality] = file_bytes
         # read data from columns
         for col in column2modality.keys():
