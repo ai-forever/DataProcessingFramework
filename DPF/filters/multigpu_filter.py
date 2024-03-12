@@ -1,5 +1,5 @@
-from multiprocessing import Manager, Process
 import multiprocessing
+from multiprocessing import Manager
 from typing import Any, Union
 
 import numpy as np
