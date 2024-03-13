@@ -22,8 +22,7 @@ dependencies = [
   "pandas",
   "pandarallel",
   "opencv-python==4.8.0.76",
-  "fsspec>=2023.1.0",
-  "s3fs==0.4.2",
+  "fsconnectors @ git+https://github.com/ai-forever/fsconnectors.git",
   "imageio",
   "imageio[pyav]"
 ]

@@ -1,7 +1,7 @@
 import io
 from typing import Union
 
-import fsspec
+from fsconnectors import S3Connector as S3Client
 
 from .connector import Connector
 
@@ -25,18 +25,19 @@ class S3Connector(Connector):
         self.endpoint_url = endpoint_url
         self.key = key
         self.secret = secret
-        self.storage_options = {
-            "anon": False,
-            "key": self.key,
-            "secret": self.secret,
-            "client_kwargs": {"endpoint_url": self.endpoint_url},
-        }
+        self.s3client = S3Client(
+            endpoint_url=self.endpoint_url,
+            aws_access_key_id=self.key,
+            aws_secret_access_key=self.secret
+        )
+
+    @staticmethod
+    def _preprocess_filepath(path: str) -> str:
+        return path[5:]
 
     def read_file(self, filepath: str, binary: bool) -> io.BytesIO:
         mode = "rb" if binary else "rt"
-        with fsspec.open(
-            filepath, s3=self.storage_options, mode=mode, skip_instance_cache=True
-        ) as f:
+        with self.s3client.open(self._preprocess_filepath(filepath), mode=mode) as f:
             if mode == "rb":
                 res = io.BytesIO(f.read())
                 res.seek(0)
@@ -49,9 +50,7 @@ class S3Connector(Connector):
     ) -> None:
         mode = "wb" if binary else "wt"
 
-        with fsspec.open(
-            f"simplecache::{filepath}", s3=self.storage_options, mode=mode
-        ) as f:
+        with self.s3client.open(self._preprocess_filepath(filepath), mode=mode) as f:
             if isinstance(data, io.BytesIO):
                 data.seek(0)
                 f.write(data.read())
@@ -59,20 +58,18 @@ class S3Connector(Connector):
                 f.write(data)
 
     def listdir(self, folder_path: str) -> list[str]:
-        folder_path = folder_path.lstrip("s3://").rstrip("/") + "/"  # noqa
-        s3 = fsspec.filesystem("s3", **self.storage_options)
-        files: list[str] = s3.ls(folder_path)
+        folder_path = self._preprocess_filepath(folder_path).rstrip("/") + "/"  # noqa
+        files: list[str] = self.s3client.listdir(folder_path)
         if folder_path in files:
             files.remove(folder_path)  # remove parent dir
-        files = ["s3://" + f for f in files]
+        files = ["s3://" + folder_path + f for f in files]
         return files
 
     def mkdir(self, folder_path: str) -> None:
-        folder_path = folder_path.rstrip("/") + "/"
-        s3 = fsspec.filesystem("s3", **self.storage_options)
+        folder_path = self._preprocess_filepath(folder_path).rstrip("/") + "/"
         # for some reason doesn't create directory
         # but it's ok because directories being created automatically when upload files
-        s3.makedirs(folder_path, exist_ok=True)
+        self.s3client.mkdir(folder_path)
 
     def join(self, *args: str) -> str:
         path = ''
