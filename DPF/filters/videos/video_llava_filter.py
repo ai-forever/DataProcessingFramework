@@ -25,6 +25,21 @@ def disable_torch_init() -> None:
     torch.nn.LayerNorm.reset_parameters = lambda self: None  # type: ignore
 
 
+def check_caption(caption: str) -> Optional[str]:
+    sentences_dict = {}
+    sentences = caption.split('.')
+    for sentence in sentences:
+        if sentence not in sentences_dict:
+            sentences_dict[sentence] = 1
+        else:
+            sentences_dict[sentence] += 1
+
+    if max(sentences_dict.values()) == 1:
+        return caption
+    else:
+        return None
+
+
 class VideoLLaVAFilter(VideoFilter):
     """
     Video-LLaVA inference class to get captions for auto-labeling videos.
@@ -130,11 +145,11 @@ class VideoLLaVAFilter(VideoFilter):
                 use_cache=True,
                 stopping_criteria=[self.stopping_criteria])
 
-        all_outputs = []
+        all_outputs: list[Optional[str]] = []
         for i in range(output_ids.shape[0]):
             caption = self.tokenizer.decode(output_ids[i, self.input_ids.shape[1]:]).strip().split('</s>')[0]
             all_outputs.append(caption)
-
+            all_outputs.append(check_caption(caption))
         df_batch_labels[self.schema[1]].extend(all_outputs)
         df_batch_labels[self.key_column].extend(keys)
         return df_batch_labels
