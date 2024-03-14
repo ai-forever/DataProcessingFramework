@@ -42,7 +42,7 @@ pip install .
 
 ### Поддерживаемые форматы данных
 
-Датасеты должен быть форматирован в одном из следующих форматов:
+Датасет должен храниться в одном из следующих форматов:
 - Files
 - Shards
 - ShardedFiles
@@ -90,7 +90,7 @@ from DPF.dataset_reader import DatasetReader
 
 config = FilesDatasetConfig.from_path_and_columns(
   'examples/example_video_dataset/',
-  video_path_col='image_name',
+  video_path_col='video_name',
   text_col='caption'
 )
 
@@ -104,7 +104,7 @@ processor = reader.read_from_config(config)
 
 Обработчик (processor) датасета дает интерфейс для взаимодействия и изменения данных.
 
-Более подробно про методы обработчика [см. здесь](docs/formats.md)
+Более подробно про методы обработчика [см. здесь](docs/processor.md)
 
 ### Фильтрация
 
