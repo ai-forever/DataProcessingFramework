@@ -1,12 +1,13 @@
-from typing import List, Dict, Union, Optional, Any
+from typing import Any, Optional, Union
+
 import numpy as np
 import torch
+from lavis.models import load_model_and_preprocess  # type: ignore
 from torch.nn.utils.rnn import pad_sequence
-from lavis.models import load_model_and_preprocess
-from PIL import Image
 
 from DPF.utils import read_image_rgb_from_bytes
-from ...dataloaders.dataloader_utils import identical_collate_fn
+
+from ...types import ModalityToDataMapping
 from .t2i_filter import T2IFilter
 
 
@@ -31,7 +32,7 @@ class BlipFilter(T2IFilter):
 
     def __init__(
         self,
-        templates: Optional[List[str]] = None,
+        templates: Optional[list[str]] = None,
         device: str = "cuda:0",
         workers: int = 16,
         batch_size: int = 64,
@@ -52,18 +53,22 @@ class BlipFilter(T2IFilter):
         )
 
     @property
-    def schema(self) -> List[str]:
-        return [self.key_column, f"blip2_ViT-L_similarity"]
+    def schema(self) -> list[str]:
+        return [self.key_column, "blip2_ViT-L_similarity"]
 
     @property
-    def dataloader_kwargs(self) -> Dict[str, Any]:
+    def dataloader_kwargs(self) -> dict[str, Any]:
         return {
             "num_workers": self.num_workers,
             "batch_size": self.batch_size,
             "drop_last": False
         }
-        
-    def preprocess(self, modality2data: Dict[str, Union[bytes, str]], metadata: dict):
+
+    def preprocess_data(
+        self,
+        modality2data: ModalityToDataMapping,
+        metadata: dict[str, Any]
+    ) -> Any:
         key = metadata[self.key_column]
         text = modality2data['text']
         pil_img = read_image_rgb_from_bytes(modality2data['image'])
@@ -71,26 +76,29 @@ class BlipFilter(T2IFilter):
         text_tensor = self.txt_processors["eval"](text)
         return key, img_tensor, text_tensor
 
-    def process_batch(self, batch) -> dict:
-        df_batch_labels = self._generate_dict_from_schema()
-        keys, image_tensors, text_tensors = list(zip(*batch))
-           
-        sample  = {}
+    def process_batch(self, batch: list[Any]) -> dict[str, list[Any]]:
+        df_batch_labels = self._get_dict_from_schema()
+
+        image_tensors: list[torch.Tensor]
+        text_tensors: list[torch.Tensor]
+        keys, image_tensors, text_tensors = list(zip(*batch))  # type: ignore
+
+        sample: dict[str, Union[torch.Tensor, list[torch.Tensor]]] = {}
         with torch.no_grad():
             image_tensors = [t.to(self.device) for t in image_tensors]
             sample['image'] = pad_sequence(image_tensors, batch_first=True)
             sample['text_input'] = text_tensors
             features_image = self.blip_model.extract_features(sample, mode="image")
             features_text = self.blip_model.extract_features(sample, mode="text")
-            
-            batch_similarity = self.get_similarity(features_image, features_text)
 
-        df_batch_labels[f"blip2_ViT-L_similarity"].extend(batch_similarity)
+            batch_similarity = self.get_similarity(features_image, features_text)  # type: ignore
+
+        df_batch_labels["blip2_ViT-L_similarity"].extend(batch_similarity)
         df_batch_labels[self.key_column].extend(keys)
 
         return df_batch_labels
 
-    def get_similarity(self, features_image, features_text):
+    def get_similarity(self, features_image, features_text):  # type: ignore
         with torch.no_grad():
             logits_per_image = features_image.image_embeds_proj[:,0,:] @ features_text.text_embeds_proj[:,0,:].t()
             probs = logits_per_image.cpu().numpy().tolist()

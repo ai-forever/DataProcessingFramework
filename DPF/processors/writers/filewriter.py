@@ -1,14 +1,14 @@
 from abc import abstractmethod
-import traceback
-from typing import Optional, Dict, Tuple
+from types import TracebackType
+from typing import Optional, Union
 
 
 class ABSWriter:
     @abstractmethod
     def save_sample(
         self,
-        modality2sample_data: Dict[str, Tuple[str, bytes]],
-        table_data: Dict[str, str] = {},
+        modality2sample_data: dict[str, tuple[str, bytes]],
+        table_data: Optional[dict[str, str]] = None,
     ) -> None:
         pass
 
@@ -19,8 +19,8 @@ class ABSWriter:
     @abstractmethod
     def __exit__(
         self,
-        exception_type,
-        exception_value: Optional[Exception],
-        exception_traceback: traceback,
+        exception_type: Union[type[BaseException], None],
+        exception_value: Union[BaseException, None],
+        exception_traceback: Union[TracebackType, None],
     ) -> None:
         pass

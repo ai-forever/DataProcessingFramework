@@ -1,14 +1,13 @@
 from abc import ABC, abstractmethod
 
-from DPF.modalities import MODALITIES, Modality
+from DPF.modalities import DataModality
 
 
 class DataType(ABC):
     """Represents modality in a specific storage format"""
 
-    def __init__(self, modality: Modality):
-        assert modality.key in MODALITIES
-        assert (modality.can_be_file and self.is_file) or (modality.can_be_column and not self.is_file)
+    def __init__(self, modality: DataModality):
+        assert self.is_file or (modality.can_be_column and not self.is_file)
         self.modality = modality
 
     @property
@@ -22,13 +21,13 @@ class ColumnDataType(DataType):
 
     def __init__(
         self,
-        modality: Modality,
+        modality: DataModality,
         user_column_name: str
     ):
         """
         Parameters
         ----------
-        modality: Modality
+        modality: DataModality
             instance of DPF.modalities.Modality
         user_column_name: str
             Name of column with data of this modality
@@ -40,6 +39,10 @@ class ColumnDataType(DataType):
     def is_file(self) -> bool:
         return False
 
+    @property
+    def column_name(self) -> str:
+        return self.modality.column  # type: ignore
+
     def __repr__(self) -> str:
         return f'ColumnDataType(modality={self.modality}, user_column_name="{self.user_column_name}")'
 
@@ -49,13 +52,13 @@ class FileDataType(DataType):
 
     def __init__(
         self,
-        modality: Modality,
+        modality: DataModality,
         user_path_column_name: str
     ):
         """
         Parameters
         ----------
-        modality: Modality
+        modality: DataModality
             instance of DPF.modalities.Modality
         user_path_column_name: str
             Name of column with paths to files of this modality
@@ -76,13 +79,13 @@ class ShardedDataType(DataType):
 
     def __init__(
         self,
-        modality: Modality,
+        modality: DataModality,
         user_basename_column_name: str,
     ):
         """
         Parameters
         ----------
-        modality: Modality
+        modality: DataModality
             instance of DPF.modalities.Modality
         user_basename_column_name: str
             Column name with file names of this modality

@@ -1,25 +1,36 @@
 import os
-from typing import List, Dict, Optional
+
 import pandas as pd
 
+from DPF.configs import ShardedFilesDatasetConfig
+from DPF.connectors import Connector
 from DPF.datatypes import ShardedDataType
-from DPF.validators.format_validators import (
-    ShardedValidator, FileStructureError, NoSuchFileError, IsNotKeyError, \
-    DataFrameError, MissingValueError
+from DPF.validators.errors import (
+    DataFrameErrorType,
+    FileStructureErrorType,
+    MissingValueError,
+    NoSuchFileError,
 )
+from DPF.validators.format_validators.sharded_validator import ShardedValidator
 
 
 class ShardedFilesValidator(ShardedValidator):
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        merged_df: pd.DataFrame,
+        connector: Connector,
+        config: ShardedFilesDatasetConfig,
+        columns_to_check: list[str]
+    ):
+        super().__init__(merged_df, connector, config, columns_to_check)
 
-    def _validate_files(self, filepaths: List[str]) -> List[FileStructureError]:
+    def _validate_files(self, filepaths: list[str]) -> list[FileStructureErrorType]:
         datafiles_ext = '.' + self.config.datafiles_ext.lstrip('.')
-        datafiles_set = set([f for f in filepaths if f.endswith(datafiles_ext)])
-        folders_set = set([f.rstrip('/') for f in filepaths if f not in datafiles_set])
+        datafiles_set = {f for f in filepaths if f.endswith(datafiles_ext)}
+        folders_set = {f.rstrip('/') for f in filepaths if f not in datafiles_set}
 
-        errors = []
+        errors: list[FileStructureErrorType] = []
         for datafile in datafiles_set:
             folder_path = datafile.replace(datafiles_ext, '')
             if folder_path not in folders_set:
@@ -35,12 +46,12 @@ class ShardedFilesValidator(ShardedValidator):
         self,
         dataframe_path: str,
         df: pd.DataFrame
-    ) -> (List[FileStructureError], List[DataFrameError]):
-        errors = []
-        errors_df = []
+    ) -> tuple[list[FileStructureErrorType], list[DataFrameErrorType]]:
+        errors: list[FileStructureErrorType] = []
+        errors_df: list[DataFrameErrorType] = []
         folder_path = dataframe_path.replace('.'+self.config.datafiles_ext.lstrip('.'), '')
 
-        filenames_in_folder_set = set(self.filesystem.listdir(folder_path, filenames_only=True))
+        filenames_in_folder_set = {os.path.basename(f) for f in self.connector.listdir(folder_path)}
 
         filename_columns = []
         for datatype in self.config.datatypes:

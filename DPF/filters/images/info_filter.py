@@ -1,9 +1,11 @@
-from typing import Dict, Union, List, Any, Optional
-from io import BytesIO
-from PIL import Image
-import numpy as np
 from dataclasses import dataclass
+from io import BytesIO
+from typing import Any, Optional
 
+import numpy as np
+from PIL import Image
+
+from ...types import ModalityToDataMapping
 from .img_filter import ImageFilter
 
 
@@ -11,13 +13,13 @@ from .img_filter import ImageFilter
 class ImageInfo:
     key: str
     is_correct: bool
-    width: int
-    height: int
-    channels: int
+    width: Optional[int]
+    height: Optional[int]
+    channels: Optional[int]
     error: Optional[str]
 
 
-def get_image_info(img_bytes, data, key_column) -> ImageInfo:
+def get_image_info(img_bytes: bytes, data: dict[str, Any], key_column: str) -> ImageInfo:
     """
     Get image path, read status, width, height, num channels, read error
     """
@@ -56,7 +58,7 @@ class ImageInfoFilter(ImageFilter):
         self.num_workers = workers
 
     @property
-    def schema(self) -> List[str]:
+    def schema(self) -> list[str]:
         return [
             self.key_column,
             "is_correct", "width", "height",
@@ -64,18 +66,22 @@ class ImageInfoFilter(ImageFilter):
         ]
 
     @property
-    def dataloader_kwargs(self) -> Dict[str, Any]:
+    def dataloader_kwargs(self) -> dict[str, Any]:
         return {
             "num_workers": self.num_workers,
             "batch_size": 1,
             "drop_last": False,
         }
 
-    def preprocess(self, modality2data: Dict[str, Union[bytes, str]], metadata: dict) -> ImageInfo:
+    def preprocess_data(
+        self,
+        modality2data: ModalityToDataMapping,
+        metadata: dict[str, Any]
+    ) -> Any:
         return get_image_info(modality2data['image'], metadata, self.key_column)
 
-    def process_batch(self, batch) -> dict:
-        df_batch_labels = self._generate_dict_from_schema()
+    def process_batch(self, batch: list[Any]) -> dict[str, list[Any]]:
+        df_batch_labels = self._get_dict_from_schema()
 
         for image_info in batch:
             df_batch_labels[self.key_column].append(image_info.key)

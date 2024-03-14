@@ -1,44 +1,41 @@
-from typing import List, Dict, Optional, Union
-from abc import abstractmethod, ABC
+from abc import ABC, abstractmethod
 
 from DPF.datatypes import DataType
+from DPF.modalities import ModalityName
 
 
 class DatasetConfig(ABC):
     """Config for a dataset"""
 
-    def __init__(
-        self,
-        path: str,
-        datatypes: List[DataType],
-    ):
-        """
-        Parameters
-        ----------
-        path: str
-            Path to dataset
-        datatypes: List[DataType]
-            List of datatypes in dataset
-        """
-        assert len(set([d.modality.key for d in datatypes])) == len(datatypes)
+    def __init__(self, path: str):
         assert not path.endswith('/')
-        self.datatypes = datatypes
         self.path = path
 
     @property
     @abstractmethod
-    def modality2datatype(self) -> Dict[str, DataType]:
+    def datatypes(self) -> list[DataType]:
+        """List of datatypes of a dataset"""
         pass
 
     @property
     @abstractmethod
-    def columns_mapping(self) -> Dict[str, str]:
+    def modality2datatype(self) -> dict[ModalityName, DataType]:
+        """Mapping modality to its datatype"""
         pass
 
-    def __repr__(self) -> str:
-        s = "DatasetConfig(\n\t"
-        s += 'datatypes=[\n\t\t'
-        s += '\n\t\t'.join([str(i) for i in self.datatypes])
-        s += '\n\t]'
-        s += '\n)'
-        return s
+    @property
+    @abstractmethod
+    def user_column2default_column(self) -> dict[str, str]:
+        pass
+
+    @property
+    def user_column_names(self) -> list[str]:
+        return list(self.user_column2default_column.keys())
+
+    @property
+    def user_columns_to_rename(self) -> dict[str, str]:
+        columns_to_rename = {}
+        for k, v in self.user_column2default_column.items():
+            if k != v:
+                columns_to_rename[k] = v
+        return columns_to_rename

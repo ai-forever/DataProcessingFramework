@@ -1,9 +1,12 @@
-from typing import Dict, Union, List, Any
-import imageio.v3 as iio
 import io
+from typing import Any
+
+import imageio.v3 as iio
 from PIL import Image
 
 from DPF.filters.images.img_filter import ImageFilter
+
+from ...types import ModalityToDataMapping
 from .video_filter import VideoFilter
 
 
@@ -26,21 +29,25 @@ class ImageFilterAdapter(VideoFilter):
         self.num_workers = workers
 
     @property
-    def schema(self) -> List[str]:
+    def schema(self) -> list[str]:
         return [
             self.key_column,
             *self.image_filter.schema[1:]
         ]
 
     @property
-    def dataloader_kwargs(self) -> Dict[str, Any]:
+    def dataloader_kwargs(self) -> dict[str, Any]:
         return {
             "num_workers": self.num_workers,
             "batch_size": 1,
             "drop_last": False,
         }
 
-    def preprocess(self, modality2data: Dict[str, Union[bytes, str]], metadata: dict):
+    def preprocess_data(
+        self,
+        modality2data: ModalityToDataMapping,
+        metadata: dict[str, Any]
+    ) -> Any:
         key = metadata[self.key_column]
 
         video_bytes = modality2data['video']
@@ -55,10 +62,10 @@ class ImageFilterAdapter(VideoFilter):
         Image.fromarray(frame).convert('RGB').save(buff, format='JPEG', quality=95)
         modality2data['image'] = buff.getvalue()
         metadata[self.image_filter.key_column] = ''
-        return key, self.image_filter.preprocess(modality2data, metadata)
+        return key, self.image_filter.preprocess_data(modality2data, metadata)
 
-    def process_batch(self, batch) -> dict:
-        df_batch_labels = self._generate_dict_from_schema()
+    def process_batch(self, batch: list[Any]) -> dict[str, list[Any]]:
+        df_batch_labels = self._get_dict_from_schema()
 
         for key, data in batch:
             df_batch_labels_images = self.image_filter.process_batch([data])

@@ -1,8 +1,10 @@
-from typing import Dict, Union, List, Any, Optional
-import imageio.v3 as iio
 import io
 from dataclasses import dataclass
+from typing import Any, Optional
 
+import imageio.v3 as iio
+
+from ...types import ModalityToDataMapping
 from .video_filter import VideoFilter
 
 
@@ -10,14 +12,14 @@ from .video_filter import VideoFilter
 class VideoInfo:
     key: str
     is_correct: bool
-    width: int
-    height: int
-    fps: float
-    duration: float
+    width: Optional[int]
+    height: Optional[int]
+    fps: Optional[float]
+    duration: Optional[float]
     error: Optional[str]
 
 
-def get_video_info(video_bytes, data, key_column) -> VideoInfo:
+def get_video_info(video_bytes: bytes, data: dict[str, Any], key_column: str) -> VideoInfo:
     """
     Get image path, read status, width, height, num channels, read error
     """
@@ -50,28 +52,32 @@ class VideoInfoFilter(VideoFilter):
         self.num_workers = workers
 
     @property
-    def schema(self) -> List[str]:
+    def schema(self) -> list[str]:
         return [
             self.key_column, "is_correct", "error",
             "width", "height", "fps", "duration"
         ]
 
     @property
-    def dataloader_kwargs(self) -> Dict[str, Any]:
+    def dataloader_kwargs(self) -> dict[str, Any]:
         return {
             "num_workers": self.num_workers,
             "batch_size": 1,
             "drop_last": False,
         }
 
-    def preprocess(self, modality2data: Dict[str, Union[bytes, str]], metadata: dict) -> VideoInfo:
+    def preprocess_data(
+        self,
+        modality2data: ModalityToDataMapping,
+        metadata: dict[str, Any]
+    ) -> Any:
         return get_video_info(modality2data['video'], metadata, self.key_column)
 
-    def process_batch(self, batch) -> dict:
-        df_batch_labels = self._generate_dict_from_schema()
+    def process_batch(self, batch: list[Any]) -> dict[str, list[Any]]:
+        df_batch_labels = self._get_dict_from_schema()
 
         for video_info in batch:
-            df_batch_labels[self.key_column].append(video_info.key)
+            df_batch_labels[self.key_column].append(video_info.name)
             df_batch_labels["is_correct"].append(video_info.is_correct)
             df_batch_labels["error"].append(video_info.error)
             df_batch_labels["width"].append(video_info.width)

@@ -1,10 +1,13 @@
-from typing import Dict, List, Union, Any
 import os
+from typing import Any
 from urllib.request import urlretrieve
-import torch
+
 import clip
 import numpy as np
+import torch
 import torch.nn as nn
+
+from DPF.types import ModalityToDataMapping
 
 try:
     from torch.utils.data.dataloader import default_collate
@@ -12,11 +15,12 @@ except ImportError:
     from torch.utils.data import default_collate
 
 from DPF.utils import read_image_rgb_from_bytes
+
 from .img_filter import ImageFilter
 
 
 class MLP(nn.Module):
-    def __init__(self, input_size, xcol='emb', ycol='avg_rating'):
+    def __init__(self, input_size: int, xcol: str = 'emb', ycol: str = 'avg_rating'):
         super().__init__()
         self.input_size = input_size
         self.xcol = xcol
@@ -32,38 +36,38 @@ class MLP(nn.Module):
             nn.Linear(16, 1)
         )
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> Any:
         return self.layers(x)
 
 
-def normalized(a, axis=-1, order=2):
+def normalized(a: np.ndarray[Any, Any], axis: int = -1, order: int = 2) -> Any:
     l2 = np.atleast_1d(np.linalg.norm(a, order, axis))
     l2[l2 == 0] = 1
     return a / np.expand_dims(l2, axis)
 
 
-def get_improved_aesthetic_model(cache_folder):
+def get_improved_aesthetic_model(cache_folder: str) -> MLP:
     """
     Load the aesthetic model
     """
-    path_to_model = cache_folder + "/sac+logos+ava1-l14-linearMSE.pth" 
+    path_to_model = cache_folder + "/sac+logos+ava1-l14-linearMSE.pth"
     if not os.path.exists(path_to_model):
         os.makedirs(cache_folder, exist_ok=True)
         url_model = (
             "https://github.com/christophschuhmann/improved-aesthetic-predictor/blob/main/"
-            + "sac+logos+ava1-l14-linearMSE.pth" 
+            + "sac+logos+ava1-l14-linearMSE.pth"
             + '?raw=true'
         )
         # TODO rework download
         urlretrieve(url_model, path_to_model)
-        
+
     model = MLP(768)  # CLIP embedding dim is 768 for CLIP ViT L 14
 
-    s = torch.load(path_to_model) 
+    s = torch.load(path_to_model)
 
     model.load_state_dict(s)
-    model.eval()    
-    
+    model.eval()
+
     return model
 
 
@@ -88,41 +92,45 @@ class ImprovedAestheticFilter(ImageFilter):
         self.device = device
 
         self.weights_folder = weights_folder
-        
+
         self.aesthetic_model = get_improved_aesthetic_model(weights_folder)
         self.aesthetic_model.to(self.device)
         self.clip_model, self.clip_transforms = clip.load("ViT-L/14", device=device)
 
     @property
-    def schema(self) -> List[str]:
+    def schema(self) -> list[str]:
         return [self.key_column, "improved_aesthetic_score_ViT-L/14"]
 
     @property
-    def dataloader_kwargs(self) -> Dict[str, Any]:
+    def dataloader_kwargs(self) -> dict[str, Any]:
         return {
             "num_workers": self.num_workers,
             "batch_size": self.batch_size,
             "drop_last": False,
         }
 
-    def preprocess(self, modality2data: Dict[str, Union[bytes, str]], metadata: dict):
+    def preprocess_data(
+        self,
+        modality2data: ModalityToDataMapping,
+        metadata: dict[str, Any]
+    ) -> Any:
         key = metadata[self.key_column]
         pil_image = read_image_rgb_from_bytes(modality2data['image'])
-        
+
         image = self.clip_transforms(pil_image)
 
         return key, image
 
-    def process_batch(self, batch) -> dict:
-        df_batch_labels = self._generate_dict_from_schema()
+    def process_batch(self, batch: list[Any]) -> dict[str, list[Any]]:
+        df_batch_labels = self._get_dict_from_schema()
 
         keys, image_tensors = list(zip(*batch))
-        batch = default_collate(image_tensors).to(self.device)
+        batch = default_collate(image_tensors).to(self.device)  # type: ignore
         with torch.no_grad():
             inputs = self.clip_model.encode_image(batch)
             inputs = normalized(inputs.cpu().detach().numpy())
-            outputs = self.aesthetic_model(torch.from_numpy(inputs).to(self.device).type(torch.cuda.FloatTensor))
-        
+            outputs = self.aesthetic_model(torch.from_numpy(inputs).to(self.device).type(torch.cuda.FloatTensor))  # type: ignore [attr-defined]
+
         df_batch_labels["improved_aesthetic_score_ViT-L/14"].extend(outputs.cpu().reshape(-1).tolist())
         df_batch_labels[self.key_column].extend(keys)
 

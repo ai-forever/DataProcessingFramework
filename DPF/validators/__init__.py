@@ -1,1 +1,1 @@
-from .validator import Validator, ValidationResult
+from .validator import ValidationResult, Validator

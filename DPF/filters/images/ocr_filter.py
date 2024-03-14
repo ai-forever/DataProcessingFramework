@@ -1,24 +1,16 @@
-from typing import Optional, List, Dict, Any
-import os
-import torch
-from torch import nn
-import numpy as np
 import json
+import os
+from typing import Any, Optional
 
-try:
-    from torch.utils.data.dataloader import default_collate
-except ImportError:
-    from torch.utils.data import default_collate
-from torchvision import models, transforms
-from huggingface_hub import hf_hub_url, cached_download
+import torch
 
-from DPF.filters.utils import FP16Module
 from DPF.utils import read_image_rgb_from_bytes
-from .img_filter import ImageFilter
 
-from .ocr_model.utils import AttnLabelConverter
+from ...types import ModalityToDataMapping
+from .img_filter import ImageFilter
 from .ocr_model.dataset import AlignCollate
 from .ocr_model.model import Model
+from .ocr_model.utils import AttnLabelConverter
 
 
 class Options:
@@ -64,10 +56,10 @@ class OCRFilter(ImageFilter):
         self.opt.input_channel = 1
         self.opt.output_channel = 512
         self.opt.hidden_size = 256
-        
+
         self.converter = AttnLabelConverter(self.opt.character)
         self.opt.num_class = len(self.converter.character)
-        
+
         self.model = Model(self.opt)
         weights = torch.load(self.weights_path)
         keys = list(weights.keys())
@@ -78,37 +70,41 @@ class OCRFilter(ImageFilter):
         self.model.load_state_dict(weights)
         self.model.to(self.device)
         self.model.eval()
-        
+
         self.AlignCollate = AlignCollate(imgH=self.opt.imgH, imgW=self.opt.imgW, keep_ratio_with_pad=self.opt.PAD)
         #
         self.text_box_col = "text_boxes"
         self.ocr_col = f"OCR_{self.model_name}"
 
     @property
-    def schema(self) -> List[str]:
+    def schema(self) -> list[str]:
         return ["image_path", self.ocr_col]
 
     @property
-    def dataloader_kwargs(self) -> Dict[str, Any]:
+    def dataloader_kwargs(self) -> dict[str, Any]:
         return {
             "num_workers": self.num_workers,
             "batch_size": self.batch_size,
-            "preprocess_f": self.preprocess,
+            "preprocess_f": self.preprocess_data,
             "drop_last": False,
             "cols_to_return": [self.text_box_col],
         }
 
-    def preprocess(self, img_bytes: bytes, data: dict):
-        image_path = data["image_path"]
-        boxes = json.loads(data[self.text_box_col])
-        pil_img = read_image_rgb_from_bytes(img_bytes)._convert('L')
+    def preprocess_data(
+        self,
+        modality2data: ModalityToDataMapping,
+        metadata: dict[str, Any]
+    ) -> Any:
+        image_path = metadata["image_path"]
+        boxes = json.loads(metadata[self.text_box_col])
+        pil_img = read_image_rgb_from_bytes(modality2data['image']).convert('L')
         return image_path, pil_img, boxes
 
-    def process_batch(self, batch) -> dict:
-        df_batch_labels = self._generate_dict_from_schema()
+    def process_batch(self, batch: list[Any]) -> dict[str, list[Any]]:
+        df_batch_labels = self._get_dict_from_schema()
         image_path, pil_img, boxes = batch[0]
         w, h = pil_img.size
-        
+
         input_data = []
         for box in boxes:
             left = max(box[0][0], 0)
@@ -119,20 +115,20 @@ class OCRFilter(ImageFilter):
                 upper, lower = lower, upper
             if left > right:
                 left, right = right, left
-                
+
             crop = pil_img.crop(
                 (left, upper, right, lower)
             )
             input_data.append((crop, ''))
-            
+
         if len(input_data) == 0:
             df_batch_labels[self.ocr_col].append("[]")
             df_batch_labels["image_path"].append(image_path)
             return df_batch_labels
-        
+
         data_preproc = self.AlignCollate(input_data)
         image_tensors = data_preproc[0]
-        
+
         batch_size = image_tensors.size(0)
         image = image_tensors.to(self.device)
         length_for_pred = torch.IntTensor([self.opt.batch_max_length] * batch_size).to(self.device)
@@ -142,11 +138,11 @@ class OCRFilter(ImageFilter):
         _, preds_index = preds.max(2)
         preds_str = self.converter.decode(preds_index, length_for_pred)
         preds_str = [s.replace('[s]', '') for s in preds_str]
-        
+
         res = []
         for box, prediction in zip(boxes, preds_str):
             res.append((box, prediction))
-            
+
         df_batch_labels[self.ocr_col].append(json.dumps(res))
         df_batch_labels["image_path"].append(image_path)
 

@@ -1,7 +1,6 @@
-from typing import Dict, Tuple, List, Union, Any
-from abc import abstractmethod, ABC
+from abc import ABC, abstractmethod
+from typing import Any
 
-import numpy as np
 import pandas as pd
 from pandarallel import pandarallel
 
@@ -17,22 +16,46 @@ class ColumnFilter(ABC):
 
     @property
     @abstractmethod
-    def columns_to_process(self) -> List[str]:
-        """List of columns in DataFrame that should be processed and passed to "process" method"""
+    def columns_to_process(self) -> list[str]:
+        """List of columns in DataFrame that should be processed and passed to "process_sample" method"""
         pass
 
     @property
     @abstractmethod
-    def schema(self) -> List[str]:
+    def schema(self) -> list[str]:
         """List of result columns that filter adds to a DataFrame"""
         pass
 
     @abstractmethod
-    def process(self, row: dict) -> tuple:
+    def process_sample(self, sample: dict[str, Any]) -> list[Any]:
+        """Method that processes one sample
+
+        Parameters
+        ----------
+        sample: dict[str, Any]
+            Sample from dataset dataframe. Mapping from column name to its value
+
+        Returns
+        -------
+        list[Any]
+            Results to add (length of list is equal to length of a "schema" property)
+        """
         pass
 
-    def __call__(self, df: pd.DataFrame) -> np.ndarray:
+    def __call__(self, df: pd.DataFrame) -> list[list[Any]]:
+        """Run filter. Rusn process_sample method on full dataframe
+
+        Parameters
+        ----------
+        df: pd.DataFrame
+            Dataset to be processed
+
+        Returns
+        -------
+        list[list[Any]]
+            List of results
+        """
         pandarallel.initialize(nb_workers=self.workers)
-        res = np.array(list(df[self.columns_to_process].parallel_apply(self.process, axis=1)))
+        res = list(df[self.columns_to_process].parallel_apply(self.process_sample, axis=1))
         return res
 

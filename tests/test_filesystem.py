@@ -1,8 +1,8 @@
-from DPF.filesystems import LocalFileSystem, S3FileSystem
+from DPF.connectors import S3Connector
 
 
 def test_s3_join():
-    fs = S3FileSystem('test', 'test', 'test')
+    fs = S3Connector('test', 'test', 'test')
 
     assert fs.join('s3://example-bucket/path/to/dataset', 'shards/') == \
            's3://example-bucket/path/to/dataset/shards'

@@ -1,12 +1,19 @@
-from typing import Dict, List, Union, Any
+from typing import Any
 
-from transformers import AutoTokenizer, BitsAndBytesConfig
-from llava.model import LlavaLlamaForCausalLM
 import torch
-from llava.conversation import conv_templates, SeparatorStyle
+from llava.constants import (
+    DEFAULT_IM_END_TOKEN,
+    DEFAULT_IM_START_TOKEN,
+    DEFAULT_IMAGE_TOKEN,
+    IMAGE_TOKEN_INDEX,
+)
+from llava.conversation import SeparatorStyle, conv_templates
+from llava.mm_utils import KeywordsStoppingCriteria, tokenizer_image_token
+from llava.model import LlavaLlamaForCausalLM
 from llava.utils import disable_torch_init
-from llava.constants import IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_TOKEN, DEFAULT_IM_START_TOKEN, DEFAULT_IM_END_TOKEN
-from llava.mm_utils import tokenizer_image_token, get_model_name_from_path, KeywordsStoppingCriteria
+from transformers import AutoTokenizer
+
+from ...types import ModalityToDataMapping
 
 try:
     from torch.utils.data.dataloader import default_collate
@@ -14,6 +21,7 @@ except ImportError:
     from torch.utils.data import default_collate
 
 from DPF.utils import read_image_rgb_from_bytes
+
 from .img_filter import ImageFilter
 
 
@@ -23,9 +31,9 @@ class LLaVaCaptioningFilter(ImageFilter):
     """
 
     def __init__(
-        self, 
-        model_path: str = 'liuhaotian/llava-v1.5-13b', 
-        prompt: str = 'detailed-long', 
+        self,
+        model_path: str = 'liuhaotian/llava-v1.5-13b',
+        prompt: str = 'detailed-long',
         workers: int = 16,
         batch_size: int = 16,
         device: str = "cuda:0",
@@ -36,7 +44,7 @@ class LLaVaCaptioningFilter(ImageFilter):
         self.batch_size = batch_size
         self.num_workers = workers
         self.device = device
-        
+
         #
         self.prompt_to_use = prompt
         prompts = {
@@ -77,41 +85,45 @@ class LLaVaCaptioningFilter(ImageFilter):
         self.stopping_criteria = KeywordsStoppingCriteria(keywords, self.tokenizer, self.input_ids)
 
     @property
-    def schema(self) -> List[str]:
+    def schema(self) -> list[str]:
         return [self.key_column, f"caption {self.model_path} prompt {self.prompt_to_use}"]
 
     @property
-    def dataloader_kwargs(self) -> Dict[str, Any]:
+    def dataloader_kwargs(self) -> dict[str, Any]:
         return {
             "num_workers": self.num_workers,
             "batch_size": self.batch_size,
             "drop_last": False,
         }
 
-    def preprocess(self, modality2data: Dict[str, Union[bytes, str]], metadata: dict):
+    def preprocess_data(
+        self,
+        modality2data: ModalityToDataMapping,
+        metadata: dict[str, Any]
+    ) -> Any:
         key = metadata[self.key_column]
         pil_img = read_image_rgb_from_bytes(modality2data['image']).convert('RGB')
-        img_tensor = self.image_processor.preprocess(pil_img, return_tensors='pt')['pixel_values'].half()
+        img_tensor = self.image_processor.preprocess_data(pil_img, return_tensors='pt')['pixel_values'].half()
         return key, img_tensor
 
-    def process_batch(self, batch) -> dict:
-        df_batch_labels = self._generate_dict_from_schema()
+    def process_batch(self, batch: list[Any]) -> dict[str, list[Any]]:
+        df_batch_labels = self._get_dict_from_schema()
 
         keys, image_tensors = list(zip(*batch))
-        image_tensors = default_collate(image_tensors).to(self.device)
-        
-        input_ids_batch = self.input_ids.repeat_interleave(image_tensors.shape[0], 0).to(self.device)
+        image_tensors = default_collate(image_tensors).to(self.device)  # type: ignore
+
+        input_ids_batch = self.input_ids.repeat_interleave(image_tensors.shape[0], 0).to(self.device)  # type: ignore
         with torch.inference_mode():
             output_ids = self.model.generate(
                 input_ids_batch, images=image_tensors, do_sample=True, temperature=0.2, top_p=0.7,
                 max_new_tokens=512, use_cache=True, stopping_criteria=[self.stopping_criteria]
             )
-        
+
         all_outputs = []
         for i in range(output_ids.shape[0]):
             output = self.tokenizer.decode(output_ids[i, self.input_ids.shape[1]:]).strip().split('</s>')[0]
             all_outputs.append(output)
-            
+
         df_batch_labels[self.schema[1]].extend(all_outputs)
         df_batch_labels[self.key_column].extend(keys)
 

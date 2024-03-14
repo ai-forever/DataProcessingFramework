@@ -1,8 +1,12 @@
-from typing import List
+
 from PIL import Image
 
-from DPF.transforms.base_file_transforms import BaseFilesTransforms, TransformsFileData
-from DPF.transforms.image_video_resizer import Resizer
+from DPF.transforms.base_file_transforms import (
+    BaseFilesTransforms,
+    PoolOptions,
+    TransformsFileData,
+)
+from DPF.transforms.resizer import Resizer
 
 
 class ImageResizeTransforms(BaseFilesTransforms):
@@ -11,7 +15,7 @@ class ImageResizeTransforms(BaseFilesTransforms):
         self,
         resizer: Resizer,
         img_format: str = 'JPEG',
-        pool_type: str = 'processes',
+        pool_type: PoolOptions = 'processes',
         workers: int = 16,
         pbar: bool = True
     ):
@@ -20,11 +24,11 @@ class ImageResizeTransforms(BaseFilesTransforms):
         self.img_format = img_format
 
     @property
-    def required_metadata(self) -> List[str]:
+    def required_metadata(self) -> list[str]:
         return []
 
     @property
-    def metadata_to_change(self) -> List[str]:
+    def metadata_to_change(self) -> list[str]:
         return ['width', 'height']
 
     @property

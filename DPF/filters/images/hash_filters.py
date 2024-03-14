@@ -1,18 +1,16 @@
-from typing import Optional, Dict, Union, List, Any
-import hashlib
-from PIL import Image
+from typing import Any
+
 import numpy as np
+from PIL import Image
 from scipy.fftpack import dct
 
 from DPF.utils import read_image_rgb_from_bytes
+
+from ...types import ModalityToDataMapping
 from .img_filter import ImageFilter
 
 
-def get_md5_hash(img_byte_arr):
-    return hashlib.md5(img_byte_arr).hexdigest()
-
-
-def get_phash(pil_img, hash_size=8, highfreq_factor=4):
+def get_phash(pil_img: Image.Image, hash_size: int = 8, highfreq_factor: int = 4) -> str:
     img_size = hash_size * highfreq_factor
     image_array = np.array(pil_img.resize((img_size, img_size), Image.LANCZOS))
 
@@ -47,26 +45,30 @@ class PHashFilter(ImageFilter):
         self.sim_hash_size = sim_hash_size
 
     @property
-    def schema(self) -> List[str]:
+    def schema(self) -> list[str]:
         return [self.key_column, f"image_phash_{self.sim_hash_size}"]
 
     @property
-    def dataloader_kwargs(self) -> Dict[str, Any]:
+    def dataloader_kwargs(self) -> dict[str, Any]:
         return {
             "num_workers": self.num_workers,
             "batch_size": 1,
             "drop_last": False,
         }
 
-    def preprocess(self, modality2data: Dict[str, Union[bytes, str]], metadata: dict):
+    def preprocess_data(
+        self,
+        modality2data: ModalityToDataMapping,
+        metadata: dict[str, Any]
+    ) -> Any:
         key = metadata[self.key_column]
         img_simhash = get_phash(
             read_image_rgb_from_bytes(modality2data['image']), hash_size=self.sim_hash_size
         )
         return key, img_simhash
 
-    def process_batch(self, batch) -> dict:
-        df_batch_labels = self._generate_dict_from_schema()
+    def process_batch(self, batch: list[Any]) -> dict[str, list[Any]]:
+        df_batch_labels = self._get_dict_from_schema()
 
         keys, img_simhashes = list(zip(*batch))
         df_batch_labels[self.key_column].extend(keys)

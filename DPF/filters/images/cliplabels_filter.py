@@ -1,6 +1,9 @@
-from typing import List, Optional, Dict, Union, Any
-import torch
+from typing import Any, Optional
+
 import clip
+import torch
+
+from ...types import ModalityToDataMapping
 
 try:
     from torch.utils.data.dataloader import default_collate
@@ -8,6 +11,7 @@ except ImportError:
     from torch.utils.data import default_collate
 
 from DPF.utils import read_image_rgb_from_bytes
+
 from .img_filter import ImageFilter
 
 
@@ -39,10 +43,10 @@ class CLIPLabelsFilter(ImageFilter):
     def __init__(
         self,
         clip_model: str,
-        labels: List[str],
+        labels: list[str],
         weights_folder: str,
         device: str = "cuda:0",
-        templates: Optional[List[str]] = None,
+        templates: Optional[list[str]] = None,
         workers: int = 16,
         batch_size: int = 64,
         pbar: bool = True,
@@ -68,22 +72,22 @@ class CLIPLabelsFilter(ImageFilter):
         self.text_features = self.get_text_features()
         #
         self.label2column = {
-            l: f'{self.clip_version} clip score "{l}"' for l in self.labels
+            label: f'{self.clip_version} clip score "{label}"' for label in self.labels
         }
 
     @property
-    def schema(self) -> List[str]:
-        return [self.key_column] + [self.label2column[l] for l in self.labels]
+    def schema(self) -> list[str]:
+        return [self.key_column] + [self.label2column[label] for label in self.labels]
 
     @property
-    def dataloader_kwargs(self) -> Dict[str, Any]:
+    def dataloader_kwargs(self) -> dict[str, Any]:
         return {
             "num_workers": self.num_workers,
             "batch_size": self.batch_size,
             "drop_last": False,
         }
 
-    def get_text_features(self):
+    def get_text_features(self) -> torch.Tensor:
         text_features = []
 
         for template in self.templates:
@@ -91,24 +95,28 @@ class CLIPLabelsFilter(ImageFilter):
                 [template.format(class_label.strip()) for class_label in self.labels]
             )
             text_features.append(self.clip_model.encode_text(texts.to(self.device)))
-        text_features = torch.stack(text_features).mean(0)
-        text_features = text_features / text_features.norm(dim=-1, keepdim=True)
-        return text_features
+        text_features_tensor = torch.stack(text_features).mean(0)
+        text_features_tensor = text_features_tensor / text_features_tensor.norm(dim=-1, keepdim=True)
+        return text_features_tensor
 
-    def preprocess(self, modality2data: Dict[str, Union[bytes, str]], metadata: dict):
+    def preprocess_data(
+        self,
+        modality2data: ModalityToDataMapping,
+        metadata: dict[str, Any]
+    ) -> Any:
         key = metadata[self.key_column]
         pil_img = read_image_rgb_from_bytes(modality2data['image'])
 
         img_tensor = self.clip_processor(pil_img)
         return key, img_tensor
 
-    def process_batch(self, batch) -> dict:
-        df_batch_labels = self._generate_dict_from_schema()
+    def process_batch(self, batch: list[Any]) -> dict[str, list[Any]]:
+        df_batch_labels = self._get_dict_from_schema()
 
         keys, image_tensors = list(zip(*batch))
 
         with torch.no_grad():
-            batch = default_collate(image_tensors).to(self.device)
+            batch = default_collate(image_tensors).to(self.device)  # type: ignore
             image_features = self.clip_model.encode_image(batch)
             image_features = image_features / image_features.norm(dim=-1, keepdim=True)
             logits_per_image = torch.matmul(image_features, self.text_features.t())

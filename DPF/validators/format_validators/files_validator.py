@@ -1,31 +1,17 @@
-from dataclasses import dataclass
-from typing import List, Dict
+
 import pandas as pd
 
-from DPF.validators.format_validators import (
-    IsNotKeyError, FileStructureError, DataFrameError, MissedColumnsError, DuplicatedValuesError,
-    NoSuchFileError
-)
-from DPF.validators import Validator, ValidationResult
-from DPF.datatypes import FileDataType
-from DPF.filesystems import FileSystem
 from DPF.configs import FilesDatasetConfig
-
-
-@dataclass
-class FilesValidationResult(ValidationResult):
-    filestructure_errors: List[FileStructureError]
-    dataframe_errors: Dict[str, List[DataFrameError]]
-
-    def __repr__(self):
-        s = "FilesValidationResult:"
-        s += f"\nfilestructure_errors = {self.filestructure_errors}"
-        s += f"\ndataframe_errors = {self.dataframe_errors}"
-        return s
-
-    @property
-    def total_errors(self) -> int:
-        return len(self.filestructure_errors) + sum(map(len, self.dataframe_errors.values()))
+from DPF.connectors import Connector
+from DPF.datatypes import FileDataType
+from DPF.validators import ValidationResult, Validator
+from DPF.validators.errors import (
+    DataFrameErrorType,
+    DuplicatedValuesError,
+    FileStructureErrorType,
+    IsNotKeyError,
+    MissedColumnsError,
+)
 
 
 class FilesValidator(Validator):
@@ -33,17 +19,17 @@ class FilesValidator(Validator):
     def __init__(
         self,
         merged_df: pd.DataFrame,
-        filesystem: FileSystem,
+        connector: Connector,
         config: FilesDatasetConfig,
-        columns_to_check: List[str]
+        columns_to_check: list[str]
     ):
         self.merged_df = merged_df
-        self.filesystem = filesystem
+        self.connector = connector
         self.config = config
         self.columns_to_check = columns_to_check
 
-    def _validate_filestructure(self) -> List[FileStructureError]:
-        errors = []
+    def _validate_filestructure(self) -> list[FileStructureErrorType]:
+        errors: list[FileStructureErrorType] = []
 
         for datatype in self.config.datatypes:
             if isinstance(datatype, FileDataType):
@@ -53,8 +39,8 @@ class FilesValidator(Validator):
 
         return errors
 
-    def _validate_df(self, df: pd.DataFrame) -> (List[DataFrameError], List[FileStructureError]):
-        dataframe_errors = []
+    def _validate_df(self, df: pd.DataFrame) -> list[DataFrameErrorType]:
+        dataframe_errors: list[DataFrameErrorType] = []
 
         # validate dataframe
         missed_columns = set(self.columns_to_check).difference(set(df.columns))
@@ -68,7 +54,7 @@ class FilesValidator(Validator):
                 has_duplicates = filepaths.duplicated().any()
                 if has_duplicates:
                     dataframe_errors.append(
-                        DuplicatedValuesError(self.config.table_path, datatype.user_basename_column_name)
+                        DuplicatedValuesError(self.config.table_path, datatype.user_path_column_name)
                     )
 
         return dataframe_errors
@@ -76,18 +62,19 @@ class FilesValidator(Validator):
     def validate(
         self,
         validate_filestructure: bool = True,
+        validate_metadata: bool = True,
         workers: int = 4,
         pbar: bool = True
-    ) -> FilesValidationResult:
-        filestructure_errors = []
-        dataframe2errors = {}
+    ) -> ValidationResult:
+        filestructure_errors: list[FileStructureErrorType] = []
+        dataframe2errors: dict[str, list[DataFrameErrorType]] = {}
 
         if validate_filestructure:
             filestructure_errors.extend(self._validate_filestructure())
+        if validate_metadata:
+            df = self.connector.read_dataframe(self.config.table_path)
+            dataframe_errors = self._validate_df(df)
+            if len(dataframe_errors) > 0:
+                dataframe2errors[self.config.table_path] = dataframe_errors
 
-        df = self.filesystem.read_dataframe(self.config.table_path)
-        dataframe_errors = self._validate_df(df)
-        if len(dataframe_errors) > 0:
-            dataframe2errors[self.config.table_path] = dataframe_errors
-
-        return FilesValidationResult(filestructure_errors, dataframe2errors)
+        return ValidationResult(filestructure_errors, dataframe2errors)

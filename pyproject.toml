@@ -1,0 +1,118 @@
+[build-system]
+requires = [
+    "hatchling >= 1.13.0",
+    "wheel",
+    "Cython~=3.0.5"
+]
+build-backend = "hatchling.build"
+
+[project]
+name = 'DPF'
+dynamic = [
+  'version'
+]
+readme = 'README.md'
+requires-python = '>=3.9'
+dependencies = [
+  "torch",
+  "numpy",
+  "scipy",
+  "pillow",
+  "tqdm",
+  "pandas",
+  "pandarallel",
+  "opencv-python==4.8.0.76",
+  "fsconnectors @ git+https://github.com/ai-forever/fsconnectors.git",
+  "imageio",
+  "imageio[pyav]"
+]
+
+[project.optional-dependencies]
+dev = ['pytest', 'mypy', 'ruff', 'isort']
+filters = [
+    'torchvision',
+    'CLIP @ git+https://github.com/openai/CLIP.git',
+    'CRAFT @ git+https://github.com/boomb0om/CRAFT-text-detection/',
+    'salesforce-lavis',
+    'py3langid',
+    'deep_translator',
+    'huggingface_hub'
+]
+video_llava = [
+    'videollava @ git+https://github.com/PKU-YuanGroup/Video-LLaVA',
+    'flash-attn',
+    'decord',
+    'pytorchvideo @ git+https://github.com/facebookresearch/pytorchvideo.git@28fe037d212663c6a24f373b94cc5d478c8c1a1d'
+]
+
+[tool.hatch.version]
+path = "DPF/__init__.py"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+# mypy settings
+[tool.mypy]
+strict = true
+implicit_reexport = true
+disable_error_code = ["import-untyped"]
+
+[[tool.mypy.overrides]]
+module = "DPF.filters.images.ocr_model.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "DPF.filters.videos.raft_core.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "DPF.filters.videos.video_llava_filter"
+disable_error_code = ["import-not-found"]
+
+[[tool.mypy.overrides]]
+module = "DPF.filters.images.llava_captioning_filter"
+disable_error_code = ["import-not-found"]
+
+[[tool.mypy.overrides]]
+module = "DPF.filters.images.ocr_filter"
+disable_error_code = ["attr-defined", "no-untyped-call"]
+
+[[tool.mypy.overrides]]
+module = "DPF.filters.utils.fp16_module"
+disable_error_code = ["attr-defined", "no-untyped-def", "no-untyped-call", "assignment"]
+
+# isort setting
+[tool.isort]
+profile = "black"
+
+# ruff settings
+[tool.ruff]
+extend-exclude = [
+    "DPF/filters/videos/raft_core/*",
+    "DPF/filters/images/ocr_model/*"
+]
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "C",  # flake8-comprehensions
+    "B",  # flake8-bugbear
+    "UP", # pyupgrade
+]
+ignore = [
+    "E501", # line too long, handled by black
+    "B008", # do not perform function calls in argument defaults
+    "C901", # too complex
+    "W191", # indentation contains tabs
+    "E741", # Ambiguous variable name
+]
+ignore-init-module-imports = true
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+
+[tool.ruff.lint.pyupgrade]
+keep-runtime-typing = true

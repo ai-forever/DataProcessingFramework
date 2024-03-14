@@ -1,10 +1,10 @@
-from typing import Optional, List
 import re
+from typing import Any, Optional
 
 from DPF.filters import ColumnFilter
 
 
-def replace_matches(caption, re_compiled, replacement):
+def replace_matches(caption: str, re_compiled: re.Pattern[str], replacement: str) -> str:
     iterator = reversed(list(re_compiled.finditer(str(caption).lower().strip())))
     for match in iterator:
         pos = list(match.span())
@@ -19,7 +19,7 @@ class RegexFilter(ColumnFilter):
 
     def __init__(
         self,
-        regex_replacement_list: Optional[list] = None,
+        regex_replacement_list: Optional[list[tuple[str, str]]] = None,
         text_column_name: str = "text",
         workers: int = 16,
         pbar: bool = True
@@ -28,7 +28,7 @@ class RegexFilter(ColumnFilter):
 
         if regex_replacement_list is None:
             regex_replacement_list = []
-        self.compiled_regexs = []
+        self.compiled_regex_replacement_list: list[tuple[re.Pattern[str], str]] = []
 
         # compiling regexs
         for regex, replacement in regex_replacement_list:
@@ -37,20 +37,20 @@ class RegexFilter(ColumnFilter):
         self.text_column_name = text_column_name
 
     @property
-    def columns_to_process(self) -> List[str]:
+    def columns_to_process(self) -> list[str]:
         return [self.text_column_name]
 
     @property
-    def schema(self) -> List[str]:
+    def schema(self) -> list[str]:
         return ["clean_caption"]
 
-    def add_regex(self, regex, replacement):
-        self.compiled_regexs.append((re.compile(regex), replacement))
+    def add_regex(self, regex: str, replacement: str) -> None:
+        self.compiled_regex_replacement_list.append((re.compile(regex), replacement))
 
-    def process(self, row: dict) -> tuple:
-        caption = row[self.text_column_name]
+    def process_sample(self, sample: dict[str, Any]) -> list[Any]:
+        caption = sample[self.text_column_name]
 
-        for re_compiled, replacement in self.compiled_regexs:
+        for re_compiled, replacement in self.compiled_regex_replacement_list:
             caption = replace_matches(caption, re_compiled, replacement)
 
-        return caption
+        return [caption]

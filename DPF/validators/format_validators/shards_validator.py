@@ -1,26 +1,38 @@
 import os
-from typing import List, Dict, Optional
+
 import pandas as pd
 
+from DPF.configs import ShardsDatasetConfig
+from DPF.connectors import Connector
 from DPF.datatypes import ShardedDataType
-from DPF.validators.format_validators import (
-    ShardedValidator, FileStructureError, NoSuchFileError, IsNotKeyError, \
-    DataFrameError, MissingValueError
+from DPF.validators.errors import (
+    DataFrameErrorType,
+    FileStructureErrorType,
+    MissingValueError,
+    NoSuchFileError,
 )
+from DPF.validators.format_validators.sharded_validator import ShardedValidator
 
 
 class ShardsValidator(ShardedValidator):
+    config: ShardsDatasetConfig
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        merged_df: pd.DataFrame,
+        connector: Connector,
+        config: ShardsDatasetConfig,
+        columns_to_check: list[str]
+    ):
+        super().__init__(merged_df, connector, config, columns_to_check)
 
-    def _validate_files(self, filepaths: List[str]) -> List[FileStructureError]:
+    def _validate_files(self, filepaths: list[str]) -> list[FileStructureErrorType]:
         datafiles_ext = '.' + self.config.datafiles_ext
         archives_ext = '.' + self.config.archives_ext
-        datafiles_set = set([f for f in filepaths if f.endswith(datafiles_ext)])
-        archives_set = set([f for f in filepaths if f.endswith(archives_ext)])
+        datafiles_set = {f for f in filepaths if f.endswith(datafiles_ext)}
+        archives_set = {f for f in filepaths if f.endswith(archives_ext)}
 
-        errors = []
+        errors: list[FileStructureErrorType] = []
         for datafile in datafiles_set:
             archive_path = datafile.replace(datafiles_ext, archives_ext)
             if archive_path not in archives_set:
@@ -36,14 +48,14 @@ class ShardsValidator(ShardedValidator):
         self,
         dataframe_path: str,
         df: pd.DataFrame
-    ) -> (List[FileStructureError], List[DataFrameError]):
-        errors = []
-        errors_df = []
+    ) -> tuple[list[FileStructureErrorType], list[DataFrameErrorType]]:
+        errors: list[FileStructureErrorType] = []
+        errors_df: list[DataFrameErrorType] = []
         archive_path = dataframe_path.replace(self.config.datafiles_ext, self.config.archives_ext)
 
-        tar = self.filesystem.read_tar(archive_path)
+        tar = self.connector.read_tar(archive_path)
         filenames_in_tar = []
-        for c, member in enumerate(tar):
+        for member in tar:
             filenames_in_tar.append(member.name)
         tar.close()
         filenames_in_tar_set = set(filenames_in_tar)

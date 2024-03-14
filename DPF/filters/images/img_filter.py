@@ -1,8 +1,7 @@
-from typing import List
 from abc import ABC
 
 from DPF.filters.data_filter import DataFilter
-from DPF.modalities import MODALITIES
+from DPF.modalities import MODALITIES, ModalityName
 
 
 class ImageFilter(DataFilter, ABC):
@@ -11,7 +10,7 @@ class ImageFilter(DataFilter, ABC):
     """
 
     @property
-    def modalities(self) -> List[str]:
+    def modalities(self) -> list[ModalityName]:
         return ['image']
 
     @property
@@ -19,5 +18,5 @@ class ImageFilter(DataFilter, ABC):
         return MODALITIES['image'].path_column
 
     @property
-    def metadata_columns(self) -> List[str]:
+    def metadata_columns(self) -> list[str]:
         return []

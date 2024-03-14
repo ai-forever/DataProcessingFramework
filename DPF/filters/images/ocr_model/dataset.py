@@ -1,23 +1,19 @@
-import os
-import sys
-import re
-import six
 import math
-# TODO(review) - зависимость отсутствует в requirements.txt
-import lmdb
-import torch
-# TODO(review) - зависимость отсутствует в requirements.txt
-from natsort import natsorted
-from PIL import Image
+
 import numpy as np
-from torch.utils.data import Dataset, ConcatDataset, Subset
-from torch._utils import _accumulate
+
+# TODO(review) - зависимость отсутствует в requirements.txt
+import torch
+
 # TODO(review) - зависимость отсутствует в requirements.txt
 import torchvision.transforms as transforms
 
+# TODO(review) - зависимость отсутствует в requirements.txt
+from PIL import Image
+
 
 # TODO(review) - зачем наследоваться от object?
-class ResizeNormalize(object):
+class ResizeNormalize:
 
     def __init__(self, size, interpolation=Image.BICUBIC):
         self.size = size
@@ -31,7 +27,7 @@ class ResizeNormalize(object):
         return img
 
 
-class NormalizePAD(object):
+class NormalizePAD:
 
     def __init__(self, max_size, PAD_type='right'):
         self.toTensor = transforms.ToTensor()
@@ -51,7 +47,7 @@ class NormalizePAD(object):
         return Pad_img
 
 
-class AlignCollate(object):
+class AlignCollate:
 
     def __init__(self, imgH=32, imgW=100, keep_ratio_with_pad=False):
         self.imgH = imgH

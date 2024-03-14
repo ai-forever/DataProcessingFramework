@@ -1,31 +1,34 @@
-from typing import List, Dict, Union, Any, Type
-from multiprocessing import Process, Manager
-import pandas as pd
+import multiprocessing
+from multiprocessing import Manager
+from typing import Any, Union
+
 import numpy as np
+import pandas as pd
 import torch
 
 from DPF.configs import DatasetConfig
-from DPF.filesystems import FileSystem
+from DPF.connectors import Connector
 from DPF.dataset_reader import DatasetReader
+
 from .data_filter import DataFilter
 
 
 # TODO(review) - один вызов в MultiGPUFilter, нужно перенести его внутрь класса
 def run_one_process(
     config: DatasetConfig,
-    fs: FileSystem,
+    connector: Connector,
     df: pd.DataFrame,
     i: int,
     index: pd.Series,
-    results: List[pd.DataFrame],
-    filter_class: Type[DataFilter],
-    filter_kwargs: dict,
-    device: str,
-    filter_run_kwargs: dict
-):
-    reader = DatasetReader(filesystem=fs)
+    results: list[pd.DataFrame],
+    filter_class: type[DataFilter],
+    filter_kwargs: dict[str, Any],
+    device: Union[str, torch.device],
+    filter_run_kwargs: dict[str, Any]
+) -> None:
+    reader = DatasetReader(connector=connector)
     processor = reader.from_df(config, df)
-    datafilter = filter_class(**filter_kwargs, _pbar_position=i, device=device)
+    datafilter = filter_class(**filter_kwargs, _pbar_position=i, device=device)  # type: ignore
     processor.apply_data_filter(datafilter, **filter_run_kwargs)
     res = processor.df
     res.set_index(index, inplace=True)
@@ -39,16 +42,50 @@ class MultiGPUDataFilter:
 
     def __init__(
         self,
-        devices: List[Union[torch.device | str]],
-        filter_class: type,
-        filter_params: dict
+        devices: list[Union[torch.device, str]],
+        datafilter_class: type[DataFilter],
+        datafilter_params: dict[str, Any]
     ):
-        self.filter_class = filter_class
-        self.filter_params = filter_params
+        """
+        Parameters
+        ----------
+        devices: list[Union[torch.device, str]]
+            List of devices to run datafilter on
+        datafilter_class: type[DataFilter]
+            Class of datafilter to use
+        datafilter_params: dict[str, Any]
+            Parameters for datafilter_class initialization
+        """
+        self.filter_class = datafilter_class
+        self.filter_params = datafilter_params
         self.devices = devices
         self.num_parts = len(devices)
 
-    def run(self, df: pd.DataFrame, config: DatasetConfig, fs: FileSystem, filter_run_kwargs: dict) -> pd.DataFrame:
+    def run(
+        self,
+        df: pd.DataFrame,
+        config: DatasetConfig,
+        connector: Connector,
+        filter_run_kwargs: dict[str, Any]
+    ) -> pd.DataFrame:
+        """Renames columns in files of a dataset
+
+        Parameters
+        ----------
+        df: pd.DataFrame
+            Dataframe to process with datafilter
+        config: DatasetConfig
+            Config of that dataset
+        connector: Connector
+            Connector to use
+        filter_run_kwargs: dict[str, Any]
+            Parameters for datafilter.run method
+
+        Returns
+        -------
+        pd.DataFrame
+            Dataframe with new columns added
+        """
         manager = Manager()
         shared_results = manager.list()
 
@@ -58,10 +95,10 @@ class MultiGPUDataFilter:
             params.append(
                 (
                     config,
-                    fs,
+                    connector,
                     df_splits[i],
                     i,
-                    df_splits[i].index,
+                    df_splits[i].index,  # type: ignore
                     shared_results,
                     self.filter_class,
                     self.filter_params,
@@ -72,7 +109,8 @@ class MultiGPUDataFilter:
 
         processes = []
         for param in params:
-            p = Process(target=run_one_process, args=param)
+            context = multiprocessing.get_context('spawn')
+            p = context.Process(target=run_one_process, args=param)
             p.start()
             processes.append(p)
 

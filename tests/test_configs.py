@@ -1,12 +1,16 @@
-from DPF.configs import ShardsDatasetConfig, ShardedFilesDatasetConfig, FilesDatasetConfig
+from DPF.configs import (
+    FilesDatasetConfig,
+    ShardedFilesDatasetConfig,
+    ShardsDatasetConfig,
+)
 
 
 def test_shards_config():
     path = 'tests/datasets/shards_correct'
-    config = ShardsDatasetConfig.from_modalities(
+    config = ShardsDatasetConfig.from_path_and_columns(
         path,
         image_name_col="image_name",
-        caption_col="caption"
+        text_col="caption"
     )
     print(config)
     assert isinstance(config, ShardsDatasetConfig)
@@ -16,10 +20,10 @@ def test_shards_config():
 
 def test_sharded_files_config():
     path = 'tests/datasets/sharded_files_correct'
-    config = ShardedFilesDatasetConfig.from_modalities(
+    config = ShardedFilesDatasetConfig.from_path_and_columns(
         path,
         image_name_col="image_name",
-        caption_col="caption"
+        text_col="caption"
     )
     print(config)
     assert isinstance(config, ShardedFilesDatasetConfig)
@@ -29,14 +33,13 @@ def test_sharded_files_config():
 
 def test_files_config():
     path = 'tests/datasets/files_correct/data.csv'
-    config = FilesDatasetConfig.from_modalities(
+    config = FilesDatasetConfig.from_path_and_columns(
         path,
         image_path_col="image_path",
-        caption_col="caption"
+        text_col="caption"
     )
     print(config)
     assert isinstance(config, FilesDatasetConfig)
     assert config.table_path == path
     assert len(config.datatypes) == 2
 
-    

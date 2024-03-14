@@ -1,10 +1,13 @@
-from typing import List, Dict, Union, Optional, Any
+from typing import Any, Optional
+
+import clip
 import numpy as np
 import torch
 from torch.nn.utils.rnn import pad_sequence
-import clip
 
 from DPF.utils import read_image_rgb_from_bytes
+
+from ...types import ModalityToDataMapping
 from .t2i_filter import T2IFilter
 
 
@@ -35,7 +38,7 @@ class CLIPFilter(T2IFilter):
         self,
         clip_version: str,
         weights_folder: str,
-        templates: Optional[List[str]] = None,
+        templates: Optional[list[str]] = None,
         device: str = "cuda:0",
         workers: int = 16,
         batch_size: int = 64,
@@ -59,28 +62,33 @@ class CLIPFilter(T2IFilter):
         )
 
     @property
-    def schema(self) -> List[str]:
+    def schema(self) -> list[str]:
         return [self.key_column, f"clip_{self.clip_version}_similarity"]
 
     @property
-    def dataloader_kwargs(self) -> Dict[str, Any]:
+    def dataloader_kwargs(self) -> dict[str, Any]:
         return {
             "num_workers": self.num_workers,
             "batch_size": self.batch_size,
             "drop_last": False
         }
 
-    def preprocess(self, modality2data: Dict[str, Union[bytes, str]], metadata: dict):
+    def preprocess_data(
+        self,
+        modality2data: ModalityToDataMapping,
+        metadata: dict[str, Any]
+    ) -> Any:
         key = metadata[self.key_column]
         text = modality2data['text']
         pil_img = read_image_rgb_from_bytes(modality2data['image'])
         img_tensor = self.clip_processor(pil_img)
         return key, img_tensor, text
 
-    def process_batch(self, batch) -> dict:
-        df_batch_labels = self._generate_dict_from_schema()
+    def process_batch(self, batch: list[Any]) -> dict[str, list[Any]]:
+        df_batch_labels = self._get_dict_from_schema()
 
-        keys, image_tensors, batch_labels = list(zip(*batch))
+        image_tensors: list[torch.Tensor]
+        keys, image_tensors, batch_labels = list(zip(*batch))  # type: ignore
 
         with torch.no_grad():
             image_tensors = [t.to(self.device) for t in image_tensors]
@@ -93,16 +101,16 @@ class CLIPFilter(T2IFilter):
                     truncate=True,
                 )
                 text_latents.append(self.clip_model.encode_text(texts.to(self.device)))
-            text_latents = torch.stack(text_latents).mean(0)
-            text_latents = text_latents / text_latents.norm(dim=-1, keepdim=True)
-            batch_similarity = self.get_similarity(inputs, text_latents).tolist()
+            text_latents_tensor = torch.stack(text_latents).mean(0)
+            text_latents_tensor = text_latents_tensor / text_latents_tensor.norm(dim=-1, keepdim=True)
+            batch_similarity = self.get_similarity(inputs, text_latents_tensor).tolist()
 
         df_batch_labels[f"clip_{self.clip_version}_similarity"].extend(batch_similarity)
         df_batch_labels[self.key_column].extend(keys)
 
         return df_batch_labels
 
-    def get_similarity(self, inputs, text_latents):
+    def get_similarity(self, inputs: dict[str, torch.Tensor], text_latents: torch.Tensor) -> np.ndarray[Any, Any]:
         with torch.no_grad():
             image_latents = self.clip_model.encode_image(inputs["pixel_values"])
             image_latents = image_latents / image_latents.norm(dim=-1, keepdim=True)
