@@ -1,11 +1,14 @@
-## Трансформации датасета
+## Transforms
 
-С помощью DPF можно изменять данные в датасете, например, изменить размер каждого видео или каждого фото.
-Для этого используется трансформации `DPF.transforms`.
+You can transform data in dataset with DPF.
+For example, resize videos or photos in dataset.
+You can use `DPF.transforms` for these tasks.
 
-Трансформации пока что работают только для форматов _files_ и _sharded files_.
+Transformations are currently working only for _files_ and _sharded files_ formats.
 
-Уменьшить все изображения до 768 пикселей по минимальной стороне с сохранением соотношения сторон:
+### Examples
+
+Resize all images to 768 pixels on the minimum side while maintaining the aspect ratio:
 ```python
 from DPF.transforms import ImageResizeTransforms, Resizer, ResizerModes
 
@@ -13,7 +16,7 @@ transforms = ImageResizeTransforms(Resizer(ResizerModes.MIN_SIZE, size=768))
 processor.apply_transform(transforms)
 ```
 
-Уменьшить все видео до 768 пикселей по максимальной стороне с сохранением соотношения сторон:
+Resize all images to 768 pixels on the maximum side while maintaining the aspect ratio:
 ```python
 from DPF.transforms import VideoResizeTransforms, Resizer, ResizerModes
 

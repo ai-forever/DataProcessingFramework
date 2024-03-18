@@ -1,73 +1,72 @@
 # DataProcessingFramework
 
-Фреймворк для обработки мультимодальных датасетов.
+A framework for processing multimodal datasets.
 
-## Содержание
+- [Installation](#installation)
+- [Overview](#overview)
+- [Basic usage](#basic-usage)
 
-- [Установка](#installation)
-- [О фреймворке](#overview)
-- [Базовое использование](#basic-usage)
+## Installation
 
-## Установка
-
-Установить с помощью pip:
+Install with pip:
 ```bash
 pip install git+https://github.com/ai-forever/DataProcessingFramework
 ```
-Установка из исходников:
+Install from repository:
 ```bash
 git clone https://github.com/ai-forever/DataProcessingFramework
 cd DataProcessingFramework
 pip install .
 ```
 
-## О фреймворке
+## Overview
 
-Фреймворк ориентирован на работу с мультимодальными данными и поддерживает следующие возможности:
-1. Чтение датасетов
-2. Фильтрация датасетов и подсчет метрик с помощью различных моделей
-3. Конвертация датасетов в другие форматы хранения
-4. Валидация датасетов
+Framework supports following features:
+1. Reading datasets
+2. Filtering datasets and calculating metrics using different models
+3. Converting datasets to other storage formats
+4. Datasets validating
 
-### Поддерживаемые виды данных
+### Supported data modalities
 
-Фреймворк поддерживает работу с данными, имеющим любую комбинацию следующих модальностей:
-- Тексты
-- Изображения
-- Видео
+The framework supports data that has any combination of the following modalities:
+- Text
+- Image
+- Video
 
-При этом, не поддерживаются датасеты, имеющие в одном сэмпле несколько данных одной модальности.
-Например, поддерживаются датасеты с модальностями: текст-видео, текст-картинка, картинка-видео, изображение и тд.
-Но не поддерживаются датасеты с дублирующимися модальностями: картинка-картинка (img2img), картинка-текст-картинка и тд.
+Datasets with several data of the same modality in one sample are not supported.
+For example, datasets with following modalities are supported: text-video, text-image, image-video, images, etc.
+Not supported: image2image, image-text-image, etc.
 
-### Поддерживаемые форматы данных
+### Supported data formats
 
-Датасет должен храниться в одном из следующих форматов:
+The dataset should be stored in one of the following formats::
 - Files
 - Shards
 - ShardedFiles
 
-[Подробнее про форматы данных](docs/formats.md)
+[More about data formats](docs/formats.md)
 
-## Базовое использование
+## Basic usage
 
-### Конфиги
-Чтобы считать датасет, нужно сначала создать конфиг, описывающий датасет и тип данных в нем.
-Для каждого формата данных нужно использовать соответствующий конфиг. Пример для формата _shards_:
+### Configs
+To read a dataset, you must first create a config that describes the dataset and the type of data in it.
+For each data format, you need to use the appropriate config.
+
+Example for _shards_ format:
 
 ```python
 from DPF.configs import ShardsDatasetConfig
 
 config = ShardsDatasetConfig.from_path_and_columns(
-  'examples/example_dataset/',  # путь к датасету
-  image_name_col='image_name',  # название колонки в csv с названием изображения
-  video_name_col='video_name',  # название колонки в csv с названием видео
-  text_col='caption'  # название колонки в csv с кэпшенами
+  'examples/example_dataset/',  # path to shards
+  image_name_col='image_name',  # name of column in csv file with image names 
+  text_col='caption'  # name of column in csv file with text/captions
 )
 ```
 
-### Чтение датасета
-Считать датасет можно с помощью класса `DatasetReader`, передав конфиг в метод `from_config`:
+### Reading a dataset
+You can read dataset using `DatasetReader.from_config` method:
 
 ```python
 from DPF.configs import ShardsDatasetConfig
@@ -82,7 +81,7 @@ config = ShardsDatasetConfig.from_path_and_columns(
 reader = DatasetReader()
 processor = reader.read_from_config(config)
 ```
-Пример чтения датасета с видео в формате _files_:
+Example for _files_ format:
 
 ```python
 from DPF.configs import FilesDatasetConfig
@@ -98,24 +97,25 @@ reader = DatasetReader()
 processor = reader.read_from_config(config)
 ```
 
-[Примеры чтения данных из других форматов](docs/formats.md)
+[Examples of reading data in other formats](docs/formats.md)
 
-### Просмотр и изменение датасета
+### Viewing and updating dataset
 
-Обработчик (processor) датасета дает интерфейс для взаимодействия и изменения данных.
+A dataset processor provides an interface for interacting with data and modifying it.
 
-Более подробно про методы обработчика [см. здесь](docs/processor.md)
+[More about dataset processor](docs/processor.md)
 
-### Фильтрация
+### Filtering dataset
 
-Фильтры - это модели или алгоритмы, которые позволяют посчитать метрики для датасета.
-Фильтры обрабатывают данные и добавляют новые колонки с посчитанными метриками.
+Filters are models or algorithms that calculate metrics for a dataset. 
+Filters process the data and add new columns with the calculated metrics.
 
-Подробнее про фильтры [см. здесь](docs/filters.md)
+[More about filters](docs/filters.md)
 
-### Трансформации
+### Transforming dataset
 
-С помощью DPF можно изменять данные в датасете, например, изменить размер каждого видео или каждого фото.
-Для этого используется трансформации `DPF.transforms`.
+You can transform data in dataset with DPF.
+For example, resize videos or photos in dataset.
+You can use `DPF.transforms` for these tasks.
 
-Подробнее про трансформации [см. здесь](docs/transforms.md)
+[More about transforms](docs/transforms.md)

@@ -1,19 +1,19 @@
-## Поддерживаемые форматы данных
+## Supported data formats
 
-Датасеты должен быть форматирован в одном из следующих форматов:
+The dataset should be stored in one of the following formats::
 - Files
 - Shards
 - ShardedFiles
 
-### Формат files
+### Files format
 
-Формат files это csv файл с метаданными и путями к изображениям, видео и др. CSV файл может выглядеть примерно так:
+The files format is a csv file with metadata and paths to images, videos, etc. A csv file can look like this:
 ```csv
 image_path,text,width,height
 images/1.jpg,caption,512,512
 ```
 
-Чтение датасета из формата _files_:
+Reading a dataset in _files_ format:
 
 ```python
 from DPF.configs import FilesDatasetConfig
@@ -29,13 +29,13 @@ reader = DatasetReader()
 processor = reader.read_from_config(config)
 ```
 
-### Формат shards
+### Shards format
 
-В этом формате датасет разделяется на шарды по `N` сэмплов в каждом.
-Файлы в каждом шарде лежат в tar архиве, а метаинформация лежит в csv файле.
-tar архив и csv файл каждого шарда должны иметь одинаковые имена (индекс шарда).
+In this format, the dataset is divided into shards of N samples each. 
+The files in each shard stored in `tar archive, and the metadata is stored in csv file. 
+The tar archive and csv file of each shard must have the same names (shard index).
 
-Пример структуры: 
+Example of _shards_ structure: 
 ```
 0.tar
 0.csv
@@ -44,7 +44,7 @@ tar архив и csv файл каждого шарда должны иметь
 ...
 ```
 
-Файл `0.csv`:
+`0.csv` file:
 ```csv
 image_name, caption
 0.jpg, caption for image 1
@@ -52,7 +52,7 @@ image_name, caption
 ...
 ```
 
-Чтение датасета из формата _shards_:
+Reading a dataset in _shards_ format:
 
 ```python
 from DPF.configs import ShardsDatasetConfig
@@ -68,11 +68,11 @@ reader = DatasetReader()
 processor = reader.read_from_config(config)
 ```
 
-### Формат sharded files
+### Sharded files format
 
-Этот формат похож на формат _shards_, но вместо tar архивов файлы лежат в папках.
+This format is similar to _shards_, but instead of tar archives, the files stored in folders.
 
-Пример структуры: 
+Example of _sharded files_ structure: 
 ```
 .
 ├── 0/
@@ -88,7 +88,7 @@ processor = reader.read_from_config(config)
 └── ...
 ```
 
-Чтение датасета из формата _sharded files_:
+Reading a dataset from _sharded files_ format:
 
 ```python
 from DPF.configs import ShardedFilesDatasetConfig

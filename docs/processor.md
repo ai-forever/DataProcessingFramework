@@ -1,13 +1,13 @@
-## Взаимодействие с датасетом через `DatasetProcessor`
+## `DatasetProcessor` guide
 
-Через обработчик датасета можно:
-- Обновлять и менять метаданные
-- Применять фильтры
-- Применять трансформации
-- Конвертировать датасет в другие форматы
-- Просматривать семплы из датасета
+Dataset processor supports following features:
+- Update and change metadata
+- Apply filters
+- Apply transformations
+- Convert dataset to other formats
+- View samples from a dataset
 
-### Пример
+### Example
 ```python
 from DPF.configs import ShardsDatasetConfig
 from DPF.dataset_reader import DatasetReader
@@ -22,34 +22,34 @@ reader = DatasetReader()
 processor = reader.read_from_config(config)
 ```
 
-### Атрибуты
-У обработчика датасета есть три основных атрибута:
-- `processor.df` - Датафрейм с метаданными о каждом сэмпле датасета
-- `processor.connector` - Коннектор к файловому хранилищу, где лежит датасет. Объект типа `processor.connectors.Connector`
-- `processor.config` - Конфиг датасета
+### Attributes
+Dataset processor have three main attributes:
+- `processor.df` - Pandas dataframe with metadata
+- `processor.connector` - A connector to filesystem there dataset is located. Object of type `processor.connectors.Connector`
+- `processor.config` - Dataset config
 
-### Вывести саммари о датасете
+### Print summary about dataset
 
 ```python
 processor.print_summary()
 ```
 
-### Обновление и изменение метаданных
+### Update and change metadata
 
-Обновить существующие или добавить новые колонки с метаинформацией:
+Update existing columns or add new columns:
 ```python
 processor.update_columns(['old_column_to_update', 'new_column'])
 ```
-Переименовать колонки с метаинформацией:
+Rename columns:
 ```python
 processor.rename_columns({'old_column': 'new_columns'})
 ```
-Удалить колонки с метаинформацией:
+Delete columns:
 ```python
 processor.delete_columns(['column_to_delete'])
 ```
 
-### Просмотр сэмплов из датасета
+### View samples
 
 ```python
 from PIL import Image
@@ -61,17 +61,17 @@ print(metadata['caption'])
 Image.open(io.BytesIO(modality2bytes['image']))
 ```
 
-### Фильтрация
+### Filters
 
-[Документация по фильтрам](filters.md)
+[Filters documentation](filters.md)
 
-### Трансформации
+### Transformation
 
-[Документация по трансформациям](transforms.md)
+[Transforms documentation](transforms.md)
 
-### Конвертация в другие форматы
+### Convert to other formats
 
-Конвертация в формат _shards_:
+Convert to _shards_ format:
 
 ```python
 processor.save_to_shards(
@@ -82,7 +82,7 @@ processor.save_to_shards(
 )
 ```
 
-Конвертация в формат _sharded files_
+Convert to _sharded files_ format:
 
 ```python
 processor.save_to_sharded_files(
