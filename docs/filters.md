@@ -26,15 +26,35 @@ List of implemented filters:
   - [VideoInfoFilter](../DPF/filters/videos/info_filter.py) - gather basic info about videos (width, height, fps, duration)
   - [ImageFilterAdapter](../DPF/filters/videos/image_filter_adapter.py) - adapter of image filters to the one frame of video
 
-Example:
+Example of using filter that adds metadata about images (width, height, channels):
 ```python
-from DPF.filters.images.base_images_info_filter import ImageInfoGatherer
-datafilter = ImageInfoGatherer(workers=8)
+from DPF.filters.images.info_filter import ImageInfoFilter
+datafilter = ImageInfoFilter(workers=8)
 processor.apply_data_filter(datafilter)
 processor.df # new columns ['width', 'height', 'is_correct'] are added
 ```
 
+### Datafilter
+
+Datafilters are filters that calculate new metadata (scores, captions, probabilities, etc) based on a file modalities: images and videos.
+To run a datafilter, use `processor.apply_data_filter()` method.
+
+### Columnfilter
+
+Columnfilters are filters that also calculates new metadata, but based on a existing metadata (texts, etc).
+
+Example of using column filter that classifies the text language:
+```python
+from DPF.filters.texts.lang_filter import LangFilter
+
+columnfilter = LangFilter(workers=16)
+processor.apply_column_filter(columnfilter)
+processor.df # new columns ["lang", "lang_score"] are added
+```
+
 ### Running filter on several GPUs
+
+To run a datafilter on multiple GPUs use `MultiGPUDataFilter` class:
 
 ```python
 from DPF.filters.images.llava_captioning_filter import LLaVaCaptioningFilter
@@ -50,3 +70,4 @@ multigpufilter = MultiGPUDataFilter(
 )
 processor.apply_multi_gpu_data_filter(multigpufilter)
 ```
+See `help(MultiGPUDataFilter)` for more information.

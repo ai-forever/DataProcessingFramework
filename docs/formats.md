@@ -1,9 +1,9 @@
 ## Supported data formats
 
-The dataset should be stored in one of the following formats::
+The dataset should be stored in one of the following formats:
 - Files
 - Shards
-- ShardedFiles
+- Sharded files
 
 ### Files format
 
@@ -16,8 +16,7 @@ images/1.jpg,caption,512,512
 Reading a dataset in _files_ format:
 
 ```python
-from DPF.configs import FilesDatasetConfig
-from DPF.dataset_reader import DatasetReader
+from DPF import FilesDatasetConfig, DatasetReader
 
 config = FilesDatasetConfig.from_path_and_columns(
     'tests/datasets/files_correct/data.csv',
@@ -55,8 +54,7 @@ image_name, caption
 Reading a dataset in _shards_ format:
 
 ```python
-from DPF.configs import ShardsDatasetConfig
-from DPF.dataset_reader import DatasetReader
+from DPF import ShardsDatasetConfig, DatasetReader
 
 config = ShardsDatasetConfig.from_path_and_columns(
   'tests/datasets/shards_correct',
@@ -70,7 +68,7 @@ processor = reader.read_from_config(config)
 
 ### Sharded files format
 
-This format is similar to _shards_, but instead of tar archives, the files stored in folders.
+This format is similar to _shards_, but instead of tar archives, files are stored in folders.
 
 Example of _sharded files_ structure: 
 ```
@@ -91,8 +89,7 @@ Example of _sharded files_ structure:
 Reading a dataset from _sharded files_ format:
 
 ```python
-from DPF.configs import ShardedFilesDatasetConfig
-from DPF.dataset_reader import DatasetReader
+from DPF import ShardedFilesDatasetConfig, DatasetReader
 
 config = ShardedFilesDatasetConfig.from_path_and_columns(
   'tests/datasets/shards_correct',

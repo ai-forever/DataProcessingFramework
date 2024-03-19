@@ -4,7 +4,11 @@ You can transform data in dataset with DPF.
 For example, resize videos or photos in dataset.
 You can use `DPF.transforms` for these tasks.
 
-Transformations are currently working only for _files_ and _sharded files_ formats.
+> Transformations are currently working only for _files_ and _sharded files_ formats and only on local storage
+
+List of implemented transforms:
+- [ImageResizeTransforms](../DPF/transforms/image_resize_transforms.py) - transforms that resizes images
+- [VideoResizeTransforms](../DPF/transforms/video_resize_transforms.py) - transforms that resizes videos
 
 ### Examples
 

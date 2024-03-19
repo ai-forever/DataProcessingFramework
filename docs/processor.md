@@ -1,4 +1,4 @@
-## `DatasetProcessor` guide
+## DatasetProcessor guide
 
 Dataset processor supports following features:
 - Update and change metadata
@@ -9,8 +9,7 @@ Dataset processor supports following features:
 
 ### Example
 ```python
-from DPF.configs import ShardsDatasetConfig
-from DPF.dataset_reader import DatasetReader
+from DPF import ShardsDatasetConfig, DatasetReader
 
 config = ShardsDatasetConfig.from_path_and_columns(
   'examples/example_dataset/',
@@ -36,20 +35,24 @@ processor.print_summary()
 
 ### Update and change metadata
 
-Update existing columns or add new columns:
+Methods below modifying or adding columns to a dataset metadata (usually csv files).
+
+Update existing columns or add new columns in dataset metadata.
 ```python
 processor.update_columns(['old_column_to_update', 'new_column'])
 ```
-Rename columns:
+Rename columns in dataset metadata:
 ```python
 processor.rename_columns({'old_column': 'new_columns'})
 ```
-Delete columns:
+Delete columns in dataset metadata:
 ```python
 processor.delete_columns(['column_to_delete'])
 ```
 
 ### View samples
+
+`processor.get_random_sample()` returns random sample from dataset.
 
 ```python
 from PIL import Image
