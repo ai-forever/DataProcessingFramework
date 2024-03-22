@@ -103,7 +103,7 @@ class LLaVaCaptioningFilter(ImageFilter):
     ) -> Any:
         key = metadata[self.key_column]
         pil_img = read_image_rgb_from_bytes(modality2data['image']).convert('RGB')
-        img_tensor = self.image_processor.preprocess_data(pil_img, return_tensors='pt')['pixel_values'].half()
+        img_tensor = self.image_processor.preprocess(pil_img, return_tensors='pt')['pixel_values'].half()
         return key, img_tensor
 
     def process_batch(self, batch: list[Any]) -> dict[str, list[Any]]:
