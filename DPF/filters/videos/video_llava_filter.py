@@ -27,7 +27,7 @@ def disable_torch_init():
     setattr(torch.nn.LayerNorm, "reset_parameters", lambda self: None)
 
     
-def check_caption(caption):
+def check_caption(caption: str):
     sentences_dict = {}
     sentences = caption.split('.')
     for sentence in sentences:
@@ -54,7 +54,7 @@ class VideoLLaVAFilter(VideoFilter):
         model_base: str = None,
         cache_path: str = "cache_dir",
         prompt: str = "detailed_video",
-        temperature: float = 0.2,
+        temperature: float = 0.8,
         max_new_tokens: int = 1024,
         load_4bit: bool = False,
         load_8bit: bool = False,
@@ -140,6 +140,8 @@ class VideoLLaVAFilter(VideoFilter):
                 do_sample=True if self.temperature > 0 else False,
                 temperature=self.temperature,
                 max_new_tokens=self.max_new_tokens,
+                num_beams=1,
+                no_repeat_ngram_size=2,
                 use_cache=True,
                 stopping_criteria=[self.stopping_criteria])
         
