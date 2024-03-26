@@ -27,7 +27,7 @@ def disable_torch_init():
     setattr(torch.nn.LayerNorm, "reset_parameters", lambda self: None)
 
     
-def check_caption(caption: str):
+def check_caption(caption: str) -> Optional[str]:
     sentences_dict = {}
     sentences = caption.split('.')
     for sentence in sentences:
