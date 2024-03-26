@@ -150,7 +150,6 @@ class VideoLLaVAFilter(VideoFilter):
         all_outputs: list[Optional[str]] = []
         for i in range(output_ids.shape[0]):
             caption = self.tokenizer.decode(output_ids[i, self.input_ids.shape[1]:]).strip().split('</s>')[0]
-            all_outputs.append(caption)
             all_outputs.append(check_caption(caption))
         df_batch_labels[self.schema[1]].extend(all_outputs)
         df_batch_labels[self.key_column].extend(keys)
