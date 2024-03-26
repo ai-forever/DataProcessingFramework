@@ -52,7 +52,7 @@ class VideoLLaVAFilter(VideoFilter):
         model_base: Optional[str] = None,
         cache_path: str = "cache_dir",
         prompt: str = "detailed_video",
-        temperature: float = 0.2,
+        temperature: float = 0.8,
         max_new_tokens: int = 1024,
         load_4bit: bool = False,
         load_8bit: bool = False,
@@ -142,6 +142,8 @@ class VideoLLaVAFilter(VideoFilter):
                 do_sample=True if self.temperature > 0 else False,
                 temperature=self.temperature,
                 max_new_tokens=self.max_new_tokens,
+                num_beams=1,
+                no_repeat_ngram_size=2,
                 use_cache=True,
                 stopping_criteria=[self.stopping_criteria])
 
