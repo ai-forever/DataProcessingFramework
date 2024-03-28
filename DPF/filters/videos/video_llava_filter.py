@@ -37,7 +37,7 @@ def check_caption(caption: str) -> Optional[str]:
     if max(sentences_dict.values()) == 1:
         return caption
     else:
-        return None
+        return ""
 
 
 class VideoLLaVAFilter(VideoFilter):
@@ -52,7 +52,7 @@ class VideoLLaVAFilter(VideoFilter):
         model_base: Optional[str] = None,
         cache_path: str = "cache_dir",
         prompt: str = "detailed_video",
-        temperature: float = 0.2,
+        temperature: float = 0.8,
         max_new_tokens: int = 1024,
         load_4bit: bool = False,
         load_8bit: bool = False,
@@ -142,13 +142,14 @@ class VideoLLaVAFilter(VideoFilter):
                 do_sample=True if self.temperature > 0 else False,
                 temperature=self.temperature,
                 max_new_tokens=self.max_new_tokens,
+                num_beams=1,
+                no_repeat_ngram_size=2,
                 use_cache=True,
                 stopping_criteria=[self.stopping_criteria])
 
         all_outputs: list[Optional[str]] = []
         for i in range(output_ids.shape[0]):
             caption = self.tokenizer.decode(output_ids[i, self.input_ids.shape[1]:]).strip().split('</s>')[0]
-            all_outputs.append(caption)
             all_outputs.append(check_caption(caption))
         df_batch_labels[self.schema[1]].extend(all_outputs)
         df_batch_labels[self.key_column].extend(keys)
