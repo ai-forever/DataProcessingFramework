@@ -37,7 +37,7 @@ def check_caption(caption: str) -> Optional[str]:
     if max(sentences_dict.values()) == 1:
         return caption
     else:
-        return None
+        return ""
 
 
 class VideoLLaVAFilter(VideoFilter):
