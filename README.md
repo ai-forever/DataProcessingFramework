@@ -100,7 +100,7 @@ Example for _shards_ format:
 from DPF import ShardsDatasetConfig
 
 config = ShardsDatasetConfig.from_path_and_columns(
-  'examples/example_dataset/',  # path to shards
+  'examples/example_dataset',  # path to shards
   image_name_col='image_name',  # name of column in csv file with image names 
   text_col='caption'  # name of column in csv file with text/captions
 )
@@ -113,7 +113,7 @@ You can read dataset using `DatasetReader.from_config` method:
 from DPF import ShardsDatasetConfig, DatasetReader
 
 config = ShardsDatasetConfig.from_path_and_columns(
-  'examples/example_dataset/',
+  'examples/example_dataset',
   image_name_col='image_name',
   text_col='caption'
 )
@@ -121,14 +121,14 @@ config = ShardsDatasetConfig.from_path_and_columns(
 reader = DatasetReader()
 processor = reader.read_from_config(config)
 ```
-Example for _files_ format:
+Example for _sharded files_ format:
 
 ```python
-from DPF import FilesDatasetConfig, DatasetReader
+from DPF import ShardedFilesDatasetConfig, DatasetReader
 
-config = FilesDatasetConfig.from_path_and_columns(
-  'examples/example_video_dataset/',
-  video_path_col='video_name',
+config = ShardedFilesDatasetConfig.from_path_and_columns(
+  'examples/example_video_dataset',
+  video_name_col='video_name',
   text_col='caption'
 )
 
