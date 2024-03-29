@@ -50,7 +50,7 @@ class VideoLLaVAFilter(VideoFilter):
         model_path: str = "LanguageBind/Video-LLaVA-7B",
         model_name: str = "Video-LLaVA-7B",
         model_base: Optional[str] = None,
-        cache_path: str = "cache_dir",
+        cache_path: Optional[str] = None,
         prompt: str = "detailed_video",
         temperature: float = 0.8,
         max_new_tokens: int = 1024,

@@ -38,9 +38,12 @@ filters = [
     'deep_translator',
     'huggingface_hub'
 ]
+llava = [
+    'transformers>=4.29',
+    'LLaVA @ git+https://github.com/haotian-liu/LLaVA.git'
+]
 video_llava = [
     'videollava @ git+https://github.com/PKU-YuanGroup/Video-LLaVA',
-    'flash-attn',
     'decord',
     'pytorchvideo @ git+https://github.com/facebookresearch/pytorchvideo.git@28fe037d212663c6a24f373b94cc5d478c8c1a1d'
 ]
