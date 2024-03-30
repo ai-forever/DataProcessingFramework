@@ -69,6 +69,8 @@ print(processor.df[new_column_name]) # prints generated image captions
 processor.update_columns([new_column_name], workers=16)
 ```
 
+More examples [there](examples/)
+
 ### Supported data modalities
 
 The framework supports data that has any combination of the following modalities:

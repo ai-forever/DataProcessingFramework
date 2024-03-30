@@ -10,7 +10,7 @@ List of implemented filters:
   - [ImprovedAestheticFilter](../DPF/filters/images/aesthetic_improved_filter.py) - aesthetic scoring for images
   - [BLIPCaptioningFilter](../DPF/filters/images/blip_captioning_filter.py) - captioning images using BLIP model
   - [CLIPLabelsFilter](../DPF/filters/images/cliplabels_filter.py) - calculate similarity of images with provided texts using CLIP model
-  - [LLaVaCaptioningFilter](../DPF/filters/images/llava_captioning_filter.py) - captioning images using LLaVA-13b model
+  - [LLaVaCaptioningFilter](../DPF/filters/images/llava_captioning_filter.py) - captioning images using LLaVA models
   - [NSFWFilter](../DPF/filters/images/nsfw_filter.py) - NSFW images detection
   - [CRAFTFilter](../DPF/filters/images/text_detection_filter.py) - text detection on image
   - [OCRFilter](../DPF/filters/images/ocr_filter.py) - text recognition
@@ -21,10 +21,14 @@ List of implemented filters:
   - [RuCLIPFilter](../DPF/filters/text2image/ruclip_filter.py) - similarity of images and texts using ru-clip
 - `texts`:
   - [LangFilter](../DPF/filters/texts/lang_filter.py) - text language classification
+  - [GoogleTranslateFilter](../DPF/filters/texts/google_translate_filter.py) - translates a text
   - [RegexFilter](../DPF/filters/texts/regex_filter.py) - filter texts using regular expressions
 - `videos`:
   - [VideoInfoFilter](../DPF/filters/videos/info_filter.py) - gather basic info about videos (width, height, fps, duration)
   - [ImageFilterAdapter](../DPF/filters/videos/image_filter_adapter.py) - adapter of image filters to the one frame of video
+  - [GunnarFarnebackFilter](../DPF/filters/videos/farneback_filter.py) - computes flow scores using Farneback's algorithm
+  - [RAFTOpticalFlowFilter](../DPF/filters/videos/raft_filter.py) - computes flow scores using [RAFT](https://github.com/princeton-vl/RAFT) model
+  - [VideoLLaVAFilter](../DPF/filters/videos/video_llava_filter.py) - captioning videos using Video-LLaVA
 
 ### Datafilter
 
@@ -73,6 +77,14 @@ processor.apply_multi_gpu_data_filter(multigpufilter)
 ```
 See `help(MultiGPUDataFilter)` for more information.
 
+### Examples
+
+You can find usage examples [there](../examples).
+- [Image filters examples](../examples/image_filters_example.ipynb)
+- [Video filters examples](../examples/video_filters_example.ipynb)
+- [Text filters examples](../examples/text_filters_example.ipynb)
+
 ### Creating new filter
 
 TODO
+
