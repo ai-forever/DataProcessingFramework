@@ -77,8 +77,8 @@ class OCRFilter(ImageFilter):
         self.ocr_col = f"OCR_{self.model_name}"
 
     @property
-    def schema(self) -> list[str]:
-        return ["image_path", self.ocr_col]
+    def result_columns(self) -> list[str]:
+        return [self.ocr_col]
 
     @property
     def dataloader_kwargs(self) -> dict[str, Any]:

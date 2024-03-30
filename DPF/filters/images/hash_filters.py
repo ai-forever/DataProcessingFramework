@@ -45,8 +45,8 @@ class PHashFilter(ImageFilter):
         self.sim_hash_size = sim_hash_size
 
     @property
-    def schema(self) -> list[str]:
-        return [self.key_column, f"image_phash_{self.sim_hash_size}"]
+    def result_columns(self) -> list[str]:
+        return [f"image_phash_{self.sim_hash_size}"]
 
     @property
     def dataloader_kwargs(self) -> dict[str, Any]:

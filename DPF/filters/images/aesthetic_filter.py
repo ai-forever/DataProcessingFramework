@@ -80,8 +80,8 @@ class AestheticFilter(ImageFilter):
         self.aesthetic_model.to(self.device)
 
     @property
-    def schema(self) -> list[str]:
-        return [self.key_column, "aesthetic_score"]
+    def result_columns(self) -> list[str]:
+        return ["aesthetic_score"]
 
     @property
     def dataloader_kwargs(self) -> dict[str, Any]:

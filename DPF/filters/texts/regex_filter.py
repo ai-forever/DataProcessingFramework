@@ -41,7 +41,7 @@ class RegexFilter(ColumnFilter):
         return [self.text_column_name]
 
     @property
-    def schema(self) -> list[str]:
+    def result_columns(self) -> list[str]:
         return ["clean_caption"]
 
     def add_regex(self, regex: str, replacement: str) -> None:

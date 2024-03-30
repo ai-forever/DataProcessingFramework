@@ -21,8 +21,15 @@ class DataFilter(ABC):
         self.pbar_position = _pbar_position
 
     @property
-    @abstractmethod
     def schema(self) -> list[str]:
+        """List of all columns of a DataFrame returned by filter.
+        Also includes system columns needed for merging (they are not added)
+        """
+        return [self.key_column]+self.result_columns
+
+    @property
+    @abstractmethod
+    def result_columns(self) -> list[str]:
         """List of result columns that filter adds to a DataFrame"""
         pass
 

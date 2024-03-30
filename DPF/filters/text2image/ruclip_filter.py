@@ -72,8 +72,8 @@ class RuCLIPFilter(T2IFilter):
         )
 
     @property
-    def schema(self) -> list[str]:
-        return [self.key_column, f"{self.ruclip_version}_similarity"]
+    def result_columns(self) -> list[str]:
+        return [f"{self.ruclip_version}_similarity"]
 
     @property
     def dataloader_kwargs(self) -> dict[str, Any]:

@@ -29,11 +29,8 @@ class ImageFilterAdapter(VideoFilter):
         self.num_workers = workers
 
     @property
-    def schema(self) -> list[str]:
-        return [
-            self.key_column,
-            *self.image_filter.schema[1:]
-        ]
+    def result_columns(self) -> list[str]:
+        return self.image_filter.result_columns
 
     @property
     def dataloader_kwargs(self) -> dict[str, Any]:

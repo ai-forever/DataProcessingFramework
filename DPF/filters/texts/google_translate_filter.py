@@ -69,7 +69,7 @@ class GoogleTranslateFilter(ColumnFilter):
         return [self.text_column_name]
 
     @property
-    def schema(self) -> list[str]:
+    def result_columns(self) -> list[str]:
         return [f"{self.text_column_name}_translated"]
 
     def process_sample(self, sample: dict[str, Any]) -> list[Any]:

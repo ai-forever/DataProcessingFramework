@@ -106,8 +106,8 @@ class VideoLLaVAFilter(VideoFilter):
         self.stopping_criteria = KeywordsStoppingCriteria(keywords, self.tokenizer, self.input_ids)
 
     @property
-    def schema(self) -> list[str]:
-        return [self.key_column, f"caption {self.model_name} prompt {self.prompt_to_use}"]
+    def result_columns(self) -> list[str]:
+        return [f"caption {self.model_name} prompt {self.prompt_to_use}"]
 
     @property
     def dataloader_kwargs(self) -> dict[str, Any]:

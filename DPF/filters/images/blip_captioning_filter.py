@@ -43,8 +43,8 @@ class BLIPCaptioningFilter(ImageFilter):
         self.blip_processor = self.blip_processor["eval"]
 
     @property
-    def schema(self) -> list[str]:
-        return [self.key_column, "blip_caption"]
+    def result_columns(self) -> list[str]:
+        return ["blip_caption"]
 
     @property
     def dataloader_kwargs(self) -> dict[str, Any]:

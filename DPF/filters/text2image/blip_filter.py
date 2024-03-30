@@ -53,8 +53,8 @@ class BlipFilter(T2IFilter):
         )
 
     @property
-    def schema(self) -> list[str]:
-        return [self.key_column, "blip2_ViT-L_similarity"]
+    def result_columns(self) -> list[str]:
+        return ["blip2_ViT-L_similarity"]
 
     @property
     def dataloader_kwargs(self) -> dict[str, Any]:

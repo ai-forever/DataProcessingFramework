@@ -97,8 +97,8 @@ class NSFWFilter(ImageFilter):
         )
 
     @property
-    def schema(self) -> list[str]:
-        return ["image_path", "nsfw_score"]
+    def result_columns(self) -> list[str]:
+        return ["nsfw_score"]
 
     @property
     def dataloader_kwargs(self) -> dict[str, Any]:
