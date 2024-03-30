@@ -51,7 +51,8 @@ class GoogleTranslateFilter(ColumnFilter):
         source_lang: str = "auto",
         target_lang: str = "en",
         max_symbols_in_batch: int = 3000,
-        timeout: float = 3,
+        timeout: float = 1,
+        timeout_on_error: float = 3,
         num_retries_per_batch: int = 1,
         pbar: bool = True
     ):
@@ -61,6 +62,7 @@ class GoogleTranslateFilter(ColumnFilter):
         self.target_lang = target_lang
         self.max_symbols_in_batch = max_symbols_in_batch
         self.timeout = timeout
+        self.timeout_on_error = timeout_on_error
         self.num_retries_per_batch = num_retries_per_batch
         self.translator = GoogleTranslator(source=source_lang, target=target_lang)
 
@@ -90,7 +92,8 @@ class GoogleTranslateFilter(ColumnFilter):
                     break
                 except Exception as err:
                     print(f'[{self.__class__.__name__}] {err}, retry: {num_retry}/{self.num_retries_per_batch}')
-                    time.sleep(self.timeout)
+                    time.sleep(self.timeout_on_error)
+            time.sleep(self.timeout)
 
         res = list(df[self.columns_to_process[0]].apply(lambda x: results.get(x, None)))
         return res
