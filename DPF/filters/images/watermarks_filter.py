@@ -112,8 +112,8 @@ class WatermarksFilter(ImageFilter):
         )
 
     @property
-    def schema(self) -> list[str]:
-        return [self.key_column, f"watermark_{self.watermarks_model}"]
+    def result_columns(self) -> list[str]:
+        return [f"watermark_{self.watermarks_model}"]
 
     @property
     def dataloader_kwargs(self) -> dict[str, Any]:

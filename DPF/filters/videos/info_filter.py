@@ -52,9 +52,9 @@ class VideoInfoFilter(VideoFilter):
         self.num_workers = workers
 
     @property
-    def schema(self) -> list[str]:
+    def result_columns(self) -> list[str]:
         return [
-            self.key_column, "is_correct", "error",
+            "is_correct", "error",
             "width", "height", "fps", "duration"
         ]
 

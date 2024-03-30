@@ -22,9 +22,16 @@ class ColumnFilter(ABC):
 
     @property
     @abstractmethod
-    def schema(self) -> list[str]:
+    def result_columns(self) -> list[str]:
         """List of result columns that filter adds to a DataFrame"""
         pass
+
+    @property
+    def schema(self) -> list[str]:
+        """List of all columns of a DataFrame returned by filter.
+        Also includes system columns needed to merge (they are not added)
+        """
+        return self.result_columns
 
     @abstractmethod
     def process_sample(self, sample: dict[str, Any]) -> list[Any]:

@@ -93,9 +93,8 @@ class RAFTOpticalFlowFilter(VideoFilter):
         self.model.eval()
 
     @property
-    def schema(self) -> list[str]:
+    def result_columns(self) -> list[str]:
         return [
-            self.key_column,
             "mean_optical_flow_raft"
         ]
 

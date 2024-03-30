@@ -62,8 +62,8 @@ class CLIPFilter(T2IFilter):
         )
 
     @property
-    def schema(self) -> list[str]:
-        return [self.key_column, f"clip_{self.clip_version}_similarity"]
+    def result_columns(self) -> list[str]:
+        return [f"clip_{self.clip_version}_similarity"]
 
     @property
     def dataloader_kwargs(self) -> dict[str, Any]:

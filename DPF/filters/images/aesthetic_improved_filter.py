@@ -98,8 +98,8 @@ class ImprovedAestheticFilter(ImageFilter):
         self.clip_model, self.clip_transforms = clip.load("ViT-L/14", device=device)
 
     @property
-    def schema(self) -> list[str]:
-        return [self.key_column, "improved_aesthetic_score_ViT-L/14"]
+    def result_columns(self) -> list[str]:
+        return ["improved_aesthetic_score_ViT-L/14"]
 
     @property
     def dataloader_kwargs(self) -> dict[str, Any]:

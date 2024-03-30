@@ -30,8 +30,8 @@ class CRAFTFilter(ImageFilter):
         self.model = CRAFTModel(weights_folder, device, use_refiner=False, fp16=True)
 
     @property
-    def schema(self) -> list[str]:
-        return [self.key_column, "text_boxes", "num_text_boxes", "text_area"]
+    def result_columns(self) -> list[str]:
+        return ["text_boxes", "num_text_boxes", "text_area"]
 
     @property
     def dataloader_kwargs(self) -> dict[str, Any]:

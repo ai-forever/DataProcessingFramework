@@ -75,11 +75,8 @@ class GunnarFarnebackFilter(VideoFilter):
         self.pass_frames = pass_frames
 
     @property
-    def schema(self) -> list[str]:
-        return [
-            self.key_column,
-            "mean_optical_flow_farneback"
-        ]
+    def result_columns(self) -> list[str]:
+        return ["mean_optical_flow_farneback"]
 
     @property
     def dataloader_kwargs(self) -> dict[str, Any]:

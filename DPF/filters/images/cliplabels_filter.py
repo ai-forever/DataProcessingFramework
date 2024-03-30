@@ -76,8 +76,8 @@ class CLIPLabelsFilter(ImageFilter):
         }
 
     @property
-    def schema(self) -> list[str]:
-        return [self.key_column] + [self.label2column[label] for label in self.labels]
+    def result_columns(self) -> list[str]:
+        return [self.label2column[label] for label in self.labels]
 
     @property
     def dataloader_kwargs(self) -> dict[str, Any]:

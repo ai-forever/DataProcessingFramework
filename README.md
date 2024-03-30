@@ -58,10 +58,11 @@ datafilter = LLaVaCaptioningFilter(
     workers=16, prompt='short', 
     batch_size=16, device="cuda:0"
 )
+print(datafilter.result_columns) # prints list of columns that will be added
 # applying filter to dataset
 processor.apply_data_filter(datafilter) # new metadata is created
 
-new_column_name = datafilter.schema[1] # name of new added column with generated caption
+new_column_name = datafilter.result_columns[1] # name of new added column with generated caption
 
 print(processor.df[new_column_name]) # prints generated image captions
 # adding new metadata to remote dataset
