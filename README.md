@@ -19,6 +19,10 @@ cd DataProcessingFramework
 pip install .
 ```
 
+Extra requirements: `filters`, `dev`, `llava`, `video_llava`
+
+To install extra requirements run: `pip install .[filters]`
+
 ## Overview
 
 Framework supports following features:
@@ -31,6 +35,9 @@ Framework supports following features:
 
 DPF allows you to easily filter datasets and add new metadata. 
 For example, the code below generates synthetic captions for images in shards on remote s3 storage and updates dataset metadata without downloading shards:
+
+Before running the example below, install extra requirements: `pip install DPF[filters,llava]`
+
 ```python
 from DPF import S3Connector, DatasetReader, ShardsDatasetConfig
 
