@@ -154,3 +154,4 @@ class VideoLLaVAFilter(VideoFilter):
         df_batch_labels[self.schema[1]].extend(all_outputs)
         df_batch_labels[self.key_column].extend(keys)
         return df_batch_labels
+    
