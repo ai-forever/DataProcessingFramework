@@ -12,7 +12,7 @@ Dataset processor supports following features:
 from DPF import ShardsDatasetConfig, DatasetReader
 
 config = ShardsDatasetConfig.from_path_and_columns(
-  'examples/example_dataset/',
+  'examples/example_dataset',
   image_name_col='image_name',
   text_col='caption'
 )

@@ -12,7 +12,7 @@ from .img_filter import ImageFilter
 
 def get_phash(pil_img: Image.Image, hash_size: int = 8, highfreq_factor: int = 4) -> str:
     img_size = hash_size * highfreq_factor
-    image_array = np.array(pil_img.resize((img_size, img_size), Image.LANCZOS))
+    image_array = np.array(pil_img.resize((img_size, img_size), Image.Resampling.LANCZOS))
 
     dct_coef = dct(dct(image_array, axis=0), axis=1)
     dct_reduced_coef = dct_coef[:hash_size, :hash_size]
