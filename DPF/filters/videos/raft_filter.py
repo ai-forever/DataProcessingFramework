@@ -1,6 +1,6 @@
 import io
 import os
-from typing import Any
+from typing import Any, Optional
 from urllib.request import urlopen
 from zipfile import ZipFile
 
@@ -82,14 +82,14 @@ class RAFTOpticalFlowFilter(VideoFilter):
 
         if use_small_model:
             self.model_name = "raft_small"
-            model_weights = os.path.join("models", "raft-small.pth")
+            model_weights_path = os.path.join("models", "raft-small.pth")
         else:
             self.model_name = "raft"
-            model_weights = os.path.join("models", "raft-things.pth")
+            model_weights_path = os.path.join("models", "raft-things.pth")
 
         self.model = RAFT(small=use_small_model)
 
-        model_weights = torch.load(zipped_files.open(model_weights))
+        model_weights = torch.load(zipped_files.open(model_weights_path))
         model_weights = {key.replace("module.", ""): value for key, value in model_weights.items()}
         self.model.load_state_dict(model_weights)
 
@@ -138,7 +138,7 @@ class RAFTOpticalFlowFilter(VideoFilter):
     def process_batch(self, batch: list[Any]) -> dict[str, list[Any]]:
         df_batch_labels = self._get_dict_from_schema()
 
-        mean_magnitudes = []
+        mean_magnitudes: list[Optional[float]] = []
         for data in batch:
             key, frames = data
             with torch.no_grad():

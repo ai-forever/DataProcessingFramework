@@ -1,5 +1,5 @@
 import io
-from typing import Any
+from typing import Any, Optional
 
 import cv2
 import imageio.v3 as iio
