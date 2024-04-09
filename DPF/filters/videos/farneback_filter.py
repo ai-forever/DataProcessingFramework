@@ -1,5 +1,5 @@
 import io
-from typing import Any, Optional
+from typing import Any
 
 import cv2
 import imageio.v3 as iio
@@ -111,7 +111,7 @@ class GunnarFarnebackFilter(VideoFilter):
                 transform_frame(frame=frames[i], target_size=(450, 450))
                 for i in range(self.pass_frames, len(frames), self.pass_frames)
             ]
-        
+
         mean_magnitudes: list[float] = []
         for i in range(self.pass_frames, len(frames_resized), self.pass_frames):
             current_frame = frames_resized[i - self.pass_frames]

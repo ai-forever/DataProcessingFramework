@@ -1,6 +1,6 @@
 import io
 import os
-from typing import Any, Optional
+from typing import Any
 from urllib.request import urlopen
 from zipfile import ZipFile
 
@@ -73,7 +73,7 @@ class RAFTOpticalFlowFilter(VideoFilter):
         self.num_workers = workers
         self.batch_size = batch_size
         self.device = device
-        
+
         assert pass_frames >= 1, "Number of pass_frames should be greater or equal to 1."
         self.pass_frames = pass_frames
 
@@ -145,11 +145,11 @@ class RAFTOpticalFlowFilter(VideoFilter):
                 for i in range(self.pass_frames, len(frames), self.pass_frames):
                     current_frame = frames[i - self.pass_frames]
                     next_frame = frames[i]
-                    
+
                     if (i - self.pass_frames) == 0:
                         current_frame_cuda = current_frame.to(self.device)
                         next_frame_cuda = next_frame.to(self.device)
-                        
+
                         _, flow = self.model(
                             current_frame_cuda,
                             next_frame_cuda,
@@ -158,7 +158,7 @@ class RAFTOpticalFlowFilter(VideoFilter):
                     else:
                         current_frame_cuda = next_frame_cuda
                         next_frame_cuda = next_frame.to(self.device)
-                        
+
                         _, flow = self.model(
                             current_frame_cuda,
                             next_frame_cuda,
