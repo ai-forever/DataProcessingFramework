@@ -136,7 +136,6 @@ class GunnarFarnebackFilter(VideoFilter):
     def process_batch(self, batch: list[Any]) -> dict[str, list[Any]]:
         df_batch_labels = self._get_dict_from_schema()
 
-        mean_magnitudes = []
         for data in batch:
             key, mean_optical_flow = data
             df_batch_labels[self.key_column].append(key)
