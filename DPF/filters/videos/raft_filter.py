@@ -73,7 +73,8 @@ class RAFTOpticalFlowFilter(VideoFilter):
         self.num_workers = workers
         self.batch_size = batch_size
         self.device = device
-
+        
+        assert pass_frames >= 1, "Number of pass_frames should be greater or equal to 1."
         self.pass_frames = pass_frames
 
         resp = urlopen(WEIGHTS_URL)
@@ -97,7 +98,7 @@ class RAFTOpticalFlowFilter(VideoFilter):
 
     @property
     def result_columns(self) -> list[str]:
-        return  [f"mean_optical_flow_{self.model_name}"]
+        return [f"mean_optical_flow_{self.model_name}"]
 
     @property
     def dataloader_kwargs(self) -> dict[str, Any]:
@@ -144,12 +145,25 @@ class RAFTOpticalFlowFilter(VideoFilter):
                 for i in range(self.pass_frames, len(frames), self.pass_frames):
                     current_frame = frames[i - self.pass_frames]
                     next_frame = frames[i]
-
-                    _, flow = self.model(
-                        current_frame.to(self.device),
-                        next_frame.to(self.device),
-                        iters=20, test_mode=True
-                    )
+                    
+                    if (i - self.pass_frames) == 0:
+                        current_frame_cuda = current_frame.to(self.device)
+                        next_frame_cuda = next_frame.to(self.device)
+                        
+                        _, flow = self.model(
+                            current_frame_cuda,
+                            next_frame_cuda,
+                            iters=20, test_mode=True
+                        )
+                    else:
+                        current_frame_cuda = next_frame_cuda
+                        next_frame_cuda = next_frame.to(self.device)
+                        
+                        _, flow = self.model(
+                            current_frame_cuda,
+                            next_frame_cuda,
+                            iters=20, test_mode=True
+                        )
 
                     flow = flow.detach().cpu().numpy()
                     magnitude, angle = cv2.cartToPolar(flow[0][..., 0], flow[0][..., 1])
