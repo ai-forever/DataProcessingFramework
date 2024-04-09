@@ -31,7 +31,7 @@ def get_image_info(img_bytes: bytes, data: dict[str, Any], key_column: str) -> I
 
     try:
         pil_img = Image.open(BytesIO(img_bytes))
-        pil_img.load()
+        pil_img.load()  # type: ignore
 
         arr = np.array(pil_img)
 
