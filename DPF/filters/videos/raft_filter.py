@@ -138,7 +138,7 @@ class RAFTOpticalFlowFilter(VideoFilter):
     def process_batch(self, batch: list[Any]) -> dict[str, list[Any]]:
         df_batch_labels = self._get_dict_from_schema()
 
-        mean_magnitudes: list[Optional[float]] = []
+        mean_magnitudes: np.floating[Any] = []
         for data in batch:
             key, frames = data
             with torch.no_grad():

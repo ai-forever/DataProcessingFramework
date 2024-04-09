@@ -112,7 +112,7 @@ class GunnarFarnebackFilter(VideoFilter):
                 for i in range(self.pass_frames, len(frames), self.pass_frames)
             ]
         
-        mean_magnitudes: list[Optional[float]] = []
+        mean_magnitudes: np.floating[Any] = []
         for i in range(self.pass_frames, len(frames_resized), self.pass_frames):
             current_frame = frames_resized[i - self.pass_frames]
             next_frame = frames_resized[i]
