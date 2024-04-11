@@ -47,6 +47,11 @@ video_llava = [
     'decord',
     'pytorchvideo @ git+https://github.com/facebookresearch/pytorchvideo.git@28fe037d212663c6a24f373b94cc5d478c8c1a1d'
 ]
+lita = [
+    'lita @ git+https://github.com/NVlabs/LITA',
+    'gdown',
+    'llava @ git+https://github.com/haotian-liu/LLaVA'
+]
 
 [tool.hatch.version]
 path = "DPF/__init__.py"
