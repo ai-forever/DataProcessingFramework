@@ -132,14 +132,14 @@ class LITAFilter(VideoFilter):
         with torch.inference_mode():
             output_ids = self.model.generate(
                 input_ids_batch,
-                images=video_tensors[:, 0],
+                images=video_tensors[:, 0],  # type: ignore
                 do_sample=True,
                 temperature=self.temperature,
                 top_p=0.85,
                 num_beams=1,
                 max_new_tokens=self.max_new_tokens,
                 use_cache=True
-            )    
+            )
 
         all_outputs: list[Optional[str]] = []
         for i in range(output_ids.shape[0]):
