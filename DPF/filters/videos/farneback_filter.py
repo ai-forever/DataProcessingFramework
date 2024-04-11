@@ -111,33 +111,33 @@ class GunnarFarnebackFilter(VideoFilter):
                 transform_frame(frame=frames[i], target_size=(450, 450))
                 for i in range(self.pass_frames, len(frames), self.pass_frames)
             ]
-        return key, frames_resized
+
+        mean_magnitudes: list[float] = []
+        for i in range(self.pass_frames, len(frames_resized), self.pass_frames):
+            current_frame = frames_resized[i - self.pass_frames]
+            next_frame = frames_resized[i]
+            flow = cv2.calcOpticalFlowFarneback(
+                current_frame,
+                next_frame,
+                None,
+                self.pyramid_scale,
+                self.levels,
+                self.win_size,
+                self.iterations,
+                self.size_poly_exp,
+                self.poly_sigma,
+                self.flags
+            )
+            magnitude, _ = cv2.cartToPolar(flow[..., 0], flow[..., 1])
+            mean_magnitudes.append(magnitude)
+        mean_optical_flow = np.mean(mean_magnitudes)
+        return key, mean_optical_flow
 
     def process_batch(self, batch: list[Any]) -> dict[str, list[Any]]:
         df_batch_labels = self._get_dict_from_schema()
 
-        mean_magnitudes = []
         for data in batch:
-            key, frames = data
-            for i in range(self.pass_frames, len(frames), self.pass_frames):
-                current_frame = frames[i - self.pass_frames]
-                next_frame = frames[i]
-                flow = cv2.calcOpticalFlowFarneback(
-                    current_frame,
-                    next_frame,
-                    None,
-                    self.pyramid_scale,
-                    self.levels,
-                    self.win_size,
-                    self.iterations,
-                    self.size_poly_exp,
-                    self.poly_sigma,
-                    self.flags
-                )
-                magnitude, _ = cv2.cartToPolar(flow[..., 0], flow[..., 1])
-                mean_magnitudes.append(magnitude)
-            mean_optical_flow = np.mean(mean_magnitudes)
-
+            key, mean_optical_flow = data
             df_batch_labels[self.key_column].append(key)
             df_batch_labels['mean_optical_flow_farneback'].append(round(mean_optical_flow, 3))
         return df_batch_labels
