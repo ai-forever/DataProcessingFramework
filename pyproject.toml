@@ -78,7 +78,7 @@ module = "DPF.filters.videos.video_llava_filter"
 disable_error_code = ["import-not-found"]
 
 [[tool.mypy.overrides]]
-module = "DPF.filters.videos.lita"
+module = "DPF.filters.videos.lita_filter"
 disable_error_code = ["import-not-found", "call-overload"]
 
 [[tool.mypy.overrides]]
