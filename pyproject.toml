@@ -47,6 +47,10 @@ video_llava = [
     'decord',
     'pytorchvideo @ git+https://github.com/facebookresearch/pytorchvideo.git@28fe037d212663c6a24f373b94cc5d478c8c1a1d'
 ]
+lita = [
+    'LITA @ git+https://github.com/NVlabs/LITA',
+    'gdown'
+]
 
 [tool.hatch.version]
 path = "DPF/__init__.py"
@@ -71,6 +75,10 @@ ignore_errors = true
 [[tool.mypy.overrides]]
 module = "DPF.filters.videos.video_llava_filter"
 disable_error_code = ["import-not-found"]
+
+[[tool.mypy.overrides]]
+module = "DPF.filters.videos.lita_filter"
+disable_error_code = ["import-not-found", "call-overload"]
 
 [[tool.mypy.overrides]]
 module = "DPF.filters.images.llava_captioning_filter"
