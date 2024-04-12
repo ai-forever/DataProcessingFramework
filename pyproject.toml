@@ -49,8 +49,7 @@ video_llava = [
 ]
 lita = [
     'LITA @ git+https://github.com/NVlabs/LITA',
-    'gdown',
-    'LLaVA  @ git+https://github.com/haotian-liu/LLaVA'
+    'gdown'
 ]
 
 [tool.hatch.version]
