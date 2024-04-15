@@ -186,3 +186,34 @@ For example, resize videos or photos in dataset.
 You can use `DPF.transforms` for these tasks.
 
 [More about transforms](docs/transforms.md)
+
+### Pipelines
+
+Pipelines help to combine several filters into one pipeline and process the dataset using it. For example:
+```python
+from DPF.configs import ShardsDatasetConfig
+from DPF.dataset_reader import DatasetReader
+from DPF.pipelines import FilterPipeline
+from DPF.filters.images.info_filter import ImageInfoFilter
+from DPF.filters.images.hash_filters import PHashFilter
+
+reader = DatasetReader()
+config = ShardsDatasetConfig.from_path_and_columns(
+    "examples/example_dataset",
+    image_name_col='image_name',
+)
+processor = reader.read_from_config(config, workers=4)
+
+pipeline = FilterPipeline("pipeline_example")
+pipeline.add_datafilter(
+    ImageInfoFilter,
+    {'workers': 4},
+    processor_run_kwargs={'return_none_on_error': True},
+)
+pipeline.add_datafilter(PHashFilter, {'workers': 4})
+pipeline.add_deduplication(["image_phash_8"])
+pipeline.add_shuffle()
+pipeline.run(processor)
+```
+
+[More about pipelines](docs/pipelines.md)
