@@ -61,6 +61,16 @@ class MultiGPUDataFilter:
         self.devices = devices
         self.num_parts = len(devices)
 
+        # getting result columns names
+        datafilter = self.filter_class(**self.filter_params, device=devices[0]) # type: ignore
+        self._result_columns = datafilter.result_columns
+        del datafilter
+        torch.cuda.empty_cache()
+
+    @property
+    def result_columns(self) -> list[str]:
+        return self._result_columns
+
     def run(
         self,
         df: pd.DataFrame,

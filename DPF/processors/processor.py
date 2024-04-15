@@ -53,6 +53,10 @@ class DatasetProcessor(ABC):
         """Columns that presented in dataframe"""
         return self._df.columns.tolist()  # type: ignore
 
+    @property
+    def modalities(self) -> list[str]:
+        return list(self.config.modality2datatype.keys())
+
     def __getitem__(self, column_name: str) -> pd.Series:
         return self._df[column_name]
 
@@ -63,7 +67,7 @@ class DatasetProcessor(ABC):
         """Prints summary info about dataset"""
         print('Dataset format:', config2format(self.config))
         print('Path:', self.config.path)
-        print('Modalities:', list(self.config.modality2datatype.keys()))
+        print('Modalities:', self.modalities)
 
         cols = self.columns
         print('Columns:', len(cols))
