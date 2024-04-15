@@ -86,10 +86,10 @@ class FilterPipelineStage(PipelineStage):
         columns_intersection = set(processor.columns).intersection(set(columns_to_be_added))
         if columns_intersection == set(columns_to_be_added):
             if self.skip_if_columns_exist:
-                logger.info(f"All columns are presented in a dataset, skipping filtering")
+                logger.info("All columns are presented in a dataset, skipping filtering")
                 return
             else:
-                logger.info(f"All columns are presented in a dataset, force rewriting them")
+                logger.info("All columns are presented in a dataset, force rewriting them")
 
         if len(columns_intersection) > 0:
             logger.info(f"Dropping existing columns: {list(columns_intersection)}")

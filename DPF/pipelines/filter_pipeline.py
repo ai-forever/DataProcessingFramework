@@ -63,11 +63,11 @@ class FilterPipeline:
         else:
             stage = FilterPipelineStage(
                 'multigpufilter', filter_class=MultiGPUDataFilter,
-                filter_kwargs=dict(
-                    devices=devices,
-                    datafilter_class=datafilter,
-                    datafilter_params=datafilter_kwargs
-                ),
+                filter_kwargs={
+                    "devices": devices,
+                    "datafilter_class": datafilter,
+                    "datafilter_params": datafilter_kwargs
+                },
                 processor_run_kwargs=processor_run_kwargs,
                 skip_if_columns_exist=skip_if_columns_exist
             )
@@ -140,9 +140,9 @@ class FilterPipeline:
             except Exception as err:
                 self.logger.exception(f"Error occured during filtering: {err}")
                 if stage_runner.on_error == "stop":
-                    self.logger.warning(f'Stopping pipeline')
+                    self.logger.warning('Stopping pipeline')
                     raise err
                 else:
-                    self.logger.warning(f'Continue')
+                    self.logger.warning('Continue')
             else:
                 self.logger.info(f"Pipeline stage finished. New dataframe shape: {processor.df.shape}")
