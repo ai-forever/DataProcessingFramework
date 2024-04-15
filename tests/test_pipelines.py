@@ -3,7 +3,7 @@ from DPF.configs import ShardsDatasetConfig
 from DPF.filters.images.dummy_gpu_filter import DummyGPUFilter
 from DPF.filters.images.hash_filters import PHashFilter
 from DPF.filters.images.info_filter import ImageInfoFilter
-from DPF.pipelines import FilterPipeline
+from DPF.pipelines.filter_pipeline import FilterPipeline
 
 
 def test_pipeline_imageinfo():
