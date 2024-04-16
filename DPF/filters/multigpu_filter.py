@@ -29,6 +29,7 @@ def run_one_process(
     reader = DatasetReader(connector=connector)
     processor = reader.from_df(config, df)
     datafilter = filter_class(**filter_kwargs, _pbar_position=i, device=device)  # type: ignore
+    datafilter._created_by_multigpu_data_filter = True
     processor.apply_data_filter(datafilter, **filter_run_kwargs)
     res = processor.df
     res.set_index(index, inplace=True)
@@ -118,8 +119,8 @@ class MultiGPUDataFilter:
             )
 
         processes = []
+        context = multiprocessing.get_context('spawn')
         for param in params:
-            context = multiprocessing.get_context('spawn')
             p = context.Process(target=run_one_process, args=param)
             p.start()
             processes.append(p)

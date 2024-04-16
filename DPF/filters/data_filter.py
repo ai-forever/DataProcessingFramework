@@ -1,3 +1,5 @@
+import multiprocessing
+import sys
 from abc import ABC, abstractmethod
 from typing import Any
 
@@ -19,6 +21,7 @@ class DataFilter(ABC):
         super().__init__()
         self.pbar = pbar
         self.pbar_position = _pbar_position
+        self._created_by_multigpu_data_filter = False
 
     @property
     def schema(self) -> list[str]:
@@ -120,7 +123,15 @@ class DataFilter(ABC):
         pd.DataFrame
             Dataframe with columns from schema property
         """
-        dataloader = DataLoader(dataset, collate_fn=identical_collate_fn, **self.dataloader_kwargs)
+        multiprocessing_context = None
+        if self._created_by_multigpu_data_filter and sys.platform not in {'win32', 'darwin'}:
+            multiprocessing_context = multiprocessing.get_context('fork')
+
+        dataloader = DataLoader(
+            dataset, collate_fn=identical_collate_fn,
+            multiprocessing_context=multiprocessing_context,
+            **self.dataloader_kwargs
+        )
         filter_results = self._get_dict_from_schema()
 
         for batch in tqdm(dataloader, disable=not self.pbar, position=self.pbar_position):
