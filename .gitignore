@@ -1,7 +1,6 @@
 #
 /weights/
 data/
-pipelines/
 cache_dir/
 
 # pycharm

@@ -29,6 +29,7 @@ def run_one_process(
     reader = DatasetReader(connector=connector)
     processor = reader.from_df(config, df)
     datafilter = filter_class(**filter_kwargs, _pbar_position=i, device=device)  # type: ignore
+    datafilter._created_by_multigpu_data_filter = True
     processor.apply_data_filter(datafilter, **filter_run_kwargs)
     res = processor.df
     res.set_index(index, inplace=True)
@@ -60,6 +61,16 @@ class MultiGPUDataFilter:
         self.filter_params = datafilter_params
         self.devices = devices
         self.num_parts = len(devices)
+
+        # getting result columns names
+        datafilter = self.filter_class(**self.filter_params, device=devices[0]) # type: ignore
+        self._result_columns = datafilter.result_columns
+        del datafilter
+        torch.cuda.empty_cache()
+
+    @property
+    def result_columns(self) -> list[str]:
+        return self._result_columns
 
     def run(
         self,
@@ -108,8 +119,8 @@ class MultiGPUDataFilter:
             )
 
         processes = []
+        context = multiprocessing.get_context('spawn')
         for param in params:
-            context = multiprocessing.get_context('spawn')
             p = context.Process(target=run_one_process, args=param)
             p.start()
             processes.append(p)

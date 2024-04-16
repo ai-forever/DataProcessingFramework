@@ -82,6 +82,8 @@ class LITAFilter(VideoFilter):
         pretrainers = load_pretrained_model(weights_path, model_base, self.model_name, load_8bit, load_4bit)
         self.tokenizer, self.model, self.processor, self.context_len = pretrainers
 
+        self.model_num_frames = self.model.config.num_frames
+
         self.conv_mode = "llava_v1"
         self.conv = conv_templates[self.conv_mode].copy()
 
@@ -118,7 +120,7 @@ class LITAFilter(VideoFilter):
     ) -> Any:
         key = metadata[self.key_column]
         video_file = BytesIO(modality2data['video'])
-        video_file = load_video(video_file, self.processor, self.model.config.num_frames).unsqueeze(0).half()
+        video_file = load_video(video_file, self.processor, self.model_num_frames).unsqueeze(0).half()
         return key, video_file
 
     def process_batch(self, batch: list[Any]) -> dict[str, list[Any]]:
