@@ -46,3 +46,15 @@ pipeline.add_shuffle()
 
 pipeline.run(processor)
 ```
+
+Example of running datafilter on multiple GPUs:
+
+```python
+pipeline.add_datafilter(
+    LITAFilter,
+    {'batch_size': 2, 'workers': 1},
+    devices=['cuda:0', 'cuda:1']
+)
+```
+
+[Example of using pipeline for processing a video dataset](../examples/pipeline_video_example.ipynb)
