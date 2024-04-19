@@ -21,11 +21,7 @@ from llava.mm_utils import (
     get_model_name_from_path,
     tokenizer_image_token,
 )
-from transformers import (
-    AutoConfig,
-    AutoTokenizer,
-    BitsAndBytesConfig,
-)
+from transformers import AutoConfig, AutoTokenizer, BitsAndBytesConfig
 
 from DPF.types import ModalityToDataMapping
 
