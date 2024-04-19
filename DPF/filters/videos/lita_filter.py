@@ -48,12 +48,12 @@ def load_pretrained_model(model_path: str,
     kwargs = {"device_map": device_map}
 
     if device != "cuda":
-        kwargs['device_map'] = {"": device}
+        kwargs['device_map'] = {"": device}  # type: ignore
 
     if load_8bit:
-        kwargs['load_in_8bit'] = True
+        kwargs['load_in_8bit'] = True  # type: ignore
     elif load_4bit:
-        kwargs['load_in_4bit'] = True
+        kwargs['load_in_4bit'] = True  # type: ignore
         kwargs['quantization_config'] = BitsAndBytesConfig(
             load_in_4bit=True,
             bnb_4bit_compute_dtype=torch.float16,
@@ -61,7 +61,7 @@ def load_pretrained_model(model_path: str,
             bnb_4bit_quant_type='nf4'
         )
     else:
-        kwargs['torch_dtype'] = torch.float16
+        kwargs['torch_dtype'] = torch.float16  # type: ignore
 
     if 'lita' not in model_name.lower():
         warnings.warn("this function is for loading LITA models")
