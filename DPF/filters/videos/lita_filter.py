@@ -23,7 +23,6 @@ from llava.mm_utils import (
 )
 from transformers import (
     AutoConfig,
-    AutoModelForCausalLM,
     AutoTokenizer,
     BitsAndBytesConfig,
 )
@@ -64,11 +63,11 @@ def load_pretrained_model(model_path: str,
         kwargs['torch_dtype'] = torch.float16  # type: ignore
 
     if 'lita' not in model_name.lower():
-        warnings.warn("this function is for loading LITA models")
+        warnings.warn("this function is for loading LITA models", stacklevel=2)
     if 'lora' in model_name.lower():
-        warnings.warn("lora is currently not supported for LITA")
+        warnings.warn("lora is currently not supported for LITA", stacklevel=2)
     if 'mpt' in model_name.lower():
-        warnings.warn("mpt is currently not supported for LITA")
+        warnings.warn("mpt is currently not supported for LITA", stacklevel=2)
 
     if model_base is not None:
         print('Loading LITA from base model...')
@@ -107,26 +106,26 @@ def load_pretrained_model(model_path: str,
             assert num_new_tokens == 0, "time tokens should already be in the tokenizer for full finetune model"
 
         if num_new_tokens > 0:
-            warnings.warn("looking for weights in mm_projector.bin")
+            warnings.warn("looking for weights in mm_projector.bin", stacklevel=2)
             assert num_new_tokens == num_time_tokens
             model.resize_token_embeddings(len(tokenizer))
             input_embeddings = model.get_input_embeddings().weight.data
             output_embeddings = model.get_output_embeddings().weight.data
             weights = torch.load(os.path.join(model_path, 'mm_projector.bin'), map_location='cpu')
             assert 'model.embed_tokens.weight' in weights and 'lm_head.weight' in weights
-            
+
             dtype = input_embeddings.dtype
             device = input_embeddings.device
-            
+
             tokenizer_time_token_ids = tokenizer.convert_tokens_to_ids(time_tokens)
             time_token_ids = getattr(model.config, 'time_token_ids', tokenizer_time_token_ids)
             input_embeddings[tokenizer_time_token_ids] = weights['model.embed_tokens.weight'][time_token_ids].to(dtype).to(device)
             output_embeddings[tokenizer_time_token_ids] = weights['lm_head.weight'][time_token_ids].to(dtype).to(device)
-            
+
     if hasattr(model.config, "max_sequence_length"):
         context_len = model.config.max_sequence_length
     else:
-        context_len = 2048  
+        context_len = 2048
     return tokenizer, model, image_processor, context_len
 
 
