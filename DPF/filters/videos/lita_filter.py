@@ -1,4 +1,5 @@
 import os
+import warnings
 from io import BytesIO
 from typing import Any, Optional
 
@@ -7,6 +8,7 @@ import torch
 from lita.constants import (
     DEFAULT_IM_END_TOKEN,
     DEFAULT_IM_START_TOKEN,
+    DEFAULT_IMAGE_PATCH_TOKEN,
     DEFAULT_IMAGE_TOKEN,
     IMAGE_TOKEN_INDEX,
     TIME_TOKEN_TEMPLATE,
@@ -36,7 +38,13 @@ except ImportError:
     from torch.utils.data import default_collate
 
 
-def load_pretrained_model(model_path, model_base, model_name, load_8bit=False, load_4bit=False, device_map="auto", device="cuda"):
+def load_pretrained_model(model_path: str,
+                          model_base: str,
+                          model_name: str,
+                          load_8bit: bool = False,
+                          load_4bit: bool = False,
+                          device_map: str = "auto",
+                          device: str = "cuda"):
     kwargs = {"device_map": device_map}
 
     if device != "cuda":
@@ -172,7 +180,7 @@ class LITAFilter(VideoFilter):
 
         disable_torch_init()
 
-        pretrainers = load_pretrained_model(weights_path, model_base, self.model_name, load_8bit, load_4bit, device=self.device)
+        pretrainers = load_pretrained_model(weights_path, model_base, self.model_name, load_8bit, load_4bit, device=self.device)  # type: ignore
         self.tokenizer, self.model, self.processor, self.context_len = pretrainers
 
         self.model_num_frames = self.model.config.num_frames
