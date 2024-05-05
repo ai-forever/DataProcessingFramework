@@ -24,7 +24,7 @@ class VideoResizeTransforms(BaseFilesTransforms):
         self,
         resizer: Resizer,
         ffmpeg_preset: str = 'fast',
-        pool_type: PoolOptions = 'processes',
+        pool_type: PoolOptions = 'threads',
         workers: int = 16,
         pbar: bool = True
     ):
@@ -32,7 +32,7 @@ class VideoResizeTransforms(BaseFilesTransforms):
         self.resizer = resizer
         self.ffmpeg_preset = ffmpeg_preset
 
-        assert is_ffmpeg_installed(), "Please install ffmpeg"
+        assert is_ffmpeg_installed(), "Install ffmpeg first"
 
     @property
     def required_metadata(self) -> list[str]:
@@ -57,7 +57,7 @@ class VideoResizeTransforms(BaseFilesTransforms):
             new_width += new_width % 2
             new_height += new_height % 2
             temp_filename = str(uuid.uuid4())+'.'+ext
-            ffmpeg_command = f'ffmpeg -i {filepath} -preset {self.ffmpeg_preset} -vf "scale={new_width}:{new_height}" {temp_filename} -y'
+            ffmpeg_command = f'ffmpeg -hide_banner -i {filepath} -preset {self.ffmpeg_preset} -vf "scale={new_width}:{new_height}" {temp_filename} -y'
             subprocess.run(ffmpeg_command, shell=True, capture_output=True, check=True)
             shutil.move(temp_filename, filepath)
 
