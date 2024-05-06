@@ -1,12 +1,13 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Union
+from typing import Any, Callable, Optional, Union
 
 import pandas as pd
 
 from DPF.filters import ColumnFilter, DataFilter
 from DPF.filters.multigpu_filter import MultiGPUDataFilter
 from DPF.processors import DatasetProcessor
+from DPF.transforms import BaseFilesTransforms
 
 from .types import FilterTypes
 
@@ -66,13 +67,17 @@ class FilterPipelineStage(PipelineStage):
         filter_type: FilterTypes,
         filter_class: Union[type[DataFilter], type[ColumnFilter], type[MultiGPUDataFilter]],
         filter_kwargs: dict[str, Any],
-        processor_run_kwargs: dict[str, Any],
+        processor_apply_kwargs: Optional[dict[str, Any]] = None,
         skip_if_columns_exist: bool = True
     ):
         self.filter_type = filter_type
         self.filter_class = filter_class
         self.filter_kwargs = filter_kwargs
-        self.processor_run_kwargs = processor_run_kwargs
+
+        self.processor_apply_kwargs = processor_apply_kwargs
+        if self.processor_apply_kwargs is None:
+            self.processor_apply_kwargs = {}
+
         self.skip_if_columns_exist = skip_if_columns_exist
 
     @property
@@ -96,10 +101,35 @@ class FilterPipelineStage(PipelineStage):
             processor.df.drop(columns=columns_to_be_added, inplace=True, errors='ignore')
 
         if self.filter_type == 'datafilter':
-            processor.apply_data_filter(filter_obj, **self.processor_run_kwargs)  # type: ignore
+            processor.apply_data_filter(filter_obj, **self.processor_apply_kwargs)  # type: ignore
         elif self.filter_type == 'columnfilter':
-            processor.apply_column_filter(filter_obj, **self.processor_run_kwargs)  # type: ignore
+            processor.apply_column_filter(filter_obj, **self.processor_apply_kwargs)  # type: ignore
         elif self.filter_type == 'multigpufilter':
-            processor.apply_multi_gpu_data_filter(filter_obj, **self.processor_run_kwargs)
+            processor.apply_multi_gpu_data_filter(filter_obj, **self.processor_apply_kwargs)  # type: ignore
         else:
             raise ValueError(f"Unknown filter type: {self.filter_type}")
+
+
+class TransformPipelineStage(PipelineStage):
+
+    def __init__(
+        self,
+        transforms_class: type[BaseFilesTransforms],
+        transforms_kwargs: dict[str, Any],
+        processor_apply_kwargs: Optional[dict[str, Any]] = None,
+    ):
+        self.transforms_class = transforms_class
+        self.transforms_kwargs = transforms_kwargs
+
+        self.processor_apply_kwargs = processor_apply_kwargs
+        if self.processor_apply_kwargs is None:
+            self.processor_apply_kwargs = {}
+
+    @property
+    def stage_name(self) -> str:
+        return f"TransformPipelineStage(transforms_class={self.transforms_class}, transforms_kwargs={self.transforms_kwargs})"
+
+    def run(self, processor: DatasetProcessor, logger: logging.Logger) -> None:
+        transforms = self.transforms_class(**self.transforms_kwargs)
+
+        processor.apply_transform(transforms, **self.processor_apply_kwargs)  # type: ignore
