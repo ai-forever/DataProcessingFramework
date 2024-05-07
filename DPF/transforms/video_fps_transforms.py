@@ -48,5 +48,8 @@ class VideoFPSTransforms(BaseFilesTransforms):
             ffmpeg_command = f'ffmpeg -hide_banner -i {filepath} -vf fps={self.fps} {temp_filename} -y'
             subprocess.run(ffmpeg_command, shell=True, capture_output=True, check=True)
             shutil.move(temp_filename, filepath)
+            fps = self.fps
+        else:
+            fps = video_fps
 
-        return TransformsFileData(filepath, {'fps': self.fps})
+        return TransformsFileData(filepath, {'fps': fps})
