@@ -27,13 +27,16 @@ class Llava34b_Filter(ImageFilter):
         batch_size: int = 8,
         device: str = "cuda:0",
         pbar: bool = True,
+        crop_size_x: int = 336,
+        crop_size_y: int = 336,
         _pbar_position: int = 0
     ):
         super().__init__(pbar, _pbar_position)
         self.batch_size = batch_size
         self.num_workers = workers
         self.device = device
-        self.crop_size = 336
+        self.crop_size_x = crop_size_x
+        self.crop_size_y = crop_size_y
         self.prompt = "<|im_start|>system\nAnswer the questions.<|im_end|><|im_start|>user\n<image>\nDescribe this image and its style in a very detailed manner<|im_end|><|im_start|>assistant\n"
         self.processor = LlavaNextProcessor.from_pretrained(model_path)
         
@@ -66,12 +69,12 @@ class Llava34b_Filter(ImageFilter):
         key = metadata[self.key_column]
         pil_img = read_image_rgb_from_bytes(modality2data['image']).convert('RGB')
         width, height = pil_img.size  
-        left = (width - self.crop_size)/2
-        top = (height - self.crop_size)/2
-        right = (width + self.crop_size)/2
-        bottom = (height + self.crop_size)/2
+        left = int((width - self.crop_size_x)/2)
+        top = int((height - self.crop_size_y)/2)
+        right = int((width + self.crop_size_x)/2)
+        bottom = int((height + self.crop_size_y)/2)
         cropped_image = pil_img.crop((left, top, right, bottom))
-        cropped_image = cropped_image.resize((336, 336))
+        cropped_image = cropped_image.resize((self.crop_size_x, self.crop_size_y))
         return key, cropped_image
     
     def process_batch(self, batch: list[Any]) -> dict[str, list[Any]]:
