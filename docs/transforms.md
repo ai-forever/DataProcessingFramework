@@ -8,7 +8,7 @@ You can use `DPF.transforms` for these tasks.
 
 List of implemented transforms:
 - [ImageResizeTransforms](../DPF/transforms/image_resize_transforms.py) - transforms that resizes images
-- [VideoResizeTransforms](../DPF/transforms/video_resize_transforms.py) - transforms that resizes videos
+- [VideoFFMPEGTransforms](../DPF/transforms/video_ffmpeg_transforms.py) - transforms that resizes and changing fps of videos using ffmpeg
 
 ### Examples
 
@@ -25,5 +25,17 @@ Resize all images to 768 pixels on the maximum side while maintaining the aspect
 from DPF.transforms import VideoResizeTransforms, Resizer, ResizerModes
 
 transforms = VideoResizeTransforms(Resizer(ResizerModes.MAX_SIZE, size=768))
+processor.apply_transform(transforms)
+```
+
+Change fps to 24 and resize all videos to 768 pixels on the minimum side while maintaining the aspect ratio:
+```python
+from DPF.transforms import VideoFFMPEGTransforms, Resizer, ResizerModes
+
+transforms = VideoFFMPEGTransforms(
+    resizer=Resizer(ResizerModes.MIN_SIZE, size=768),
+    fps=24,
+    workers=8
+)
 processor.apply_transform(transforms)
 ```
