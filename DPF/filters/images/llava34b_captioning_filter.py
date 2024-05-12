@@ -37,7 +37,7 @@ class Llava34b_Filter(ImageFilter):
             model_path,
             torch_dtype=torch.float16,
             low_cpu_mem_usage=True,
-            use_flash_attention_2=True,
+            attn_implementation="flash_attention_2",
             device_map=self.device
         )
 
@@ -76,7 +76,7 @@ class Llava34b_Filter(ImageFilter):
         keys, images = list(zip(*batch))
         prompts = [self.prompt for _ in range(self.batch_size)]
         inputs = self.processor(prompts, list(
-            images), return_tensors="pt").to("cuda:0")
+            images), return_tensors="pt").to(self.device)
         with torch.inference_mode():
             output_ids = self.model.generate(
                 **inputs, max_new_tokens=512, use_cache=True)
@@ -84,8 +84,9 @@ class Llava34b_Filter(ImageFilter):
         all_outputs = []
         for i in range(output_ids.shape[0]):
             output = self.processor.decode(
-                output_ids[i], skip_special_tokens=True, clean_up_tokenization_spaces=False)
+                output_ids[i], skip_special_tokens=True, clean_up_tokenization_spaces=True)
             output = re.sub(r'.*?assistant', '', output, flags=re.DOTALL)
+            output = re.sub(r'\n', '', output)
             all_outputs.append(output)
 
         df_batch_labels[self.schema[1]].extend(all_outputs)
