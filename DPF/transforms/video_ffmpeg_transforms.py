@@ -137,7 +137,6 @@ class VideoFFMPEGTransforms(BaseFilesTransforms):
             args_start_str = ' '.join(ffmpeg_args_start)
             temp_filename = str(uuid.uuid4()) + '.' + ext
             ffmpeg_command = f'ffmpeg -hide_banner {args_start_str} -i {filepath} {args_str} {self.default_args} {temp_filename} -y'
-            print(ffmpeg_command)
             subprocess.run(ffmpeg_command, shell=True, capture_output=True, check=True)
             shutil.move(temp_filename, filepath)
 

@@ -39,3 +39,18 @@ transforms = VideoFFMPEGTransforms(
 )
 processor.apply_transform(transforms)
 ```
+
+Fast video cutting:
+_cut_start_ and _cut_duration_ columns should have values in seconds. 
+For example, cutting video from 7 to 11 second should be specified in dataframe as: _cut_start_ = 7, _cut_duration_ = 4
+```python
+from DPF.transforms import VideoFFMPEGTransforms
+
+transforms = VideoFFMPEGTransforms(
+    cut_start_col='cut_start',
+    cut_duration_col='cut_duration',
+    copy_stream=True,
+    workers=4,
+)
+processor.apply_transform(transforms)
+```
