@@ -6,21 +6,30 @@ import random
 import einops
 import torch
 import torch.nn as nn
-from DPF.filters.videos.grounding_gpt.video_llama.common.registry import \
-    registry
-from DPF.filters.videos.grounding_gpt.video_llama.models.blip2 import (
-    Blip2Base, disabled_train)
-from DPF.filters.videos.grounding_gpt.video_llama.models.ImageBind.models import \
-    imagebind_model
-from DPF.filters.videos.grounding_gpt.video_llama.models.ImageBind.models.imagebind_model import (
-    ImageBindModel, ModalityType)
-from DPF.filters.videos.grounding_gpt.video_llama.models.modeling_llama import \
-    LlamaForCausalLM
-from DPF.filters.videos.grounding_gpt.video_llama.models.Qformer import (
-    BertConfig, BertLMHeadModel)
 from torch.cuda.amp import autocast as autocast
+
 # from video_llama.models.Qformer import BertEncoder
 from transformers import BertConfig, LlamaTokenizer
+
+from DPF.filters.videos.grounding_gpt.video_llama.common.registry import registry
+from DPF.filters.videos.grounding_gpt.video_llama.models.blip2 import (
+    Blip2Base,
+    disabled_train,
+)
+from DPF.filters.videos.grounding_gpt.video_llama.models.ImageBind.models import (
+    imagebind_model,
+)
+from DPF.filters.videos.grounding_gpt.video_llama.models.ImageBind.models.imagebind_model import (
+    ImageBindModel,
+    ModalityType,
+)
+from DPF.filters.videos.grounding_gpt.video_llama.models.modeling_llama import (
+    LlamaForCausalLM,
+)
+from DPF.filters.videos.grounding_gpt.video_llama.models.Qformer import (
+    BertConfig,
+    BertLMHeadModel,
+)
 
 
 # from flamingo_pytorch import PerceiverResampler

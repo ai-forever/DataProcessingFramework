@@ -12,11 +12,16 @@ import os
 import numpy as np
 import torch
 import torch.nn as nn
-from DPF.filters.videos.grounding_gpt.video_llama.common.dist_utils import (
-    download_cached_file, is_dist_avail_and_initialized)
-from DPF.filters.videos.grounding_gpt.video_llama.common.utils import (
-    get_abs_path, is_url)
 from omegaconf import OmegaConf
+
+from DPF.filters.videos.grounding_gpt.video_llama.common.dist_utils import (
+    download_cached_file,
+    is_dist_avail_and_initialized,
+)
+from DPF.filters.videos.grounding_gpt.video_llama.common.utils import (
+    get_abs_path,
+    is_url,
+)
 
 
 class BaseModel(nn.Module):

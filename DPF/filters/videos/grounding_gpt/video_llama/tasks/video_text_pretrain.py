@@ -5,10 +5,8 @@
  For full license text, see the LICENSE_Lavis file in the repo root or https://opensource.org/licenses/BSD-3-Clause
 """
 
-from DPF.filters.videos.grounding_gpt.video_llama.common.registry import \
-    registry
-from DPF.filters.videos.grounding_gpt.video_llama.tasks.base_task import \
-    BaseTask
+from DPF.filters.videos.grounding_gpt.video_llama.common.registry import registry
+from DPF.filters.videos.grounding_gpt.video_llama.tasks.base_task import BaseTask
 
 
 @registry.register_task("video_text_pretrain")

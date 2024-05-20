@@ -11,23 +11,24 @@ import logging
 import os
 import time
 
-import DPF.filters.videos.grounding_gpt.video_llama.common.dist_utils as dist_utils
 import torch
 import torch.distributed as dist
 import torch.nn as nn
 import torch.nn.functional as F
-from DPF.filters.videos.grounding_gpt.video_llama.common.dist_utils import \
-    download_cached_file
-from DPF.filters.videos.grounding_gpt.video_llama.common.logger import \
-    MetricLogger
-from DPF.filters.videos.grounding_gpt.video_llama.common.utils import is_url
-from DPF.filters.videos.grounding_gpt.video_llama.models.base_model import \
-    BaseModel
-from DPF.filters.videos.grounding_gpt.video_llama.models.eva_vit import \
-    create_eva_vit_g
-from DPF.filters.videos.grounding_gpt.video_llama.models.Qformer import (
-    BertConfig, BertLMHeadModel)
 from transformers import BertTokenizer
+
+import DPF.filters.videos.grounding_gpt.video_llama.common.dist_utils as dist_utils
+from DPF.filters.videos.grounding_gpt.video_llama.common.dist_utils import (
+    download_cached_file,
+)
+from DPF.filters.videos.grounding_gpt.video_llama.common.logger import MetricLogger
+from DPF.filters.videos.grounding_gpt.video_llama.common.utils import is_url
+from DPF.filters.videos.grounding_gpt.video_llama.models.base_model import BaseModel
+from DPF.filters.videos.grounding_gpt.video_llama.models.eva_vit import create_eva_vit_g
+from DPF.filters.videos.grounding_gpt.video_llama.models.Qformer import (
+    BertConfig,
+    BertLMHeadModel,
+)
 
 
 class Blip2Base(BaseModel):

@@ -1,7 +1,10 @@
 import torch
 from lego.conversation import SeparatorStyle, conv_templates
-from lego.mm_utils import (KeywordsStoppingCriteria, get_model_name_from_path,
-                           tokenizer_image_token)
+from lego.mm_utils import (
+    KeywordsStoppingCriteria,
+    get_model_name_from_path,
+    tokenizer_image_token,
+)
 from lego.model.builder import load_pretrained_model
 from lego.utils import disable_torch_init
 

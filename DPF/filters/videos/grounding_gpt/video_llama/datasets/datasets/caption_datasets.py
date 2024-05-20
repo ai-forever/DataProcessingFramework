@@ -8,9 +8,11 @@
 import os
 from collections import OrderedDict
 
-from DPF.filters.videos.grounding_gpt.video_llama.datasets.datasets.base_dataset import \
-    BaseDataset
 from PIL import Image
+
+from DPF.filters.videos.grounding_gpt.video_llama.datasets.datasets.base_dataset import (
+    BaseDataset,
+)
 
 
 class __DisplMixin:

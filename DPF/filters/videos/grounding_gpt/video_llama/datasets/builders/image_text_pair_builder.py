@@ -2,14 +2,17 @@ import logging
 import os
 import warnings
 
-from DPF.filters.videos.grounding_gpt.video_llama.common.registry import \
-    registry
-from DPF.filters.videos.grounding_gpt.video_llama.datasets.builders.base_dataset_builder import \
-    BaseDatasetBuilder
+from DPF.filters.videos.grounding_gpt.video_llama.common.registry import registry
+from DPF.filters.videos.grounding_gpt.video_llama.datasets.builders.base_dataset_builder import (
+    BaseDatasetBuilder,
+)
 from DPF.filters.videos.grounding_gpt.video_llama.datasets.datasets.cc_sbu_dataset import (
-    CCSBUAlignDataset, CCSBUDataset)
-from DPF.filters.videos.grounding_gpt.video_llama.datasets.datasets.laion_dataset import \
-    LaionDataset
+    CCSBUAlignDataset,
+    CCSBUDataset,
+)
+from DPF.filters.videos.grounding_gpt.video_llama.datasets.datasets.laion_dataset import (
+    LaionDataset,
+)
 
 
 @registry.register_builder("cc_sbu")

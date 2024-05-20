@@ -13,13 +13,23 @@ from types import SimpleNamespace
 import torch
 import torch.nn as nn
 
-from .helpers import (EinOpsRearrange, LearnableLogitScaling, Normalize,
-                      SelectElement, SelectEOSAndProject)
-from .multimodal_preprocessors import (AudioPreprocessor, IMUPreprocessor,
-                                       PadIm2Video, PatchEmbedGeneric,
-                                       RGBDTPreprocessor,
-                                       SpatioTemporalPosEmbeddingHelper,
-                                       TextPreprocessor, ThermalPreprocessor)
+from .helpers import (
+    EinOpsRearrange,
+    LearnableLogitScaling,
+    Normalize,
+    SelectElement,
+    SelectEOSAndProject,
+)
+from .multimodal_preprocessors import (
+    AudioPreprocessor,
+    IMUPreprocessor,
+    PadIm2Video,
+    PatchEmbedGeneric,
+    RGBDTPreprocessor,
+    SpatioTemporalPosEmbeddingHelper,
+    TextPreprocessor,
+    ThermalPreprocessor,
+)
 from .transformer import MultiheadAttention, SimpleTransformer
 
 ModalityType = SimpleNamespace(

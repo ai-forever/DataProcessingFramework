@@ -5,16 +5,22 @@
  For full license text, see the LICENSE_Lavis file in the repo root or https://opensource.org/licenses/BSD-3-Clause
 """
 
-from DPF.filters.videos.grounding_gpt.video_llama.common.registry import \
-    registry
-from DPF.filters.videos.grounding_gpt.video_llama.datasets.builders.base_dataset_builder import \
-    load_dataset_config
+from DPF.filters.videos.grounding_gpt.video_llama.common.registry import registry
+from DPF.filters.videos.grounding_gpt.video_llama.datasets.builders.base_dataset_builder import (
+    load_dataset_config,
+)
 from DPF.filters.videos.grounding_gpt.video_llama.datasets.builders.image_text_pair_builder import (
-    CCSBUAlignBuilder, CCSBUBuilder, LaionBuilder)
+    CCSBUAlignBuilder,
+    CCSBUBuilder,
+    LaionBuilder,
+)
 from DPF.filters.videos.grounding_gpt.video_llama.datasets.builders.instruct_builder import (
-    LlavaInstruct_Builder, WebvidInstruct_Builder)
-from DPF.filters.videos.grounding_gpt.video_llama.datasets.builders.video_caption_builder import \
-    WebvidBuilder
+    LlavaInstruct_Builder,
+    WebvidInstruct_Builder,
+)
+from DPF.filters.videos.grounding_gpt.video_llama.datasets.builders.video_caption_builder import (
+    WebvidBuilder,
+)
 
 __all__ = [
     "CCSBUBuilder",

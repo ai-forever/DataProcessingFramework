@@ -3,26 +3,46 @@ from typing import List, Optional, Tuple, Union
 import einops
 import torch
 import torch.nn as nn
-from DPF.filters.videos.grounding_gpt.lego.constants import (
-    DEFAULT_IMAGE_END_TOKEN, DEFAULT_IMAGE_PATCH_TOKEN,
-    DEFAULT_IMAGE_START_TOKEN, DEFAULT_SOUND_END_TOKEN,
-    DEFAULT_SOUND_PATCH_TOKEN, DEFAULT_SOUND_START_TOKEN,
-    DEFAULT_VIDEO_END_TOKEN, DEFAULT_VIDEO_PATCH_TOKEN,
-    DEFAULT_VIDEO_START_TOKEN)
-from DPF.filters.videos.grounding_gpt.video_llama.models.blip2 import (
-    Blip2Base, disabled_train)
-from DPF.filters.videos.grounding_gpt.video_llama.models.ImageBind.models import \
-    imagebind_model
-from DPF.filters.videos.grounding_gpt.video_llama.models.ImageBind.models.imagebind_model import \
-    ModalityType
-from DPF.filters.videos.grounding_gpt.video_llama.models.Qformer import (
-    BertConfig, BertLMHeadModel)
 from torch.nn import CrossEntropyLoss
-from transformers import (AutoConfig, AutoModelForCausalLM, CLIPImageProcessor,
-                          CLIPVisionModel, LlamaConfig, LlamaForCausalLM,
-                          LlamaModel)
-from transformers.modeling_outputs import (BaseModelOutputWithPast,
-                                           CausalLMOutputWithPast)
+from transformers import (
+    AutoConfig,
+    AutoModelForCausalLM,
+    CLIPImageProcessor,
+    CLIPVisionModel,
+    LlamaConfig,
+    LlamaForCausalLM,
+    LlamaModel,
+)
+from transformers.modeling_outputs import (
+    BaseModelOutputWithPast,
+    CausalLMOutputWithPast,
+)
+
+from DPF.filters.videos.grounding_gpt.lego.constants import (
+    DEFAULT_IMAGE_END_TOKEN,
+    DEFAULT_IMAGE_PATCH_TOKEN,
+    DEFAULT_IMAGE_START_TOKEN,
+    DEFAULT_SOUND_END_TOKEN,
+    DEFAULT_SOUND_PATCH_TOKEN,
+    DEFAULT_SOUND_START_TOKEN,
+    DEFAULT_VIDEO_END_TOKEN,
+    DEFAULT_VIDEO_PATCH_TOKEN,
+    DEFAULT_VIDEO_START_TOKEN,
+)
+from DPF.filters.videos.grounding_gpt.video_llama.models.blip2 import (
+    Blip2Base,
+    disabled_train,
+)
+from DPF.filters.videos.grounding_gpt.video_llama.models.ImageBind.models import (
+    imagebind_model,
+)
+from DPF.filters.videos.grounding_gpt.video_llama.models.ImageBind.models.imagebind_model import (
+    ModalityType,
+)
+from DPF.filters.videos.grounding_gpt.video_llama.models.Qformer import (
+    BertConfig,
+    BertLMHeadModel,
+)
 
 
 class LEGOConfig(LlamaConfig):

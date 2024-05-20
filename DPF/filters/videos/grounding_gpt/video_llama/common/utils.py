@@ -21,14 +21,16 @@ from urllib.parse import urlparse
 import numpy as np
 import pandas as pd
 import yaml
-from DPF.filters.videos.grounding_gpt.video_llama.common.registry import \
-    registry
 from iopath.common.download import download
 from iopath.common.file_io import file_lock, g_pathmgr
 from torch.utils.model_zoo import tqdm
-from torchvision.datasets.utils import (check_integrity,
-                                        download_file_from_google_drive,
-                                        extract_archive)
+from torchvision.datasets.utils import (
+    check_integrity,
+    download_file_from_google_drive,
+    extract_archive,
+)
+
+from DPF.filters.videos.grounding_gpt.video_llama.common.registry import registry
 
 
 def now():

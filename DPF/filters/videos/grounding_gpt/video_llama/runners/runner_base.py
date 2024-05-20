@@ -17,16 +17,25 @@ import torch.distributed as dist
 import webdataset as wds
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.data import DataLoader, DistributedSampler
-from video_llama.common.dist_utils import (download_cached_file, get_rank,
-                                           get_world_size, is_main_process,
-                                           main_process)
+from video_llama.common.dist_utils import (
+    download_cached_file,
+    get_rank,
+    get_world_size,
+    is_main_process,
+    main_process,
+)
 from video_llama.common.registry import registry
 from video_llama.common.utils import is_url
-from video_llama.datasets.data_utils import (ChainDataset, concat_datasets,
-                                             reorg_datasets_by_split)
-from video_llama.datasets.datasets.dataloader_utils import (IterLoader,
-                                                            MultiIterLoader,
-                                                            PrefetchLoader)
+from video_llama.datasets.data_utils import (
+    ChainDataset,
+    concat_datasets,
+    reorg_datasets_by_split,
+)
+from video_llama.datasets.datasets.dataloader_utils import (
+    IterLoader,
+    MultiIterLoader,
+    PrefetchLoader,
+)
 
 
 @registry.register_runner("runner_base")

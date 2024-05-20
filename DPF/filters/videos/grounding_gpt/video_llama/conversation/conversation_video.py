@@ -11,17 +11,27 @@ from enum import Enum, auto
 from typing import Any, List, Tuple
 
 import torch
-from DPF.filters.videos.grounding_gpt.video_llama.common.registry import \
-    registry
-from DPF.filters.videos.grounding_gpt.video_llama.models.ImageBind.data import \
-    load_and_transform_audio_data
-from DPF.filters.videos.grounding_gpt.video_llama.processors import \
-    Blip2ImageEvalProcessor
-from DPF.filters.videos.grounding_gpt.video_llama.processors.video_processor import (
-    ToTHWC, ToUint8, load_video)
 from PIL import Image
-from transformers import (AutoModelForCausalLM, AutoTokenizer, LlamaTokenizer,
-                          StoppingCriteria, StoppingCriteriaList)
+from transformers import (
+    AutoModelForCausalLM,
+    AutoTokenizer,
+    LlamaTokenizer,
+    StoppingCriteria,
+    StoppingCriteriaList,
+)
+
+from DPF.filters.videos.grounding_gpt.video_llama.common.registry import registry
+from DPF.filters.videos.grounding_gpt.video_llama.models.ImageBind.data import (
+    load_and_transform_audio_data,
+)
+from DPF.filters.videos.grounding_gpt.video_llama.processors import (
+    Blip2ImageEvalProcessor,
+)
+from DPF.filters.videos.grounding_gpt.video_llama.processors.video_processor import (
+    ToTHWC,
+    ToUint8,
+    load_video,
+)
 
 
 class SeparatorStyle(Enum):

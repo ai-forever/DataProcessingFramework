@@ -10,14 +10,21 @@ import os
 
 import torch
 import torch.distributed as dist
+
 from DPF.filters.videos.grounding_gpt.video_llama.common.dist_utils import (
-    get_rank, get_world_size, is_dist_avail_and_initialized, is_main_process)
+    get_rank,
+    get_world_size,
+    is_dist_avail_and_initialized,
+    is_main_process,
+)
 from DPF.filters.videos.grounding_gpt.video_llama.common.logger import (
-    MetricLogger, SmoothedValue)
-from DPF.filters.videos.grounding_gpt.video_llama.common.registry import \
-    registry
-from DPF.filters.videos.grounding_gpt.video_llama.datasets.data_utils import \
-    prepare_sample
+    MetricLogger,
+    SmoothedValue,
+)
+from DPF.filters.videos.grounding_gpt.video_llama.common.registry import registry
+from DPF.filters.videos.grounding_gpt.video_llama.datasets.data_utils import (
+    prepare_sample,
+)
 
 
 class BaseTask:

@@ -11,18 +11,20 @@ import decord
 import numpy as np
 import torch
 from decord import VideoReader
-from DPF.filters.videos.grounding_gpt.video_llama.common.registry import \
-    registry
-from DPF.filters.videos.grounding_gpt.video_llama.processors import \
-    functional_video as F
-from DPF.filters.videos.grounding_gpt.video_llama.processors import \
-    transforms_video
-from DPF.filters.videos.grounding_gpt.video_llama.processors.base_processor import \
-    BaseProcessor
-from DPF.filters.videos.grounding_gpt.video_llama.processors.randaugment import \
-    VideoRandomAugment
 from omegaconf import OmegaConf
 from torchvision import transforms
+
+from DPF.filters.videos.grounding_gpt.video_llama.common.registry import registry
+from DPF.filters.videos.grounding_gpt.video_llama.processors import (
+    functional_video as F,
+)
+from DPF.filters.videos.grounding_gpt.video_llama.processors import transforms_video
+from DPF.filters.videos.grounding_gpt.video_llama.processors.base_processor import (
+    BaseProcessor,
+)
+from DPF.filters.videos.grounding_gpt.video_llama.processors.randaugment import (
+    VideoRandomAugment,
+)
 
 MAX_INT = registry.get("MAX_INT")
 decord.bridge.set_bridge("torch")

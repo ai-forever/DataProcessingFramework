@@ -9,22 +9,29 @@ import pandas as pd
 import torch
 import transformers
 from decord import VideoReader
-from DPF.filters.videos.grounding_gpt.video_llama.conversation.conversation_video import (
-    Conversation, SeparatorStyle)
-from DPF.filters.videos.grounding_gpt.video_llama.datasets.datasets.base_dataset import \
-    BaseDataset
-from DPF.filters.videos.grounding_gpt.video_llama.datasets.datasets.caption_datasets import \
-    CaptionDataset
 from PIL import Image
 from torch.utils.data.dataloader import default_collate
 from transformers import AutoModelForCausalLM, AutoTokenizer, LlamaTokenizer
+
+from DPF.filters.videos.grounding_gpt.video_llama.conversation.conversation_video import (
+    Conversation,
+    SeparatorStyle,
+)
+from DPF.filters.videos.grounding_gpt.video_llama.datasets.datasets.base_dataset import (
+    BaseDataset,
+)
+from DPF.filters.videos.grounding_gpt.video_llama.datasets.datasets.caption_datasets import (
+    CaptionDataset,
+)
 
 DEFAULT_IMAGE_PATCH_TOKEN = '<ImageHere>'
 DEFAULT_IMAGE_TOKEN = "<image>"
 import copy
 
 from DPF.filters.videos.grounding_gpt.video_llama.processors import (
-    AlproVideoTrainProcessor, transforms_video)
+    AlproVideoTrainProcessor,
+    transforms_video,
+)
 
 IGNORE_INDEX = -100
 image_conversation = Conversation(

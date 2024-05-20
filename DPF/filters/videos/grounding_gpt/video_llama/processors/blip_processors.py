@@ -7,15 +7,17 @@
 
 import re
 
-from DPF.filters.videos.grounding_gpt.video_llama.common.registry import \
-    registry
-from DPF.filters.videos.grounding_gpt.video_llama.processors.base_processor import \
-    BaseProcessor
-from DPF.filters.videos.grounding_gpt.video_llama.processors.randaugment import \
-    RandomAugment
 from omegaconf import OmegaConf
 from torchvision import transforms
 from torchvision.transforms.functional import InterpolationMode
+
+from DPF.filters.videos.grounding_gpt.video_llama.common.registry import registry
+from DPF.filters.videos.grounding_gpt.video_llama.processors.base_processor import (
+    BaseProcessor,
+)
+from DPF.filters.videos.grounding_gpt.video_llama.processors.randaugment import (
+    RandomAugment,
+)
 
 
 class BlipImageBaseProcessor(BaseProcessor):

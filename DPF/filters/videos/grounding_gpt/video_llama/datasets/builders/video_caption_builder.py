@@ -2,12 +2,13 @@ import logging
 import os
 import warnings
 
-from DPF.filters.videos.grounding_gpt.video_llama.common.registry import \
-    registry
-from DPF.filters.videos.grounding_gpt.video_llama.datasets.builders.base_dataset_builder import \
-    BaseDatasetBuilder
-from DPF.filters.videos.grounding_gpt.video_llama.datasets.datasets.webvid_datasets import \
-    WebvidDataset
+from DPF.filters.videos.grounding_gpt.video_llama.common.registry import registry
+from DPF.filters.videos.grounding_gpt.video_llama.datasets.builders.base_dataset_builder import (
+    BaseDatasetBuilder,
+)
+from DPF.filters.videos.grounding_gpt.video_llama.datasets.datasets.webvid_datasets import (
+    WebvidDataset,
+)
 
 
 @registry.register_builder("webvid")

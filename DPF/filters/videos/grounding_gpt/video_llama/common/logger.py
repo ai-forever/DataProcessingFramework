@@ -12,6 +12,7 @@ from collections import defaultdict, deque
 
 import torch
 import torch.distributed as dist
+
 from DPF.filters.videos.grounding_gpt.video_llama.common import dist_utils
 
 

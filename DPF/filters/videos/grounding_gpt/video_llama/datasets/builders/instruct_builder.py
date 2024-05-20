@@ -2,16 +2,19 @@ import logging
 import os
 import warnings
 
-from DPF.filters.videos.grounding_gpt.video_llama.common.registry import \
-    registry
-from DPF.filters.videos.grounding_gpt.video_llama.datasets.builders.base_dataset_builder import \
-    BaseDatasetBuilder
-from DPF.filters.videos.grounding_gpt.video_llama.datasets.datasets.laion_dataset import \
-    LaionDataset
-from DPF.filters.videos.grounding_gpt.video_llama.datasets.datasets.llava_instruct_dataset import \
-    Instruct_Dataset
-from DPF.filters.videos.grounding_gpt.video_llama.datasets.datasets.video_instruct_dataset import \
-    Video_Instruct_Dataset
+from DPF.filters.videos.grounding_gpt.video_llama.common.registry import registry
+from DPF.filters.videos.grounding_gpt.video_llama.datasets.builders.base_dataset_builder import (
+    BaseDatasetBuilder,
+)
+from DPF.filters.videos.grounding_gpt.video_llama.datasets.datasets.laion_dataset import (
+    LaionDataset,
+)
+from DPF.filters.videos.grounding_gpt.video_llama.datasets.datasets.llava_instruct_dataset import (
+    Instruct_Dataset,
+)
+from DPF.filters.videos.grounding_gpt.video_llama.datasets.datasets.video_instruct_dataset import (
+    Video_Instruct_Dataset,
+)
 
 
 @registry.register_builder("instruct")

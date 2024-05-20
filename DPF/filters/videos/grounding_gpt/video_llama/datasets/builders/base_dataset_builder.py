@@ -12,15 +12,18 @@ import shutil
 import warnings
 
 import torch.distributed as dist
-from DPF.filters.videos.grounding_gpt.video_llama.common import utils as utils
-from DPF.filters.videos.grounding_gpt.video_llama.common.dist_utils import (
-    is_dist_avail_and_initialized, is_main_process)
-from DPF.filters.videos.grounding_gpt.video_llama.common.registry import \
-    registry
-from DPF.filters.videos.grounding_gpt.video_llama.processors.base_processor import \
-    BaseProcessor
 from omegaconf import OmegaConf
 from torchvision.datasets.utils import download_url
+
+from DPF.filters.videos.grounding_gpt.video_llama.common import utils as utils
+from DPF.filters.videos.grounding_gpt.video_llama.common.dist_utils import (
+    is_dist_avail_and_initialized,
+    is_main_process,
+)
+from DPF.filters.videos.grounding_gpt.video_llama.common.registry import registry
+from DPF.filters.videos.grounding_gpt.video_llama.processors.base_processor import (
+    BaseProcessor,
+)
 
 
 class BaseDatasetBuilder:

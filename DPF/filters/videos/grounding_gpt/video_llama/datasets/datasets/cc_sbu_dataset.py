@@ -1,11 +1,14 @@
 import os
 
 import webdataset as wds
-from DPF.filters.videos.grounding_gpt.video_llama.datasets.datasets.base_dataset import \
-    BaseDataset
-from DPF.filters.videos.grounding_gpt.video_llama.datasets.datasets.caption_datasets import \
-    CaptionDataset
 from PIL import Image
+
+from DPF.filters.videos.grounding_gpt.video_llama.datasets.datasets.base_dataset import (
+    BaseDataset,
+)
+from DPF.filters.videos.grounding_gpt.video_llama.datasets.datasets.caption_datasets import (
+    CaptionDataset,
+)
 
 
 class CCSBUDataset(BaseDataset):

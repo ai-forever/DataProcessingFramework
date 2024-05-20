@@ -9,16 +9,15 @@ Adapted from salesforce@LAVIS Vision-CAIR@MiniGPT-4. Below is the original copyr
 import logging
 
 import torch
-from DPF.filters.videos.grounding_gpt.video_llama.common.registry import \
-    registry
-from DPF.filters.videos.grounding_gpt.video_llama.models.base_model import \
-    BaseModel
-from DPF.filters.videos.grounding_gpt.video_llama.models.blip2 import Blip2Base
-from DPF.filters.videos.grounding_gpt.video_llama.models.video_llama import \
-    VideoLLAMA
-from DPF.filters.videos.grounding_gpt.video_llama.processors.base_processor import \
-    BaseProcessor
 from omegaconf import OmegaConf
+
+from DPF.filters.videos.grounding_gpt.video_llama.common.registry import registry
+from DPF.filters.videos.grounding_gpt.video_llama.models.base_model import BaseModel
+from DPF.filters.videos.grounding_gpt.video_llama.models.blip2 import Blip2Base
+from DPF.filters.videos.grounding_gpt.video_llama.models.video_llama import VideoLLAMA
+from DPF.filters.videos.grounding_gpt.video_llama.processors.base_processor import (
+    BaseProcessor,
+)
 
 __all__ = [
     "load_model",

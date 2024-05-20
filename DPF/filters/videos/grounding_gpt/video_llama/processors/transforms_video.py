@@ -10,8 +10,9 @@
 import numbers
 import random
 
-import DPF.filters.videos.grounding_gpt.video_llama.processors.functional_video as F
 from torchvision.transforms import RandomCrop, RandomResizedCrop
+
+import DPF.filters.videos.grounding_gpt.video_llama.processors.functional_video as F
 
 __all__ = [
     "RandomCropVideo",

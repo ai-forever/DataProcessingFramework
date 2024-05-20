@@ -27,13 +27,21 @@ import torch
 import transformers
 from lego import LEGOLlamaForCausalLM
 from lego import conversation as conversation_lib
-from lego.constants import (DEFAULT_IMAGE_END_TOKEN, DEFAULT_IMAGE_PATCH_TOKEN,
-                            DEFAULT_IMAGE_START_TOKEN, DEFAULT_IMAGE_TOKEN,
-                            DEFAULT_SOUND_END_TOKEN, DEFAULT_SOUND_PATCH_TOKEN,
-                            DEFAULT_SOUND_START_TOKEN, DEFAULT_SOUND_TOKEN,
-                            DEFAULT_VIDEO_END_TOKEN, DEFAULT_VIDEO_PATCH_TOKEN,
-                            DEFAULT_VIDEO_START_TOKEN, DEFAULT_VIDEO_TOKEN,
-                            IGNORE_INDEX)
+from lego.constants import (
+    DEFAULT_IMAGE_END_TOKEN,
+    DEFAULT_IMAGE_PATCH_TOKEN,
+    DEFAULT_IMAGE_START_TOKEN,
+    DEFAULT_IMAGE_TOKEN,
+    DEFAULT_SOUND_END_TOKEN,
+    DEFAULT_SOUND_PATCH_TOKEN,
+    DEFAULT_SOUND_START_TOKEN,
+    DEFAULT_SOUND_TOKEN,
+    DEFAULT_VIDEO_END_TOKEN,
+    DEFAULT_VIDEO_PATCH_TOKEN,
+    DEFAULT_VIDEO_START_TOKEN,
+    DEFAULT_VIDEO_TOKEN,
+    IGNORE_INDEX,
+)
 from lego.mm_utils import tokenizer_image_token
 from lego.model import *
 from PIL import Image

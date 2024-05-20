@@ -5,14 +5,19 @@
  For full license text, see the LICENSE_Lavis file in the repo root or https://opensource.org/licenses/BSD-3-Clause
 """
 
-from DPF.filters.videos.grounding_gpt.video_llama.common.registry import \
-    registry
-from DPF.filters.videos.grounding_gpt.video_llama.processors.base_processor import \
-    BaseProcessor
+from DPF.filters.videos.grounding_gpt.video_llama.common.registry import registry
+from DPF.filters.videos.grounding_gpt.video_llama.processors.base_processor import (
+    BaseProcessor,
+)
 from DPF.filters.videos.grounding_gpt.video_llama.processors.blip_processors import (
-    Blip2ImageEvalProcessor, Blip2ImageTrainProcessor, BlipCaptionProcessor)
+    Blip2ImageEvalProcessor,
+    Blip2ImageTrainProcessor,
+    BlipCaptionProcessor,
+)
 from DPF.filters.videos.grounding_gpt.video_llama.processors.video_processor import (
-    AlproVideoEvalProcessor, AlproVideoTrainProcessor)
+    AlproVideoEvalProcessor,
+    AlproVideoTrainProcessor,
+)
 
 __all__ = [
     "BaseProcessor",

@@ -25,14 +25,20 @@ from transformers.file_utils import ModelOutput
 from transformers.modeling_outputs import (
     BaseModelOutputWithPastAndCrossAttentions,
     BaseModelOutputWithPoolingAndCrossAttentions,
-    CausalLMOutputWithCrossAttentions, MaskedLMOutput,
-    MultipleChoiceModelOutput, NextSentencePredictorOutput,
-    QuestionAnsweringModelOutput, SequenceClassifierOutput,
-    TokenClassifierOutput)
-from transformers.modeling_utils import (PreTrainedModel,
-                                         apply_chunking_to_forward,
-                                         find_pruneable_heads_and_indices,
-                                         prune_linear_layer)
+    CausalLMOutputWithCrossAttentions,
+    MaskedLMOutput,
+    MultipleChoiceModelOutput,
+    NextSentencePredictorOutput,
+    QuestionAnsweringModelOutput,
+    SequenceClassifierOutput,
+    TokenClassifierOutput,
+)
+from transformers.modeling_utils import (
+    PreTrainedModel,
+    apply_chunking_to_forward,
+    find_pruneable_heads_and_indices,
+    prune_linear_layer,
+)
 from transformers.models.bert.configuration_bert import BertConfig
 from transformers.utils import logging
 

@@ -32,8 +32,9 @@ class Registry:
         """
 
         def wrap(builder_cls):
-            from DPF.filters.videos.grounding_gpt.video_llama.datasets.builders.base_dataset_builder import \
-                BaseDatasetBuilder
+            from DPF.filters.videos.grounding_gpt.video_llama.datasets.builders.base_dataset_builder import (
+                BaseDatasetBuilder,
+            )
 
             assert issubclass(
                 builder_cls, BaseDatasetBuilder
@@ -64,8 +65,9 @@ class Registry:
         """
 
         def wrap(task_cls):
-            from DPF.filters.videos.grounding_gpt.video_llama.tasks.base_task import \
-                BaseTask
+            from DPF.filters.videos.grounding_gpt.video_llama.tasks.base_task import (
+                BaseTask,
+            )
 
             assert issubclass(
                 task_cls, BaseTask
@@ -94,8 +96,7 @@ class Registry:
         """
 
         def wrap(model_cls):
-            from DPF.filters.videos.grounding_gpt.video_llama.models import \
-                BaseModel
+            from DPF.filters.videos.grounding_gpt.video_llama.models import BaseModel
 
             assert issubclass(
                 model_cls, BaseModel
@@ -124,8 +125,9 @@ class Registry:
         """
 
         def wrap(processor_cls):
-            from DPF.filters.videos.grounding_gpt.video_llama.processors import \
-                BaseProcessor
+            from DPF.filters.videos.grounding_gpt.video_llama.processors import (
+                BaseProcessor,
+            )
 
             assert issubclass(
                 processor_cls, BaseProcessor

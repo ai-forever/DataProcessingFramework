@@ -12,11 +12,14 @@ import decord
 import pandas as pd
 import torch
 from decord import VideoReader
-from DPF.filters.videos.grounding_gpt.video_llama.datasets.datasets.base_dataset import \
-    BaseDataset
-from DPF.filters.videos.grounding_gpt.video_llama.datasets.datasets.caption_datasets import \
-    CaptionDataset
 from torch.utils.data.dataloader import default_collate
+
+from DPF.filters.videos.grounding_gpt.video_llama.datasets.datasets.base_dataset import (
+    BaseDataset,
+)
+from DPF.filters.videos.grounding_gpt.video_llama.datasets.datasets.caption_datasets import (
+    CaptionDataset,
+)
 
 
 class WebvidDataset(BaseDataset):

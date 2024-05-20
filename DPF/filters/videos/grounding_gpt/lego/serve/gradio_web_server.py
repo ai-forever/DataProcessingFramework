@@ -6,19 +6,32 @@ import gradio as gr
 import torch
 import uvicorn
 from fastapi import FastAPI
-from lego.constants import (DEFAULT_IMAGE_END_TOKEN, DEFAULT_IMAGE_PATCH_TOKEN,
-                            DEFAULT_IMAGE_START_TOKEN, DEFAULT_SOUND_END_TOKEN,
-                            DEFAULT_SOUND_PATCH_TOKEN,
-                            DEFAULT_SOUND_START_TOKEN, DEFAULT_VIDEO_END_TOKEN,
-                            DEFAULT_VIDEO_PATCH_TOKEN,
-                            DEFAULT_VIDEO_START_TOKEN)
+from lego.constants import (
+    DEFAULT_IMAGE_END_TOKEN,
+    DEFAULT_IMAGE_PATCH_TOKEN,
+    DEFAULT_IMAGE_START_TOKEN,
+    DEFAULT_SOUND_END_TOKEN,
+    DEFAULT_SOUND_PATCH_TOKEN,
+    DEFAULT_SOUND_START_TOKEN,
+    DEFAULT_VIDEO_END_TOKEN,
+    DEFAULT_VIDEO_PATCH_TOKEN,
+    DEFAULT_VIDEO_START_TOKEN,
+)
 from lego.conversation import Conversation, conv_templates
-from lego.mm_utils import (load_image_square, postprocess_image_answer_gradio,
-                           postprocess_output)
+from lego.mm_utils import (
+    load_image_square,
+    postprocess_image_answer_gradio,
+    postprocess_output,
+)
 from lego.model.builder import CONFIG
-from lego.serve.gradio_utils import (Chat, block_css, colors,
-                                     learn_more_markdown, title_markdown,
-                                     tos_markdown)
+from lego.serve.gradio_utils import (
+    Chat,
+    block_css,
+    colors,
+    learn_more_markdown,
+    title_markdown,
+    tos_markdown,
+)
 from PIL import Image
 from video_llama.models.ImageBind.data import load_and_transform_audio_data
 from video_llama.processors.video_processor import load_video

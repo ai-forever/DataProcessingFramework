@@ -12,7 +12,9 @@ from typing import Optional
 import torch
 from transformers.modeling_outputs import (
     BaseModelOutputWithPoolingAndCrossAttentions,
-    CausalLMOutputWithCrossAttentions, ModelOutput)
+    CausalLMOutputWithCrossAttentions,
+    ModelOutput,
+)
 
 
 @dataclass

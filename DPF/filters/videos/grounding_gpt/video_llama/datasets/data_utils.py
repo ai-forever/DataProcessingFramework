@@ -19,12 +19,13 @@ import numpy as np
 import torch
 import webdataset as wds
 from decord import VideoReader
-from DPF.filters.videos.grounding_gpt.video_llama.common.registry import \
-    registry
-from DPF.filters.videos.grounding_gpt.video_llama.datasets.datasets.base_dataset import \
-    ConcatDataset
 from torch.utils.data.dataset import IterableDataset
 from tqdm import tqdm
+
+from DPF.filters.videos.grounding_gpt.video_llama.common.registry import registry
+from DPF.filters.videos.grounding_gpt.video_llama.datasets.datasets.base_dataset import (
+    ConcatDataset,
+)
 
 decord.bridge.set_bridge("torch")
 MAX_INT = registry.get("MAX_INT")

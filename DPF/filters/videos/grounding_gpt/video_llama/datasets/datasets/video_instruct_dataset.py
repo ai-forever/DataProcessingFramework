@@ -10,20 +10,30 @@ import pandas as pd
 import torch
 import transformers
 from decord import VideoReader
-from DPF.filters.videos.grounding_gpt.video_llama.conversation.conversation_video import (
-    Conversation, SeparatorStyle)
-from DPF.filters.videos.grounding_gpt.video_llama.datasets.datasets.base_dataset import \
-    BaseDataset
-from DPF.filters.videos.grounding_gpt.video_llama.datasets.datasets.caption_datasets import \
-    CaptionDataset
-from DPF.filters.videos.grounding_gpt.video_llama.processors import (
-    AlproVideoTrainProcessor, transforms_video)
-from DPF.filters.videos.grounding_gpt.video_llama.processors.video_processor import (
-    ToTHWC, ToUint8, load_video)
 from PIL import Image
 from torch.utils.data.dataloader import default_collate
 from torchvision import transforms
 from transformers import AutoModelForCausalLM, AutoTokenizer, LlamaTokenizer
+
+from DPF.filters.videos.grounding_gpt.video_llama.conversation.conversation_video import (
+    Conversation,
+    SeparatorStyle,
+)
+from DPF.filters.videos.grounding_gpt.video_llama.datasets.datasets.base_dataset import (
+    BaseDataset,
+)
+from DPF.filters.videos.grounding_gpt.video_llama.datasets.datasets.caption_datasets import (
+    CaptionDataset,
+)
+from DPF.filters.videos.grounding_gpt.video_llama.processors import (
+    AlproVideoTrainProcessor,
+    transforms_video,
+)
+from DPF.filters.videos.grounding_gpt.video_llama.processors.video_processor import (
+    ToTHWC,
+    ToUint8,
+    load_video,
+)
 
 DEFAULT_IMAGE_PATCH_TOKEN = '<ImageHere>'
 video_conversation = Conversation(

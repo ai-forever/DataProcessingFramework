@@ -5,6 +5,7 @@ import os
 import sys
 
 import requests
+
 from DPF.filters.videos.grounding_gpt.lego.constants import LOGDIR
 
 server_error_msg = "**NETWORK ERROR DUE TO HIGH TRAFFIC. PLEASE REGENERATE OR REFRESH THIS PAGE.**"
