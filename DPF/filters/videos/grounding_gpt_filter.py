@@ -1,6 +1,4 @@
 import os
-
-os.environ["TOKENIZERS_PARALLELISM"] = "false"
 from io import BytesIO
 from typing import Any, Optional
 
@@ -11,32 +9,17 @@ from DPF.types import ModalityToDataMapping
 
 from .grounding_gpt.lego import conversation as conversation_lib
 from .grounding_gpt.lego.constants import (
-    DEFAULT_IMAGE_END_TOKEN,
-    DEFAULT_IMAGE_PATCH_TOKEN,
-    DEFAULT_IMAGE_START_TOKEN,
-    DEFAULT_IMAGE_TOKEN,
-    DEFAULT_SOUND_END_TOKEN,
-    DEFAULT_SOUND_PATCH_TOKEN,
-    DEFAULT_SOUND_START_TOKEN,
-    DEFAULT_SOUND_TOKEN,
     DEFAULT_VIDEO_END_TOKEN,
     DEFAULT_VIDEO_PATCH_TOKEN,
     DEFAULT_VIDEO_START_TOKEN,
-    DEFAULT_VIDEO_TOKEN,
-    IMAGE_TOKEN_INDEX,
 )
 from .grounding_gpt.lego.conversation import SeparatorStyle
 from .grounding_gpt.lego.mm_utils import (
     KeywordsStoppingCriteria,
     get_model_name_from_path,
-    load_image_square,
-    postprocess_output,
     tokenizer_image_token,
 )
 from .grounding_gpt.lego.model.builder import CONFIG, load_pretrained_model
-from .grounding_gpt.video_llama.models.ImageBind.data import (
-    load_and_transform_audio_data,
-)
 from .grounding_gpt.video_llama.processors.video_processor import load_video
 from .video_filter import VideoFilter
 
@@ -45,6 +28,7 @@ try:
 except ImportError:
     from torch.utils.data import default_collate
 
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 IMAGEBIND_URL = "https://dl.fbaipublicfiles.com/imagebind/imagebind_huge.pth"
 BLIP_URL = "https://storage.googleapis.com/sfr-vision-language-research/LAVIS/models/BLIP2/blip2_pretrained_flant5xxl.pth"
@@ -143,7 +127,7 @@ class GroundingGPTFilter(VideoFilter):
         keys, video_tensors = list(zip(*batch))
         video_tensors_batch = default_collate(video_tensors).to(self.device, torch.bfloat16)  # type: ignore
         input_ids_batch = self.input_ids.repeat_interleave(video_tensors_batch.shape[0], 0).to(self.device)  # type: ignore
-        
+
         with torch.inference_mode():
             output_ids = self.model.generate(
                 input_ids_batch,
@@ -152,7 +136,7 @@ class GroundingGPTFilter(VideoFilter):
                 sounds=self.sound_tensor,
                 do_sample=True,
                 temperature=self.temperature,
-                max_new_tokens=self.max_new_tokens, 
+                max_new_tokens=self.max_new_tokens,
                 top_p=0.85,
                 no_repeat_ngram_size=2,
                 use_cache=True,
