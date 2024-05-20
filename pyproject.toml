@@ -91,7 +91,7 @@ disable_error_code = ["import-not-found", "call-overload", "no-untyped-def"]
 
 [[tool.mypy.overrides]]
 module = "DPF.filters.videos.grounding_gpt.*"
-ignore_errors = true
+ignore_errors = ["import-not-found", "call-overload", "no-untyped-def", "no-untyped-call"]
 
 [[tool.mypy.overrides]]
 module = "DPF.filters.videos.grounding_gpt_filter"
