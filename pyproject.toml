@@ -95,11 +95,11 @@ ignore_errors = true
 
 [[tool.mypy.overrides]]
 module = "DPF.filters.videos.grounding_gpt_filter"
-disable_error_code = ["import-not-found", "call-overload", "no-untyped-def"]
+disable_error_code = ["import-not-found", "call-overload", "no-untyped-def", "no-untyped-call"]
 
 [[tool.mypy.overrides]]
 module = "DPF.filters.images.llava_captioning_filter"
-disable_error_code = ["import-not-found", "call-overload", "no-untyped-def", "no-untyped-call"]
+disable_error_code = ["import-not-found", "call-overload", "no-untyped-def"]
 
 [[tool.mypy.overrides]]
 module = "DPF.filters.images.ocr_filter"
