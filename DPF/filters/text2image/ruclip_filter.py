@@ -1,11 +1,15 @@
-from typing import List, Optional
+from typing import Any, Optional
+
 import numpy as np
+
+# TODO(review) - зависимость отсутствует в requirements.txt
+import ruclip  # type: ignore
 import torch
 from torch.nn.utils.rnn import pad_sequence
-import ruclip
 
+from DPF.types import ModalityToDataMapping
 from DPF.utils import read_image_rgb_from_bytes
-from DPF.filters.utils import identical_collate_fn
+
 from .t2i_filter import T2IFilter
 
 
@@ -31,26 +35,20 @@ class RuCLIPFilter(T2IFilter):
         Batch size for model
     pbar: bool = True
         Flag for displaying progress bar
-
-    Attributes
-    ----------
-    schema: List[str]
-        List of columns to be added with this filter.
-    dataloader_kwargs: dict:
-        Parameters for dataloader (batch_size, num_workers, collate_fn, etc.)
     """
 
     def __init__(
         self,
         ruclip_version: str,
         weights_folder: str,
-        templates: Optional[List[str]] = None,
+        templates: Optional[list[str]] = None,
         device: str = "cuda:0",
         workers: int = 16,
         batch_size: int = 64,
         pbar: bool = True,
+        _pbar_position: int = 0
     ):
-        super().__init__(pbar)
+        super().__init__(pbar, _pbar_position)
 
         if templates is None:
             templates = ["{}"]
@@ -73,27 +71,34 @@ class RuCLIPFilter(T2IFilter):
             templates=self.templates,
         )
 
-        self.schema = ["image_path", f"{self.ruclip_version}_similarity"]
-        self.dataloader_kwargs = {
+    @property
+    def result_columns(self) -> list[str]:
+        return [f"{self.ruclip_version}_similarity"]
+
+    @property
+    def dataloader_kwargs(self) -> dict[str, Any]:
+        return {
             "num_workers": self.num_workers,
             "batch_size": self.batch_size,
-            "preprocess_f": self.preprocess,
-            "collate_fn": identical_collate_fn,
             "drop_last": False,
-            "cols_to_return": ["caption"],
         }
 
-    def preprocess(self, img_bytes, data):
-        image_path = data["image_path"]
-        text = data["caption"]
-        pil_img = read_image_rgb_from_bytes(img_bytes)
+    def preprocess_data(
+        self,
+        modality2data: ModalityToDataMapping,
+        metadata: dict[str, Any]
+    ) -> Any:
+        key = metadata[self.key_column]
+        text = modality2data['text']
+        pil_img = read_image_rgb_from_bytes(modality2data['image'])
         img_tensor = self.ruclip_processor.image_transform(pil_img)
-        return image_path, img_tensor, text
+        return key, img_tensor, text
 
-    def process_batch(self, batch) -> dict:
-        df_batch_labels = self._generate_dict_from_schema()
+    def process_batch(self, batch: list[Any]) -> dict[str, list[Any]]:
+        df_batch_labels = self._get_dict_from_schema()
 
-        image_paths, image_tensors, batch_labels = list(zip(*batch))
+        image_tensors: list[torch.Tensor]
+        keys, image_tensors, batch_labels = list(zip(*batch))  # type: ignore
 
         with torch.no_grad():
             image_tensors = [t.to(self.device) for t in image_tensors]
@@ -103,11 +108,11 @@ class RuCLIPFilter(T2IFilter):
             batch_similarity = self.get_similarity(inputs, text_latents).tolist()
 
         df_batch_labels[f"{self.ruclip_version}_similarity"].extend(batch_similarity)
-        df_batch_labels["image_path"].extend(image_paths)
+        df_batch_labels[self.key_column].extend(keys)
 
         return df_batch_labels
 
-    def get_similarity(self, inputs, text_latents):
+    def get_similarity(self, inputs: dict[str, torch.Tensor], text_latents: torch.Tensor) -> np.ndarray[Any, Any]:
         with torch.no_grad():
             logit_scale = self.ruclip_model.logit_scale.exp()
             image_latents = self.ruclip_model.encode_image(inputs["pixel_values"])

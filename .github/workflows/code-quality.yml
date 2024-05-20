@@ -1,0 +1,17 @@
+name: Code Quality
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v4
+      with:
+        python-version: "3.9"
+    - run: pip install --upgrade pip
+    - run: pip install Cython
+    - run: pip install .[dev,filters]
+    - run: mypy DPF/
+    - run: ruff check DPF/ scripts/ tests/ --config pyproject.toml
+    - run: isort --check DPF/ tests/ scripts/

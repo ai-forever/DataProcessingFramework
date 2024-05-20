@@ -1,229 +1,219 @@
 # DataProcessingFramework
 
-Фреймворк для работы с датасетами
-  
-## Contents
+A framework for processing and filtering multimodal datasets.
 
-- [Установка](#installation)
-- [Краткий обзор](#overview)
-- [Примеры](#basic-usage)
+- [Installation](#installation)
+- [Overview](#overview)
+- [Basic usage](#basic-usage)
 
 ## Installation
 
+Install with pip:
+```bash
+pip install git+https://github.com/ai-forever/DataProcessingFramework
+```
+Install from repository:
 ```bash
 git clone https://github.com/ai-forever/DataProcessingFramework
 cd DataProcessingFramework
-pip install -r requirements.txt
+pip install .
 ```
+
+Extra requirements: `filters`, `dev`, `llava`, `video_llava`
+
+To install extra requirements run: `pip install .[filters]`
 
 ## Overview
 
-Данный фреймворк дает возможность:
-- Считывать и просматривать датасеты как локально, так и на удаленном хранилище (например, S3)
-- Применять различные фильтры для текстов и картинок в датасете
-- Сохранять и изменять датасет, добавлять в него новую информацию 
-- Валидировать датасет, то есть проверять его на соответствие определенному формату хранения
+Framework supports following features:
+1. Reading datasets
+2. Filtering datasets and calculating metrics using different models
+3. Converting datasets to other storage formats
+4. Datasets validating
+5. Supports different filesystems (local, s3)
+6. Data filtering pipelines
 
-Во фреймворке используется несколько основных и вспомогательных классов, выполняющие определенные задачи.
+DPF allows you to easily filter datasets and add new metadata. 
+For example, the code below generates synthetic captions for images in shards on remote s3 storage and updates dataset metadata without downloading shards:
 
-**Основные абстракции и их функции:**
-- **Formatter** (`DPF.formatters`) - Позволяет считать датасет, создает класс `Processor` для данного датасета
-- **Processor** (`DPF.processor`) - Основной класс, инкапсулирует в себя всю работу с датасетом: просмотр семплов, изменение и обновление данных и прочее
-- **Filter** (`DPF.filters`) - Представляет собой некоторую функцию, применяемую к датасету с целью получить новую информацию, структурировать или обнаружить неподходящие данные
-- **Validator** (`DPF.validators`) - Класс, использующийся для проверки датасета на соответствие определенному формату хранению
-- **Pipeline** (`DPF.pipelines`) - Объединяет несколько действий в один пайплайн для упрощения обработки датасета
+Before running the example below, install extra requirements: `pip install DPF[filters,llava]`
 
-**Вспомогательные классы:**
-
-- **FileSystem** (`DPF.filesystems`) - Абстракция файловой системы (local/S3)
-- **Dataloader** (`DPF.dataloaders`) - Подгрузчики данных для каждого формата хранения
-- **Writer** (`DPF.processors.writers`) - Класс, реализующий сохранение данных для конкретного формата хранения
-
-### Поддерживаемые форматы
-
-Во фреймворке данные разделены по модальностям, а внутри каждой модальности на форматы хранения. Для каждой модальности используется `Processor` и `Formatter`, соответствующие этой модальносте. Формат хранения - это способ хранения данных. Например, одни и те же данные могут храниться просто в папке, а могут в архивах.
-
-Поддерживаются следующие модальности и форматы хранения:
-- *Images* (просто картинки)
-  - *images_raw* - картинки в виде файлов на локальном хранилище
-- *Text-to-image* (пары картинка-текст)
-  - *shards* - tar-архивы с картинками и csv с текстами и дополнительными данными
-  - *raw* - папки с картинками и csv с текстами и дополнительными данными
-
-# Basic usage
-
-Примеры работы с фреймворком представлены в папке `examples/`
-
-## Text to image
-
-### Считывание датасета
-
-Для считывания датасета используются методы `formatter.from_*` (вместо `*` пишите нужную вам функцию) класса `T2IFormatter`. Метод вернет экземпляр класса `T2IProcessor`, через который осуществляется работа с датасетом.
-
-Возможно использование двух методов:
-- `formatter.from_shards` - для формата *shards*
-- `formatter.from_raw` - для формата *raw*
-
-Пример считывания картиночно-текстового датасета в формате shards с локального диска:
 ```python
-from DPF.formatters.t2i_formatter import T2IFormatter
+from DPF import S3Connector, DatasetReader, ShardsDatasetConfig
 
-formatter = T2IFormatter()
+# creating connector for S3 storage
+connector = S3Connector(
+    key='access_key',
+    secret='secret_key',
+    endpoint_url='endpoint_url'
+)
 
-processor = formatter.from_shards(
-    'path_to_your_shards', 
-    imagename_column='image_name',
-    caption_column='caption',
-    progress_bar=True,
-    processes=8
+reader = DatasetReader(connector)
+
+# creating dataset config
+config = ShardsDatasetConfig.from_path_and_columns(
+    "s3://your-bucket/path/to/shards",
+    image_name_col='image_name',
+)
+# reading a dataset
+processor = reader.read_from_config(config, workers=16)
+
+from DPF.filters.images.llava_captioning_filter import LLaVaCaptioningFilter
+
+# creating LLaVA captioner filter
+datafilter = LLaVaCaptioningFilter(
+    workers=16, prompt='short', 
+    batch_size=16, device="cuda:0"
+)
+print(datafilter.result_columns) # prints list of columns that will be added
+# applying filter to dataset
+processor.apply_data_filter(datafilter) # new metadata is created
+
+new_column_name = datafilter.result_columns[1] # name of new added column with generated caption
+
+print(processor.df[new_column_name]) # prints generated image captions
+# adding new metadata to remote dataset
+processor.update_columns([new_column_name], workers=16)
+```
+
+More examples [there](examples/)
+
+### Supported data modalities
+
+The framework supports data that has any combination of the following modalities:
+- Text
+- Image
+- Video
+
+> Datasets with several data of the same modality in one sample are not supported.
+For example, datasets with following modalities are supported: text-video, text-image, image-video, images, etc.
+Modalities that are not supported: image2image, image-text-image, etc.
+
+### Supported data formats
+
+The dataset should be stored in one of the following formats:
+- Files
+- Shards
+- Sharded files
+
+[More about data formats](docs/formats.md)
+
+## Basic usage
+
+### Configs
+To read a dataset, you must first create a config that describes the dataset and the type of data in it.
+For each data format, you need to use the appropriate config.
+
+Example for _shards_ format:
+
+```python
+from DPF import ShardsDatasetConfig
+
+config = ShardsDatasetConfig.from_path_and_columns(
+  'examples/example_dataset',  # path to shards
+  image_name_col='image_name',  # name of column in csv file with image names 
+  text_col='caption'  # name of column in csv file with text/captions
 )
 ```
 
-Пример считывания датасета с S3:
+### Reading a dataset
+You can read dataset using `DatasetReader.from_config` method:
+
 ```python
-from DPF.formatters.t2i_formatter import T2IFormatter
+from DPF import ShardsDatasetConfig, DatasetReader
 
-formatter = T2IFormatter(
-    filesystem='s3',
-    key='your_access_key',
-    secret='your_secret_key',
-    endpoint_url='your_endpoint'
+config = ShardsDatasetConfig.from_path_and_columns(
+  'examples/example_dataset',
+  image_name_col='image_name',
+  text_col='caption'
 )
 
-processor = formatter.from_shards(
-    'path_to_your_dataset_on_s3', 
-    imagename_column='image_name',
-    caption_column='rus_caption',
-    progress_bar=True,
-    processes=8
+reader = DatasetReader()
+processor = reader.read_from_config(config)
+```
+Example for _sharded files_ format:
+
+```python
+from DPF import ShardedFilesDatasetConfig, DatasetReader
+
+config = ShardedFilesDatasetConfig.from_path_and_columns(
+  'examples/example_video_dataset',
+  video_name_col='video_name',
+  text_col='caption'
 )
+
+reader = DatasetReader()
+processor = reader.read_from_config(config)
 ```
 
-Основная информация о датасете хранится в атрибуте `processor.df`. 
+[Examples of reading data in other formats](docs/formats.md)
 
-Больше подробностей можно найти в [ноутбуке с примером](https://github.com/ai-forever/DataProcessingFramework/blob/main/examples/explore_text2image_dataset.ipynb)
-
-### Работа с датасетом
-
-Датафрейм `processor.df` можно изменять, а также добавлять к нему новые колонки. Для сохранения изменений используйте метод `processor.update_data` Например, добавление колонки "соотношение сторон" можно произвести следующим способом:
+Example reading a dataset directly from S3 storage:
 ```python
-processor.df['aspect_ratio'] = processor.df['width']/processor.df['height']
-processor.update_data(['aspect_ratio'], processes=8)
-```
-Основные методы `T2IProcessor` и их назначение перечислены ниже:
-- `processor.rename_columns` - переименование колонок
-- `processor.delete_columns` - удаление колонок
-- `processor.update_data` - добавление новых колонок и обновление измененных колонок<br>
-Все перечисленные выше методы изменяют именно файлы датасета, то есть сохраняют изменения в хранилище.
-- `processor.get_random_samples` - просмотр случайных примеров из датасета
-- `processor.apply_filter` - применение фильтра к датасету
+from DPF import S3Connector, DatasetReader, ShardsDatasetConfig
 
-### Фильтрация
-
-Для датасетов модальности *text2image* можно применять также фильтры модальностей *images* и *texts*. Фильтры соответствующих модальностей расположены в папке `DPF/filters/` следующим образом:
-- `DPF/filters/text2image`
-- `DPF/filters/images`
-- `DPF/filters/texts`
-
-Для применения фильтра необходимо сначала создать объект класса `Processor`, а затем вызвать метод `Processor.apply_filter`, передав ему соответсвующий фильтр. В результате работы фильтра в датафрейме `processor.df` добавятся новые колонки. Например, применение фильтра водяных знаков будет выглядить так:
-```python
-from DPF.filters.images.watermarks_filter import WatermarksFilter
-
-# see more: help(WatermarksFilter)
-watermarks_filter = WatermarksFilter(
-    'resnext50_32x4d-small',
-    weights_folder='your_weights_folder',
-    workers=8, batch_size=128
+connector = S3Connector(
+    key='access_key',
+    secret='secret_key',
+    endpoint_url='endpoint_url'
 )
+reader = DatasetReader(connector)
 
-processor.apply_filter(watermarks_filter)
-processor.df.head()
+config = ShardsDatasetConfig.from_path_and_columns(
+    "s3://your-bucket/path/to/shards",
+    image_name_col='image_name',
+)
+processor = reader.read_from_config(config, workers=16)
 ```
 
-Фильтр, определяющий язык текста:
+### Viewing and updating dataset
+
+A dataset processor provides an interface for interacting with data and modifying it.
+
+[More about dataset processor](docs/processor.md)
+
+### Filtering dataset
+
+Filters are models or algorithms that calculate metrics for a dataset. 
+Filters process the data and add new columns with the calculated metrics.
+
+[More about filters](docs/filters.md)
+
+### Transforming dataset
+
+You can transform data in dataset with DPF.
+For example, resize videos or photos in dataset.
+You can use `DPF.transforms` for these tasks.
+
+[More about transforms](docs/transforms.md)
+
+### Pipelines
+
+Pipelines help to combine several filters into one pipeline and process the dataset using it. For example:
 ```python
-from DPF.filters.texts.lang_filter import LangFilter
+from DPF.configs import ShardsDatasetConfig
+from DPF.dataset_reader import DatasetReader
+from DPF.pipelines import FilterPipeline
+from DPF.filters.images.info_filter import ImageInfoFilter
+from DPF.filters.images.hash_filters import PHashFilter
 
-langfilter = LangFilter(
-    text_column_name='caption'
+reader = DatasetReader()
+config = ShardsDatasetConfig.from_path_and_columns(
+    "examples/example_dataset",
+    image_name_col='image_name',
 )
+processor = reader.read_from_config(config, workers=4)
 
-processor.apply_filter(lfilter)
-processor.df.head()
+pipeline = FilterPipeline("pipeline_example")
+pipeline.add_datafilter(
+    ImageInfoFilter,
+    {'workers': 4},
+    processor_run_kwargs={'return_none_on_error': True},
+)
+pipeline.add_datafilter(PHashFilter, {'workers': 4})
+pipeline.add_deduplication(["image_phash_8"])
+pipeline.add_shuffle()
+pipeline.run(processor)
 ```
 
-Больше про фильтры смотрите [здесь](#filters), а также в [этом ноутбуке](https://github.com/ai-forever/DataProcessingFramework/blob/main/examples/filter_text2image_dataset.ipynb).
-
-### Валидация
-
-Валидация позволяет проверить соответствует ли датасет формату хранения, также проверить его на битые файлы, значения NaN и прочее. Для этого используется класс `T2IValidator`. Валидатор принимает путь к датасету и возвращает: 
-1) список ошибок для каждого шарда
-2) для каждой ошибки - сколько раз она возникла
-3) статус (`False`, если возникла хотя бы одна ошибка, `True` иначе)
-
-Пример валидации датасета в формате *shards*:
-```python
-from DPF.formatters.t2i_formatter import T2IFormatter
-from DPF.validators.text2image.shards_validator import ShardsValidator
-
-path = 'path_to_your_shards'
-
-formatter = T2IFormatter()
-processor = formatter.from_shards(
-    path, 
-    imagename_column='image_name',
-    caption_column='caption',
-    progress_bar=True,
-    processes=16
-)
-
-validator = ShardsValidator(
-    filesystem=processor.get_filesystem(),
-    csv_columns=['image_name', 'caption'], # список колонок, наличие которых необходимо проверить в датасете
-    caption_column='caption',
-    validate_tars=True
-)
-
-results, err2count, all_ok = validator.validate(path, processes=16)
-```
-
-## Images
-
-## Считывание датасета
-
-Для считывания датасета используются методы `formatter.from_*` (вместо `*` пишите нужную вам функцию) класса `ImagesFormatter`. Метод вернет экземпляр класса `ImagesProcessor`, через который осуществляется работа с датасетом.
-
-Возможно использование трех методов:
-- `formatter.from_paths` - инициализация из списка путей к изображениям
-- `formatter.from_folder` - инициализация из пути к папке с изображениями
-- `formatter.from_labeled_folder` - инициализация из папки с датасетом для задачи классификации, который имеет структуру: `folder/{class_name}/{image_name}`
-
-Пример считывания датасета с изображениями:
-```python
-from DPF.formatters.images_formatter import ImagesFormatter
-
-formatter = ImagesFormatter()
-processor = formatter.from_folder(
-    'path/to/folder/'
-)
-```
-
-Основная информация о датасете хранится в атрибуте `processor.df`. 
-
-### Работа с датасетом
-
-Основные методы `ImagesProcessor` и их назначение перечислены ниже:
-- `processor.get_random_samples` - просмотр случайных примеров из датасета
-- `processor.apply_filter` - применение фильтра к датасету
-
-### Фильтрация
-
-Для датасетов модальности *images* можно применять только фильтры изображений. Они расположены в `DPF/filters/images`.
-
-## Texts
-
-TO-DO
-
-# Filters
-
-TO-DO
+[More about pipelines](docs/pipelines.md)

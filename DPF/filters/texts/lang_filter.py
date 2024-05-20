@@ -1,22 +1,35 @@
-from py3langid.langid import LanguageIdentifier, MODEL_FILE
+from typing import Any
 
-from .text_filter import TextFilter
+from py3langid.langid import MODEL_FILE, LanguageIdentifier
+
+from DPF.filters import ColumnFilter
 
 
-class LangFilter(TextFilter):
+class LangFilter(ColumnFilter):
     """
     LangFilter class
     """
 
-    def __init__(self, text_column_name: str = "caption", workers: int = 16):
-        super().__init__(text_column_name)
+    def __init__(
+        self,
+        text_column_name: str = "text",
+        workers: int = 16,
+        pbar: bool = True
+    ):
+        super().__init__(workers, pbar)
         self.lang_identifier = LanguageIdentifier.from_pickled_model(
             MODEL_FILE, norm_probs=True
         )
-
         self.text_column_name = text_column_name
-        self.schema = ["lang", "lang_score"]
 
-    def process(self, row):
-        lg, score = self.lang_identifier.classify(row[self.text_column_name])
-        return lg, round(score, 2)
+    @property
+    def columns_to_process(self) -> list[str]:
+        return [self.text_column_name]
+
+    @property
+    def result_columns(self) -> list[str]:
+        return ["lang", "lang_score"]
+
+    def process_sample(self, sample: dict[str, Any]) -> list[Any]:
+        lg, score = self.lang_identifier.classify(sample[self.text_column_name])
+        return [lg, round(score, 2)]

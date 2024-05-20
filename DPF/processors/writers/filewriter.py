@@ -1,27 +1,26 @@
 from abc import abstractmethod
-import traceback
-from typing import Optional, Dict
+from types import TracebackType
+from typing import Optional, Union
 
 
-class FileWriter:
+class ABSWriter:
     @abstractmethod
-    def save_file(
+    def save_sample(
         self,
-        file_bytes: bytes,
-        image_ext: Optional[str] = None,
-        file_data: Optional[Dict[str, str]] = None,
+        modality2sample_data: dict[str, tuple[str, bytes]],
+        table_data: Optional[dict[str, str]] = None,
     ) -> None:
         pass
 
     @abstractmethod
-    def __enter__(self) -> "FileWriter":
+    def __enter__(self) -> "ABSWriter":
         pass
 
     @abstractmethod
     def __exit__(
         self,
-        exception_type,
-        exception_value: Optional[Exception],
-        exception_traceback: traceback,
+        exception_type: Union[type[BaseException], None],
+        exception_value: Union[BaseException, None],
+        exception_traceback: Union[TracebackType, None],
     ) -> None:
         pass

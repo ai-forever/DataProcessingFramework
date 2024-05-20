@@ -1,8 +1,9 @@
 import torch
+
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
-class CTCLabelConverter(object):
+class CTCLabelConverter:
     """ Convert between text-label and text-index """
 
     def __init__(self, character):
@@ -39,11 +40,11 @@ class CTCLabelConverter(object):
     def decode(self, text_index, length):
         """ convert text-index into text-label. """
         texts = []
-        for index, l in enumerate(length):
+        for index, l in enumerate(length):  # noqa: E741
             t = text_index[index, :]
 
             char_list = []
-            for i in range(l):
+            for i in range(l):  # noqa: E741
                 if t[i] != 0 and (not (i > 0 and t[i - 1] == t[i])):  # removing repeated characters and blank.
                     char_list.append(self.character[t[i]])
             text = ''.join(char_list)
@@ -52,7 +53,7 @@ class CTCLabelConverter(object):
         return texts
 
 
-class CTCLabelConverterForBaiduWarpctc(object):
+class CTCLabelConverterForBaiduWarpctc:
     """ Convert between text-label and text-index for baidu warpctc """
 
     def __init__(self, character):
@@ -85,7 +86,7 @@ class CTCLabelConverterForBaiduWarpctc(object):
         """ convert text-index into text-label. """
         texts = []
         index = 0
-        for l in length:
+        for l in length:  # noqa: E741
             t = text_index[index:index + l]
 
             char_list = []
@@ -99,7 +100,7 @@ class CTCLabelConverterForBaiduWarpctc(object):
         return texts
 
 
-class AttnLabelConverter(object):
+class AttnLabelConverter:
     """ Convert between text-label and text-index """
 
     def __init__(self, character):
@@ -140,13 +141,13 @@ class AttnLabelConverter(object):
     def decode(self, text_index, length):
         """ convert text-index into text-label. """
         texts = []
-        for index, l in enumerate(length):
+        for index, l in enumerate(length):  # noqa: E741
             text = ''.join([self.character[i] for i in text_index[index, :]])
             texts.append(text)
         return texts
 
 
-class Averager(object):
+class Averager:
     """Compute average for torch.Tensor, used for loss average."""
 
     def __init__(self):

@@ -1,8 +1,13 @@
 import os
+from typing import Any
 from urllib.request import urlretrieve
+
+# TODO(review) - зависимость отсутствует в requirements.txt
+import clip
 import torch
 from torch import nn
-import clip
+
+from DPF.types import ModalityToDataMapping
 
 try:
     from torch.utils.data.dataloader import default_collate
@@ -10,11 +15,11 @@ except ImportError:
     from torch.utils.data import default_collate
 
 from DPF.utils import read_image_rgb_from_bytes
-from DPF.filters.utils import identical_collate_fn
+
 from .img_filter import ImageFilter
 
 
-def get_aesthetic_model(clip_model, cache_folder):
+def get_aesthetic_model(clip_model: str, cache_folder: str) -> torch.nn.Module:
     """
     Load the aethetic model
     """
@@ -37,6 +42,7 @@ def get_aesthetic_model(clip_model, cache_folder):
             + "_linear.pth?raw=true"
         )
         # TODO rework download
+        # TODO(review) - сделать в виде загрузчика моделей с удаленных ресурсов
         urlretrieve(url_model, path_to_model)
 
     s = torch.load(path_to_model)
@@ -58,8 +64,9 @@ class AestheticFilter(ImageFilter):
         workers: int = 16,
         batch_size: int = 64,
         pbar: bool = True,
+        _pbar_position: int = 0
     ):
-        super().__init__(pbar)
+        super().__init__(pbar, _pbar_position)
 
         self.num_workers = workers
         self.batch_size = batch_size
@@ -72,31 +79,38 @@ class AestheticFilter(ImageFilter):
         self.aesthetic_model = get_aesthetic_model(clip_model, weights_folder)
         self.aesthetic_model.to(self.device)
 
-        self.schema = ["image_path", "aesthetic_score"]
-        self.dataloader_kwargs = {
+    @property
+    def result_columns(self) -> list[str]:
+        return ["aesthetic_score"]
+
+    @property
+    def dataloader_kwargs(self) -> dict[str, Any]:
+        return {
             "num_workers": self.num_workers,
             "batch_size": self.batch_size,
-            "preprocess_f": self.preprocess,
-            "collate_fn": identical_collate_fn,
             "drop_last": False,
         }
 
-    def preprocess(self, img_bytes, data):
-        image_path = data["image_path"]
-        pil_img = read_image_rgb_from_bytes(img_bytes)
+    def preprocess_data(
+        self,
+        modality2data: ModalityToDataMapping,
+        metadata: dict[str, Any]
+    ) -> Any:
+        key = metadata[self.key_column]
+        pil_img = read_image_rgb_from_bytes(modality2data['image'])
         img_tensor = self.clip_transforms(pil_img)
-        return image_path, img_tensor
+        return key, img_tensor
 
-    def process_batch(self, batch) -> dict:
-        df_batch_labels = self._generate_dict_from_schema()
+    def process_batch(self, batch: list[Any]) -> dict[str, list[Any]]:
+        df_batch_labels = self._get_dict_from_schema()
 
-        image_paths, image_tensors = list(zip(*batch))
-        batch = default_collate(image_tensors).to(self.device)
+        keys, image_tensors = list(zip(*batch))
+        batch = default_collate(image_tensors).to(self.device)  # type: ignore [arg-type]
 
         with torch.no_grad():
             inputs = self.clip_model.encode_image(batch)
             outputs = self.aesthetic_model(inputs.float())
         df_batch_labels["aesthetic_score"].extend(outputs.cpu().reshape(-1).tolist())
-        df_batch_labels["image_path"].extend(image_paths)
+        df_batch_labels[self.key_column].extend(keys)
 
         return df_batch_labels

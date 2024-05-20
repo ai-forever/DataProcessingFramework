@@ -1,7 +1,7 @@
 #
+/weights/
 data/
-tests/
-pipelines/
+cache_dir/
 
 # pycharm
 .idea/
