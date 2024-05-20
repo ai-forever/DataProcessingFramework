@@ -90,8 +90,12 @@ module = "DPF.filters.videos.lita_filter"
 disable_error_code = ["import-not-found", "call-overload", "no-untyped-def"]
 
 [[tool.mypy.overrides]]
-module = "DPF.filters.videos.grounding_gpt_filter"
+module = "DPF.filters.videos.grounding_gpt.*"
 ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "DPF.filters.videos.grounding_gpt_filter"
+disable_error_code = ["import-not-found", "call-overload", "no-untyped-def"]
 
 [[tool.mypy.overrides]]
 module = "DPF.filters.images.llava_captioning_filter"
