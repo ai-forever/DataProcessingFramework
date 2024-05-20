@@ -51,6 +51,15 @@ lita = [
     'LITA @ git+https://github.com/NVlabs/LITA',
     'gdown'
 ]
+grounding_gpt = [
+    'transformers==4.34.0',
+    'tokenizers==0.14',
+    'gradio==3.23',
+    'flash-attn==2.5.6',
+    'torch==2.1.2',
+    'torchvision==0.16.2',
+    'torchaudio==2.1.2'
+]
 
 [tool.hatch.version]
 path = "DPF/__init__.py"
@@ -79,6 +88,10 @@ disable_error_code = ["import-not-found"]
 [[tool.mypy.overrides]]
 module = "DPF.filters.videos.lita_filter"
 disable_error_code = ["import-not-found", "call-overload", "no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "DPF.filters.videos.grounding_gpt_filter"
+ignore_errors = true
 
 [[tool.mypy.overrides]]
 module = "DPF.filters.images.llava_captioning_filter"
