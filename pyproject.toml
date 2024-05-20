@@ -99,7 +99,7 @@ disable_error_code = ["import-not-found", "call-overload", "no-untyped-def"]
 
 [[tool.mypy.overrides]]
 module = "DPF.filters.images.llava_captioning_filter"
-disable_error_code = ["import-not-found"]
+disable_error_code = ["import-not-found", "call-overload", "no-untyped-def"]
 
 [[tool.mypy.overrides]]
 module = "DPF.filters.images.ocr_filter"

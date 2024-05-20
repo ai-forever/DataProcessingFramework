@@ -127,7 +127,7 @@ class GroundingGPTFilter(VideoFilter):
 
         keys, video_tensors = list(zip(*batch))
         video_tensors_batch = default_collate(video_tensors).to(self.device, torch.bfloat16)  # type: ignore
-        input_ids_batch = self.input_ids.repeat_interleave(video_tensors_batch.shape[0], 0).to(self.device)  # type: ignore
+        input_ids_batch = self.input_ids.repeat_interleave(video_tensors_batch.shape[0], 0).to(self.device)
 
         with torch.inference_mode():
             output_ids = self.model.generate(
