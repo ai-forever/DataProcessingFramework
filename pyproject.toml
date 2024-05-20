@@ -117,7 +117,8 @@ profile = "black"
 [tool.ruff]
 extend-exclude = [
     "DPF/filters/videos/raft_core/*",
-    "DPF/filters/images/ocr_model/*"
+    "DPF/filters/images/ocr_model/*",
+    "DPF/filters/videos/grounding_gpt/*"
 ]
 
 [tool.ruff.lint]
