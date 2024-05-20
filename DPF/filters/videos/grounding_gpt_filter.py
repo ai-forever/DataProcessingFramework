@@ -12,6 +12,7 @@ from .grounding_gpt.lego.constants import (
     DEFAULT_VIDEO_END_TOKEN,
     DEFAULT_VIDEO_PATCH_TOKEN,
     DEFAULT_VIDEO_START_TOKEN,
+    IMAGE_TOKEN_INDEX,
 )
 from .grounding_gpt.lego.conversation import SeparatorStyle
 from .grounding_gpt.lego.mm_utils import (
