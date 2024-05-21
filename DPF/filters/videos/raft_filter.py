@@ -155,13 +155,13 @@ class RAFTOpticalFlowFilter(VideoFilter):
             key, frames = data
             with torch.no_grad():
                 for i in range(len(frames)-1):
-                    current_frame = frames[i]
+                    current_frame= frames[i]
                     next_frame = frames[i+1]
 
                     if i == 0:
                         current_frame_cuda = current_frame.to(self.device)
                     else:
-                        current_frame_cuda = next_frame_cuda
+                        current_frame_cuda = next_frame_cuda  #type: ignore #noqa: F821
 
                     next_frame_cuda = next_frame.to(self.device)
                     _, flow = self.model(

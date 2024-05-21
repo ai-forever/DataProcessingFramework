@@ -27,7 +27,7 @@ def transform_keep_ar(frame: MatLike, min_side_size: int) -> MatLike:
         new_width = min_side_size
         new_height = int(new_width / aspect_ratio)
 
-    resized_frame = cv2.resize(frame, dsize=(new_width, new_height), interpolation=cv2.INTER_LINEAR)
+    resized_frame: MatLike = cv2.resize(frame, dsize=(new_width, new_height), interpolation=cv2.INTER_LINEAR)
     resized_frame = cv2.cvtColor(resized_frame, cv2.COLOR_BGR2GRAY)
     return resized_frame
 
