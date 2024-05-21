@@ -1,5 +1,5 @@
 import io
-from typing import Any
+from typing import Any, Optional
 
 import cv2
 import imageio.v3 as iio
@@ -15,6 +15,21 @@ def transform_frame(frame: MatLike, target_size: tuple[int, int]) -> MatLike:
     frame = cv2.resize(frame, dsize=(target_size[0], target_size[1]), interpolation=cv2.INTER_LINEAR)
     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     return frame
+
+
+def transform_keep_ar(frame: MatLike, min_side_size: int) -> MatLike:
+    h, w = frame.shape[:2]
+    aspect_ratio = w / h
+    if h <= w:
+        new_height = min_side_size
+        new_width = int(aspect_ratio * new_height)
+    else:
+        new_width = min_side_size
+        new_height = int(new_width / aspect_ratio)
+
+    resized_frame = cv2.resize(frame, dsize=(new_width, new_height), interpolation=cv2.INTER_LINEAR)
+    resized_frame = cv2.cvtColor(resized_frame, cv2.COLOR_BGR2GRAY)
+    return resized_frame
 
 
 class GunnarFarnebackFilter(VideoFilter):
@@ -46,7 +61,9 @@ class GunnarFarnebackFilter(VideoFilter):
 
     def __init__(
         self,
-        pass_frames: int = 10,
+        pass_frames: int = 12,
+        num_passes: Optional[int] = None,
+        min_frame_size: int = 512,
         pyramid_scale: float = 0.5,
         levels: int = 3,
         win_size: int = 15,
@@ -55,14 +72,16 @@ class GunnarFarnebackFilter(VideoFilter):
         poly_sigma: float = 1.2,
         workers: int = 16,
         flags: int = 0,
-        batch_size: int = 1,
         pbar: bool = True,
         _pbar_position: int = 0
     ):
         super().__init__(pbar, _pbar_position)
 
         self.num_workers = workers
-        self.batch_size = batch_size
+
+        self.num_passes = num_passes
+        self.min_frame_size = min_frame_size
+        self.pass_frames = pass_frames
 
         self.pyramid_scale = pyramid_scale
         self.levels = levels
@@ -72,17 +91,15 @@ class GunnarFarnebackFilter(VideoFilter):
         self.poly_sigma = poly_sigma
         self.flags = flags
 
-        self.pass_frames = pass_frames
-
     @property
     def result_columns(self) -> list[str]:
-        return ["mean_optical_flow_farneback"]
+        return ["optical_flow_farneback"]
 
     @property
     def dataloader_kwargs(self) -> dict[str, Any]:
         return {
             "num_workers": self.num_workers,
-            "batch_size": self.batch_size,
+            "batch_size": 1,
             "drop_last": False,
         }
 
@@ -95,27 +112,18 @@ class GunnarFarnebackFilter(VideoFilter):
         video_file = modality2data['video']
 
         frames = iio.imread(io.BytesIO(video_file), plugin="pyav")
+        max_frame_to_process = self.num_passes*self.pass_frames if self.num_passes else len(frames)
+        frames_transformed = []
 
-        if frames.shape[1] > frames.shape[2]:
-            frames_resized = [
-                transform_frame(frame=frames[i], target_size=(450, 800))
-                for i in range(self.pass_frames, len(frames), self.pass_frames)
-            ]
-        elif frames.shape[2] > frames.shape[1]:
-            frames_resized = [
-                transform_frame(frame=frames[i], target_size=(800, 450))
-                for i in range(self.pass_frames, len(frames), self.pass_frames)
-            ]
-        else:
-            frames_resized = [
-                transform_frame(frame=frames[i], target_size=(450, 450))
-                for i in range(self.pass_frames, len(frames), self.pass_frames)
-            ]
+        frames_transformed = [
+            transform_keep_ar(frames[i], self.min_frame_size)
+            for i in range(self.pass_frames, min(max_frame_to_process+1, len(frames)), self.pass_frames)
+        ]
 
         mean_magnitudes: list[float] = []
-        for i in range(self.pass_frames, len(frames_resized), self.pass_frames):
-            current_frame = frames_resized[i - self.pass_frames]
-            next_frame = frames_resized[i]
+        for i in range(len(frames_transformed)-1):
+            current_frame = frames_transformed[i]
+            next_frame = frames_transformed[i+1]
             flow = cv2.calcOpticalFlowFarneback(
                 current_frame,
                 next_frame,
@@ -139,5 +147,5 @@ class GunnarFarnebackFilter(VideoFilter):
         for data in batch:
             key, mean_optical_flow = data
             df_batch_labels[self.key_column].append(key)
-            df_batch_labels['mean_optical_flow_farneback'].append(round(mean_optical_flow, 3))
+            df_batch_labels[self.result_columns[0]].append(round(mean_optical_flow, 3))
         return df_batch_labels

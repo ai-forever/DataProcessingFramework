@@ -1,6 +1,6 @@
 import io
 import os
-from typing import Any
+from typing import Any, Optional
 from urllib.request import urlopen
 from zipfile import ZipFile
 
@@ -21,6 +21,24 @@ WEIGHTS_URL = 'https://dl.dropboxusercontent.com/s/4j4z58wuv8o0mfz/models.zip'
 
 def transform_frame(frame: MatLike, target_size: tuple[int, int]) -> Tensor:
     frame = cv2.resize(frame, dsize=(target_size[0], target_size[1]), interpolation=cv2.INTER_LINEAR)
+    frame_tensor = torch.from_numpy(frame).permute(2, 0, 1).float()[None]
+
+    padder = InputPadder(frame_tensor.shape)  # type: ignore
+    frame_tensor = padder.pad(frame_tensor)[0]
+    return frame_tensor
+
+
+def transform_keep_ar(frame: MatLike, min_side_size: int) -> Tensor:
+    h, w = frame.shape[:2]
+    aspect_ratio = w / h
+    if h <= w:
+        new_height = min_side_size
+        new_width = int(aspect_ratio * new_height)
+    else:
+        new_width = min_side_size
+        new_height = int(new_width / aspect_ratio)
+
+    frame = cv2.resize(frame, dsize=(new_width, new_height), interpolation=cv2.INTER_LINEAR)
     frame_tensor = torch.from_numpy(frame).permute(2, 0, 1).float()[None]
 
     padder = InputPadder(frame_tensor.shape)  # type: ignore
@@ -62,20 +80,24 @@ class RAFTOpticalFlowFilter(VideoFilter):
     def __init__(
         self,
         pass_frames: int = 10,
+        num_passes: Optional[int] = None,
+        min_frame_size: int = 512,
         use_small_model: bool = False,
+        raft_iters: int = 20,
         device: str = "cuda:0",
         workers: int = 16,
-        batch_size: int = 1,
         pbar: bool = True,
         _pbar_position: int = 0
     ):
         super().__init__(pbar, _pbar_position)
         self.num_workers = workers
-        self.batch_size = batch_size
         self.device = device
 
         assert pass_frames >= 1, "Number of pass_frames should be greater or equal to 1."
         self.pass_frames = pass_frames
+        self.num_passes = num_passes
+        self.min_frame_size = min_frame_size
+        self.raft_iters = raft_iters
 
         resp = urlopen(WEIGHTS_URL)
         zipped_files = ZipFile(io.BytesIO(resp.read()))
@@ -98,13 +120,13 @@ class RAFTOpticalFlowFilter(VideoFilter):
 
     @property
     def result_columns(self) -> list[str]:
-        return [f"mean_optical_flow_{self.model_name}"]
+        return [f"optical_flow_{self.model_name}"]
 
     @property
     def dataloader_kwargs(self) -> dict[str, Any]:
         return {
             "num_workers": self.num_workers,
-            "batch_size": self.batch_size,
+            "batch_size": 1,
             "drop_last": False,
         }
 
@@ -117,23 +139,13 @@ class RAFTOpticalFlowFilter(VideoFilter):
         video_file = modality2data['video']
 
         frames = iio.imread(io.BytesIO(video_file), plugin="pyav")
-
-        if frames.shape[1] > frames.shape[2]:
-            frames_resized = [
-                transform_frame(frame=frames[i], target_size=(450, 800))
-                for i in range(self.pass_frames, len(frames), self.pass_frames)
-            ]
-        elif frames.shape[2] > frames.shape[1]:
-            frames_resized = [
-                transform_frame(frame=frames[i], target_size=(800, 450))
-                for i in range(self.pass_frames, len(frames), self.pass_frames)
-            ]
-        else:
-            frames_resized = [
-                transform_frame(frame=frames[i], target_size=(450, 450))
-                for i in range(self.pass_frames, len(frames), self.pass_frames)
-            ]
-        return key, frames_resized
+        max_frame_to_process = self.num_passes*self.pass_frames if self.num_passes else len(frames)
+        frames_transformed = []
+        frames_transformed = [
+            transform_keep_ar(frames[i], self.min_frame_size)
+            for i in range(self.pass_frames, min(max_frame_to_process+1, len(frames)), self.pass_frames)
+        ]
+        return key, frames_transformed
 
     def process_batch(self, batch: list[Any]) -> dict[str, list[Any]]:
         df_batch_labels = self._get_dict_from_schema()
@@ -142,28 +154,21 @@ class RAFTOpticalFlowFilter(VideoFilter):
         for data in batch:
             key, frames = data
             with torch.no_grad():
-                for i in range(self.pass_frames, len(frames), self.pass_frames):
-                    current_frame = frames[i - self.pass_frames]
-                    next_frame = frames[i]
+                for i in range(len(frames)-1):
+                    current_frame = frames[i]
+                    next_frame = frames[i+1]
 
-                    if (i - self.pass_frames) == 0:
+                    if i == 0:
                         current_frame_cuda = current_frame.to(self.device)
-                        next_frame_cuda = next_frame.to(self.device)
-
-                        _, flow = self.model(
-                            current_frame_cuda,
-                            next_frame_cuda,
-                            iters=20, test_mode=True
-                        )
                     else:
                         current_frame_cuda = next_frame_cuda
-                        next_frame_cuda = next_frame.to(self.device)
 
-                        _, flow = self.model(
-                            current_frame_cuda,
-                            next_frame_cuda,
-                            iters=20, test_mode=True
-                        )
+                    next_frame_cuda = next_frame.to(self.device)
+                    _, flow = self.model(
+                        current_frame_cuda,
+                        next_frame_cuda,
+                        iters=self.raft_iters, test_mode=True
+                    )
 
                     flow = flow.detach().cpu().numpy()
                     magnitude, angle = cv2.cartToPolar(flow[0][..., 0], flow[0][..., 1])
