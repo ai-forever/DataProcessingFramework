@@ -1,6 +1,6 @@
 # DataProcessingFramework
 
-A framework for processing and filtering multimodal datasets.
+**DPF** - a framework for processing and filtering multimodal datasets.
 
 - [Installation](#installation)
 - [Overview](#overview)
@@ -19,7 +19,7 @@ cd DataProcessingFramework
 pip install .
 ```
 
-Extra requirements: `filters`, `dev`, `llava`, `video_llava`
+Extra requirements: `filters`, `dev`, `llava`, `video_llava`, `lita`
 
 To install extra requirements run: `pip install .[filters]`
 
@@ -27,14 +27,62 @@ To install extra requirements run: `pip install .[filters]`
 
 Framework supports following features:
 1. Reading datasets
-2. Filtering datasets and calculating metrics using different models
-3. Converting datasets to other storage formats
-4. Datasets validating
-5. Supports different filesystems (local, s3)
-6. Data filtering pipelines
+2. Filtering datasets and calculating metrics using different models and algorithms. Full list of filters can be found [there](docs/filters.md)
+3. Effectively transforming data such as videos and images
+4. Data filtering and transformation pipelines
+5. Converting datasets to other [formats](docs/formats.md)
+6. Validating datasets
+7. Support for various file systems (local, s3)
 
-DPF allows you to easily filter datasets and add new metadata. 
-For example, the code below generates synthetic captions for images in shards on remote s3 storage and updates dataset metadata without downloading shards:
+DPF allows you to easily filter datasets and add new metadata. You can use various filters and transformations on your data, create pipelines from them and run them efficiently and quickly. Basic code examples for filtering data are given below:
+
+### Basic example
+Check out [basic usage](#basic-usage) for more info about DPF's API.
+
+This is a simple example for image deduplication and image aesthetic quality prediction. All filters in DPF extract attributes from the dataset's data and write them into metadata. You can then use these attributes to filter the data according to your needs.
+
+```python
+from DPF import ShardsDatasetConfig, DatasetReader
+
+# creating config for dataset
+config = ShardsDatasetConfig.from_path_and_columns(
+    'examples/example_dataset',
+    image_name_col='image_name',
+    text_col="caption"
+)
+
+# reading dataset's metadata
+reader = DatasetReader()
+processor = reader.read_from_config(config)
+
+from DPF.filters.images.hash_filters import PHashFilter
+datafilter = PHashFilter(sim_hash_size=8, workers=16)  # creating PHash filter
+# calculating PHash
+# new column "image_phash_8" will be added
+processor.apply_data_filter(datafilter)
+
+print('Dataset length before deduplication:', len(processor))
+processor.filter_df(~processor.df['image_phash_8'].duplicated())
+print('Dataset length after deduplication:', len(processor))
+
+from DPF.filters.images.aesthetic_improved_filter import ImprovedAestheticFilter
+datafilter = ImprovedAestheticFilter(
+    weights_folder='../weights',  # path to weights folder, will be downloaded to this folder
+    device='cuda:0',
+    workers=16
+)
+processor.apply_data_filter(datafilter)
+
+print(processor.df) # printing new dataset's metadata
+```
+
+Run [simple_example.py](simple_example.py) file:
+```bash
+python simple_example.py
+```
+
+### Synthetic captions example
+Code below generates synthetic captions for images in [shards](docs/formats.md) on remote S3-compatible storage and updates dataset's metadata without downloading shards:
 
 Before running the example below, install extra requirements: `pip install DPF[filters,llava]`
 
@@ -76,7 +124,7 @@ print(processor.df[new_column_name]) # prints generated image captions
 processor.update_columns([new_column_name], workers=16)
 ```
 
-More examples [there](examples/)
+You can find more examples [there](examples/)
 
 ### Supported data modalities
 
@@ -86,8 +134,7 @@ The framework supports data that has any combination of the following modalities
 - Video
 
 > Datasets with several data of the same modality in one sample are not supported.
-For example, datasets with following modalities are supported: text-video, text-image, image-video, images, etc.
-Modalities that are not supported: image2image, image-text-image, etc.
+For example, datasets with following modalities are supported: text-video, text-image, image-video, images, etc. Modalities that are not supported: image2image, image-text-image, etc.
 
 ### Supported data formats
 
