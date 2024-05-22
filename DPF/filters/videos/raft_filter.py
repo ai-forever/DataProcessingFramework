@@ -82,6 +82,7 @@ class RAFTOpticalFlowFilter(VideoFilter):
         pass_frames: int = 10,
         num_passes: Optional[int] = None,
         min_frame_size: int = 512,
+        frames_batch_size: int = 4,
         use_small_model: bool = False,
         raft_iters: int = 20,
         device: str = "cuda:0",
@@ -97,6 +98,7 @@ class RAFTOpticalFlowFilter(VideoFilter):
         self.pass_frames = pass_frames
         self.num_passes = num_passes
         self.min_frame_size = min_frame_size
+        self.frames_batch_size = frames_batch_size
         self.raft_iters = raft_iters
 
         resp = urlopen(WEIGHTS_URL)
@@ -154,25 +156,21 @@ class RAFTOpticalFlowFilter(VideoFilter):
         for data in batch:
             key, frames = data
             with torch.no_grad():
-                for i in range(len(frames)-1):
-                    current_frame= frames[i]
-                    next_frame = frames[i+1]
+                for i in range(0, len(frames)-1, self.frames_batch_size):
+                    end = min(i+self.frames_batch_size, len(frames)-1)
+                    current_frame = torch.cat(frames[i:end], dim=0)
+                    next_frame = torch.cat(frames[i+1:i+self.frames_batch_size+1], dim=0)
 
-                    if i == 0:
-                        current_frame_cuda = current_frame.to(self.device)
-                    else:
-                        current_frame_cuda = next_frame_cuda  #type: ignore #noqa: F821
-
+                    current_frame_cuda = current_frame.to(self.device)
                     next_frame_cuda = next_frame.to(self.device)
+
                     _, flow = self.model(
                         current_frame_cuda,
                         next_frame_cuda,
                         iters=self.raft_iters, test_mode=True
                     )
-
-                    flow = flow.detach().cpu().numpy()
-                    magnitude, angle = cv2.cartToPolar(flow[0][..., 0], flow[0][..., 1])
-                    mean_magnitudes.append(magnitude)
+                    magnitude = ((flow[:,0]**2+flow[:,1]**2)**0.5).flatten(start_dim=1).mean(dim=1).detach().cpu().numpy()
+                    mean_magnitudes.extend(magnitude)
                 mean_value = np.mean(mean_magnitudes)
 
                 df_batch_labels[self.key_column].append(key)
