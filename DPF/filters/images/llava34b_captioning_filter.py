@@ -67,7 +67,7 @@ class Llava34b_Filter(ImageFilter):
         left = int((width - self.crop_size_x) / 2)
         top = int((height - self.crop_size_y) / 2)
         right = left + self.crop_size_x
-        bottom = top + self.crop_size_y 
+        bottom = top + self.crop_size_y
         cropped_image = resized_img.crop((left, top, right, bottom))
         return key, cropped_image
 
