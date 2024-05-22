@@ -41,22 +41,30 @@ class GunnarFarnebackFilter(VideoFilter):
 
     Parameters
     ----------
-    pass_frames: int
+    pass_frames: int = 12
         Number of frames to pass. pass_frames = 1, if need to process all frames.
-    pyramid_scale: float
+    num_passes: Optional[int] = None
+        Number of flow scores calculations in one video. Set None to calculate flow scores on all video
+    min_frame_size: int = 512
+        The size of the minimum side of the video frame after resizing
+    pyramid_scale: float = 0.5
         Parameter, specifying the image scale (<1) to build pyramids for each image
-    levels: int
+    levels: int = 3
         Number of pyramid layers including the initial image
-    win_size: int
+    win_size: int = 15
         Averaging window size
-    iterations: int
+    iterations: int = 3
         Number of iterations the algorithm does at each pyramid level
-    size_poly_exp: int
+    size_poly_exp: int = 5
         Size of the pixel neighborhood used to find polynomial expansion in each pixel
-    poly_sigma: float
+    poly_sigma: float = 1.2
         Std of the Gaussian that is used to smooth derivatives used as a basis for the polynomial expansion
-    flags: int
+    flags: int = 0
         Operation flags that can be a combination of OPTFLOW_USE_INITIAL_FLOW and/or OPTFLOW_FARNEBACK_GAUSSIAN
+    workers: int = 16
+        Number of processes to use for reading data and calculating flow scores
+    pbar: bool = True
+        Whether to use a progress bar
     """
 
     def __init__(

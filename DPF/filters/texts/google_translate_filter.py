@@ -42,7 +42,26 @@ def translate_batch(translator: BaseTranslator, batch: list[str], delimiter: str
 
 class GoogleTranslateFilter(ColumnFilter):
     """
-    GoogleTranslateFilter class
+    Filter for translating texts with google translate api
+
+    Parameters
+    ----------
+    text_column_name: str = "text"
+        Name of column with texts
+    source_lang: str = "auto"
+        Source language to translate from
+    target_lang: str = "en"
+        Language to translate to
+    max_symbols_in_batch: int = 3000
+        Maximum symbols in one request to API.
+    timeout: float = 1
+        Timeout between requests
+    timeout_on_error: float = 3
+        Timeout between requests if error occured
+    num_retries_per_batch: int = 1
+        Number of retries of errors occured
+    pbar: bool = True
+        Whether to use a progress bar
     """
 
     def __init__(

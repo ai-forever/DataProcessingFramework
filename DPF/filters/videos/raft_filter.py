@@ -12,7 +12,8 @@ import torch.nn.functional as F
 from cv2.typing import MatLike
 from torch import Tensor
 
-from ...types import ModalityToDataMapping
+from DPF.types import ModalityToDataMapping
+
 from .raft_core.model import RAFT
 from .video_filter import VideoFilter
 
@@ -75,6 +76,27 @@ class RAFTOpticalFlowFilter(VideoFilter):
         The video's current and next frame are used for optical flow calculation between them.
         After, the mean value of optical flow for the entire video is calculated on the array of optical flow between two frames.
     More info about the model here: https://github.com/princeton-vl/RAFT
+
+    Parameters
+    ----------
+    pass_frames: int = 12
+        Number of frames to pass. pass_frames = 1, if need to process all frames.
+    num_passes: Optional[int] = None
+        Number of flow scores calculations in one video. Set None to calculate flow scores on all video
+    min_frame_size: int = 512
+        The size of the minimum side of the video frame after resizing
+    frames_batch_size: int = 16
+        Batch size during one video processing
+    use_small_model: bool = False
+        Whether to use small RAFT model
+    raft_iters: int = 20
+        Number of RAFT model iterations
+    device: str = "cuda:0"
+        Device to use
+    workers: int = 16
+        Number of processes to use for reading data and calculating flow scores
+    pbar: bool = True
+        Whether to use a progress bar
     """
 
     def __init__(
@@ -82,7 +104,7 @@ class RAFTOpticalFlowFilter(VideoFilter):
         pass_frames: int = 10,
         num_passes: Optional[int] = None,
         min_frame_size: int = 512,
-        frames_batch_size: int = 4,
+        frames_batch_size: int = 16,
         use_small_model: bool = False,
         raft_iters: int = 20,
         device: str = "cuda:0",
