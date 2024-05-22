@@ -26,8 +26,6 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 
 def load_safety_model(clip_model: str, cache_folder: str, device: Union[str, torch.device]) -> Any:
-    """load the safety model"""
-
     gpus = tf.config.list_physical_devices("GPU")
     if gpus:
         try:
@@ -38,7 +36,7 @@ def load_safety_model(clip_model: str, cache_folder: str, device: Union[str, tor
             pass
 
     if clip_model == "ViT-L/14":
-        model_dir = cache_folder + "/clip_autokeras_binary_nsfw"
+        model_dir = os.path.join(cache_folder, "clip_autokeras_binary_nsfw")
         url_model = (
             "https://raw.githubusercontent.com/LAION-AI/"
             "CLIP-based-NSFW-Detector/main/clip_autokeras_binary_nsfw.zip"
@@ -48,12 +46,13 @@ def load_safety_model(clip_model: str, cache_folder: str, device: Union[str, tor
 
     if not os.path.exists(model_dir):
         os.makedirs(cache_folder, exist_ok=True)
-        path_to_zip_file = cache_folder + "/clip_autokeras_binary_nsfw.zip"
+        path_to_zip_file = os.path.join(cache_folder, "clip_autokeras_binary_nsfw.zip")
         urlretrieve(url_model, path_to_zip_file)
         with zipfile.ZipFile(path_to_zip_file, "r") as zip_ref:
             zip_ref.extractall(cache_folder)
 
     with tf.device(device):
+        print(model_dir)
         loaded_model = load_model(model_dir, custom_objects=ak.CUSTOM_OBJECTS)
 
     return loaded_model
@@ -72,7 +71,6 @@ class NSFWFilter(ImageFilter):
 
     def __init__(
         self,
-        clip_model: str,
         weights_folder: str,
         workers: int = 16,
         batch_size: int = 64,
@@ -81,7 +79,7 @@ class NSFWFilter(ImageFilter):
         _pbar_position: int = 0
     ):
         super().__init__(pbar, _pbar_position)
-
+        clip_model = "ViT-L/14"
         self.num_workers = workers
         self.batch_size = batch_size
         self.device = device

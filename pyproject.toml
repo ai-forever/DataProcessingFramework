@@ -38,6 +38,7 @@ filters = [
     'deep_translator',
     'huggingface_hub'
 ]
+nsfw_detector = ['tensorflow', 'autokeras']
 llava = [
     'transformers>=4.29',
     'LLaVA @ git+https://github.com/haotian-liu/LLaVA.git@bb4b22748618fb6cbec35d8d4642fbbd32dec76a'
