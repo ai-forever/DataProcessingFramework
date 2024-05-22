@@ -81,7 +81,7 @@ Run [simple_example.py](simple_example.py) file:
 python simple_example.py
 ```
 
-### Synthetic captions example
+### Generated captions example
 Code below generates synthetic captions for images in [shards](docs/formats.md) on remote S3-compatible storage and updates dataset's metadata without downloading shards:
 
 Before running the example below, install extra requirements: `pip install DPF[filters,llava]`
