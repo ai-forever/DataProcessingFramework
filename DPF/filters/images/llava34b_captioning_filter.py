@@ -61,14 +61,14 @@ class Llava34b_Filter(ImageFilter):
         key = metadata[self.key_column]
         pil_img = read_image_rgb_from_bytes(
             modality2data['image']).convert('RGB')
-        width, height = pil_img.size
-        left = int((width - self.crop_size_x)/2)
-        top = int((height - self.crop_size_y)/2)
-        right = int((width + self.crop_size_x)/2)
-        bottom = int((height + self.crop_size_y)/2)
-        cropped_image = pil_img.crop((left, top, right, bottom))
-        cropped_image = cropped_image.resize(
+        resized_img = pil_img.resize(
             (self.crop_size_x, self.crop_size_y))
+        width, height = resized_img.size
+        left = int((width - self.crop_size_x) / 2)
+        top = int((height - self.crop_size_y) / 2)
+        right = left + self.crop_size_x
+        bottom = top + self.crop_size_y 
+        cropped_image = resized_img.crop((left, top, right, bottom))
         return key, cropped_image
 
     def process_batch(self, batch: list[Any]) -> dict[str, list[Any]]:
@@ -86,7 +86,7 @@ class Llava34b_Filter(ImageFilter):
             output = self.processor.decode(
                 output_ids[i], skip_special_tokens=True, clean_up_tokenization_spaces=True)
             output = re.sub(r'.*?assistant', '', output, flags=re.DOTALL)
-            output = re.sub(r'\n', '', output)
+            output = re.sub(r'\n', '', output, count=1)
             all_outputs.append(output)
 
         df_batch_labels[self.schema[1]].extend(all_outputs)
