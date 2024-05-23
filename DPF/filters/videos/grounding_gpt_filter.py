@@ -79,9 +79,6 @@ class GroundingGPTFilter(VideoFilter):
         self.model, self.tokenizer, self.image_processor, self.video_transform, self.context_len = pretrainers
 
         self.conv = conversation_lib.default_conversation.copy()
-        self.image_tensor = None
-        self.video_tensor = None
-        self.sound_tensor = None
 
         inp = DEFAULT_VIDEO_START_TOKEN + DEFAULT_VIDEO_PATCH_TOKEN * CONFIG.video_token_len + DEFAULT_VIDEO_END_TOKEN + '\n' + self.inp
         self.conv.append_message(self.conv.roles[0], inp)
@@ -132,9 +129,9 @@ class GroundingGPTFilter(VideoFilter):
         with torch.inference_mode():
             output_ids = self.model.generate(
                 input_ids_batch,
-                images=self.image_tensor,
+                images=None,
                 videos=video_tensors_batch,
-                sounds=self.sound_tensor,
+                sounds=None,
                 do_sample=True,
                 temperature=self.temperature,
                 max_new_tokens=self.max_new_tokens,
