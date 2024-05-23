@@ -20,15 +20,7 @@ from transformers import AutoTokenizer, CLIPImageProcessor, CLIPVisionModel
 
 from DPF.filters.videos.grounding_gpt.lego import LEGOLlamaForCausalLM
 from DPF.filters.videos.grounding_gpt.lego.model import *
-from DPF.filters.videos.grounding_gpt.video_llama.models.ImageBind.data import (
-    load_and_transform_audio_data,
-)
-from DPF.filters.videos.grounding_gpt.video_llama.processors import (
-    AlproVideoTrainProcessor,
-)
-from DPF.filters.videos.grounding_gpt.video_llama.processors.video_processor import (
-    load_video,
-)
+from DPF.filters.videos.grounding_gpt.video_llama.processors import AlproVideoTrainProcessor
 
 DEFAULT_IMAGE_PATCH_TOKEN = "<im_patch>"
 DEFAULT_IMAGE_START_TOKEN = "<im_start>"
