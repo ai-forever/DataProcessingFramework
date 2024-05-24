@@ -23,6 +23,7 @@ class Llava34b_Filter(ImageFilter):
         pbar: bool = True,
         crop_size_x: int = 336,
         crop_size_y: int = 336,
+        resize: int = 336,
         _pbar_position: int = 0
     ):
         super().__init__(pbar, _pbar_position)
@@ -31,6 +32,7 @@ class Llava34b_Filter(ImageFilter):
         self.device = device
         self.crop_size_x = crop_size_x
         self.crop_size_y = crop_size_y
+        self.resize = resize
         self.prompt = "<|im_start|>system\nAnswer the questions.<|im_end|><|im_start|>user\n<image>\nDescribe this image and its style in a very detailed manner<|im_end|><|im_start|>assistant\n"
         self.processor = LlavaNextProcessor.from_pretrained(model_path)
         self.model = LlavaNextForConditionalGeneration.from_pretrained(
@@ -43,7 +45,7 @@ class Llava34b_Filter(ImageFilter):
 
     @property
     def result_columns(self) -> list[str]:
-        return ["llava34b_caption"]
+        return [f"caption {self.model_path}"]
 
     @property
     def dataloader_kwargs(self) -> dict[str, Any]:
@@ -61,11 +63,13 @@ class Llava34b_Filter(ImageFilter):
         key = metadata[self.key_column]
         pil_img = read_image_rgb_from_bytes(
             modality2data['image']).convert('RGB')
-        resized_img = pil_img.resize(
-            (self.crop_size_x, self.crop_size_y))
+        width, height = pil_img.size
+        resized_width = self.resize if width <= height else self.resize * width // height
+        resized_height = self.resize * height // width if width <= height else self.resize
+        resized_img = pil_img.resize((resized_width, resized_height))
         width, height = resized_img.size
-        left = int((width - self.crop_size_x) / 2)
-        top = int((height - self.crop_size_y) / 2)
+        left = (width - self.crop_size_x) // 2
+        top = (height - self.crop_size_y) // 2
         right = left + self.crop_size_x
         bottom = top + self.crop_size_y
         cropped_image = resized_img.crop((left, top, right, bottom))
