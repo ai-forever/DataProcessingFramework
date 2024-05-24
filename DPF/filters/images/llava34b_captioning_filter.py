@@ -33,6 +33,7 @@ class Llava34b_Filter(ImageFilter):
         self.crop_size_x = crop_size_x
         self.crop_size_y = crop_size_y
         self.resize = resize
+        self.model_path = model_path
         self.prompt = "<|im_start|>system\nAnswer the questions.<|im_end|><|im_start|>user\n<image>\nDescribe this image and its style in a very detailed manner<|im_end|><|im_start|>assistant\n"
         self.processor = LlavaNextProcessor.from_pretrained(model_path)
         self.model = LlavaNextForConditionalGeneration.from_pretrained(
