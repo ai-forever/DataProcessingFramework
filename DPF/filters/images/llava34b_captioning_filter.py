@@ -2,6 +2,7 @@ import re
 from typing import Any
 
 import torch
+from torchvision import transforms as T
 from transformers import LlavaNextForConditionalGeneration, LlavaNextProcessor
 
 from DPF.filters.images.img_filter import ImageFilter
@@ -19,6 +20,7 @@ class Llava34b_Filter(ImageFilter):
         model_path: str = 'llava-hf/llava-v1.6-34b-hf',
         workers: int = 16,
         batch_size: int = 8,
+        prompt: str = 'detailed-long',
         device: str = "cuda:0",
         pbar: bool = True,
         crop_size_x: int = 336,
@@ -34,7 +36,16 @@ class Llava34b_Filter(ImageFilter):
         self.crop_size_y = crop_size_y
         self.resize = resize
         self.model_path = model_path
-        self.prompt = "<|im_start|>system\nAnswer the questions.<|im_end|><|im_start|>user\n<image>\nDescribe this image and its style in a very detailed manner<|im_end|><|im_start|>assistant\n"
+        self.prompt_to_use = prompt
+        prompts = {
+            'detailed-long': 'Please provide a caption for this image. Speak confidently and describe everything clearly. Do not lie and describe only what you can see',
+            'pixart': 'Describe this image and its style in a very detailed manner',
+            'short': 'Describe this image very shortly in 1-2 short sentences',
+            'short-video': 'Describe this video very shortly in 1-2 short sentences. Describe what is happening in this video.'
+        }
+        self.input_ids = prompts[self.prompt_to_use]
+        print(self.input_ids)
+        self.prompt = "<|im_start|>system\nAnswer the questions.<|im_end|><|im_start|>user\n<image>\n" +  f"{self.input_ids}" + "<|im_end|><|im_start|>assistant\n"
         self.processor = LlavaNextProcessor.from_pretrained(model_path)
         self.model = LlavaNextForConditionalGeneration.from_pretrained(
             model_path,
@@ -64,16 +75,11 @@ class Llava34b_Filter(ImageFilter):
         key = metadata[self.key_column]
         pil_img = read_image_rgb_from_bytes(
             modality2data['image']).convert('RGB')
-        width, height = pil_img.size
-        resized_width = self.resize if width <= height else self.resize * width // height
-        resized_height = self.resize * height // width if width <= height else self.resize
-        resized_img = pil_img.resize((resized_width, resized_height))
-        width, height = resized_img.size
-        left = (width - self.crop_size_x) // 2
-        top = (height - self.crop_size_y) // 2
-        right = left + self.crop_size_x
-        bottom = top + self.crop_size_y
-        cropped_image = resized_img.crop((left, top, right, bottom))
+        transform = T.Compose([
+                    T.Resize(self.resize),
+                    T.CenterCrop((self.crop_size_x,self.crop_size_y))
+                    ])
+        cropped_image = transform(pil_img)
         return key, cropped_image
 
     def process_batch(self, batch: list[Any]) -> dict[str, list[Any]]:
