@@ -21,7 +21,7 @@ pip install .
 
 Extra requirements: `filters`, `dev`, `llava`, `video_llava`, `lita`
 
-To install extra requirements run: `pip install .[filters]`
+To install extra requirements run: `pip install .[dev,filters]` (insert needed extra requirements)
 
 ## Overview
 
