@@ -1,4 +1,4 @@
-## Pipelines
+# Pipelines
 
 Pipelines help to combine several filters into one pipeline and process the dataset using it.
 You can build pipelines using [datafilters](../DPF/filters/data_filter.py), [columnfilters](../DPF/filters/column_filter.py), 
@@ -12,7 +12,7 @@ Available methods for adding a pipeline stage:
 4. `add_deduplication` - Deduplicates the dataset using the specified columns 
 5. `add_dataframe_filter` - Custom filter for dataset DataFrame
 
-### Examples
+## Examples
 
 ```python
 from DPF.configs import ShardsDatasetConfig

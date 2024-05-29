@@ -1,4 +1,4 @@
-## Transforms
+# Transforms
 
 You can transform data in dataset with DPF.
 For example, resize videos or photos in dataset.
@@ -10,7 +10,7 @@ List of implemented transforms:
 - [ImageResizeTransforms](../DPF/transforms/image_resize_transforms.py) - transforms that resizes images
 - [VideoFFMPEGTransforms](../DPF/transforms/video_ffmpeg_transforms.py) - transforms that resizes and changing fps of videos using ffmpeg
 
-### Examples
+## Examples
 
 Resize all images to 768 pixels on the minimum side while maintaining the aspect ratio:
 ```python
