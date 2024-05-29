@@ -44,7 +44,14 @@ def get_video_info(video_bytes: bytes, data: dict[str, Any], key_column: str) ->
 
 class VideoInfoFilter(VideoFilter):
     """
-    VideoInfoFilter class
+    Filter for gathering basic info about videos (width, height, fps, duration)
+
+    Parameters
+    ----------
+    workers: int = 16
+        Number of parallel dataloader workers
+    pbar: bool = True
+        Whether to show progress bar
     """
 
     def __init__(self, workers: int = 16, pbar: bool = True, _pbar_position: int = 0):

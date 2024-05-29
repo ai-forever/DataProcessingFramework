@@ -23,6 +23,7 @@ class OCRFilter(ImageFilter):
         self,
         weights_path: str,
         model_name: Optional[str] = None,
+        text_box_col: str = "text_boxes",
         device: str = "cuda:0",
         workers: int = 16,
         pad: int = 5,
@@ -73,7 +74,7 @@ class OCRFilter(ImageFilter):
 
         self.AlignCollate = AlignCollate(imgH=self.opt.imgH, imgW=self.opt.imgW, keep_ratio_with_pad=self.opt.PAD)
         #
-        self.text_box_col = "text_boxes"
+        self.text_box_col = text_box_col
         self.ocr_col = f"OCR_{self.model_name}"
 
     @property

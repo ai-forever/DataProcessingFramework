@@ -5,14 +5,26 @@ import imageio.v3 as iio
 from PIL import Image
 
 from DPF.filters.images.img_filter import ImageFilter
+from DPF.types import ModalityToDataMapping
 
-from ...types import ModalityToDataMapping
 from .video_filter import VideoFilter
 
 
 class ImageFilterAdapter(VideoFilter):
     """
-    ImageFilterAdapter class
+    Runs an ImageFilter on one frame from video
+
+    Parameters
+    ----------
+    image_filter: ImageFilter
+        Image filter to apply
+    video_frame: float
+        Position of frame to use
+        For example 0 means first frame, 0.5 means central frame and 1 means last frame
+    workers: int = 8
+        Number of pytorch dataloader workers
+    pbar: bool = True
+        Whether to show progress bar
     """
 
     def __init__(
@@ -52,7 +64,7 @@ class ImageFilterAdapter(VideoFilter):
         fps = meta['fps']
         duration = meta['duration']
         total_frames = int(fps*duration)
-        frame_index = int(total_frames*self.video_frame)
+        frame_index = min(int(total_frames*self.video_frame), total_frames-1)
         frame = iio.imread(io.BytesIO(video_bytes), index=frame_index, plugin="pyav")
 
         buff = io.BytesIO()

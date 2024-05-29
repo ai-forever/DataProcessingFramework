@@ -323,6 +323,13 @@ class DatasetProcessor(ABC):
         self,
         condition: pd.Series
     ) -> None:
+        """Applies a condition filter for DataFrame (df attribute)
+
+        Parameters
+        ----------
+        condition: pd.Series
+            Condition for dataframe to filter. self.df = self.df[condition] will be used
+        """
         self._df = self._df[condition]
 
     def _write_dataset(
