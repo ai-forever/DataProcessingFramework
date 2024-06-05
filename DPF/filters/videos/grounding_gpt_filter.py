@@ -57,7 +57,7 @@ class GroundingGPTFilter(VideoFilter):
         self.model_name = get_model_name_from_path(weights_path)
         self.prompt_to_use = prompt
         prompt_templates = {
-            'detailed_video': 'Describe this video and its style in a very detailed manner',
+            'detailed_video': 'Offer a detailed explanation of of the clip’s key features',
             'short_video': 'Describe this video and its style briefly'
         }
 
