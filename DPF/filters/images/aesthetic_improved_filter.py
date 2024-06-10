@@ -73,7 +73,22 @@ def get_improved_aesthetic_model(cache_folder: str) -> MLP:
 
 class ImprovedAestheticFilter(ImageFilter):
     """
-    ImprovedAestheticFilter class
+    Filter for improved aesthetic score calculating with LAION model. This repository is used:
+    https://github.com/christophschuhmann/improved-aesthetic-predictor
+
+    Parameters
+    ----------
+    weights_folder: str
+        Path to the folder where the weights are located.
+        If there are no weights, they will be downloaded automatically
+    device: str = "cuda:0"
+        Device to use
+    workers: int = 16
+        Number of processes to use for reading data and calculating flow scores
+    batch_size: int = 64
+        Batch size for model
+    pbar: bool = True
+        Whether to use a progress bar
     """
 
     def __init__(

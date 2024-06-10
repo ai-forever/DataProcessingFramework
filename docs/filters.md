@@ -1,4 +1,4 @@
-## Filters
+# Filters
 
 Filters are models or algorithms that calculate metrics for a dataset. 
 Filters process the data and add new columns with the calculated metrics.
@@ -32,7 +32,7 @@ List of implemented filters:
   - [VideoLLaVAFilter](../DPF/filters/videos/video_llava_filter.py) - captioning videos using Video-LLaVA
   - [LITAFilter](../DPF/filters/videos/lita_filter.py) - captioning videos using [LITA model](https://github.com/NVlabs/LITA)
 
-### Datafilter
+## Datafilter
 
 Datafilters are filters that calculate new metadata (scores, captions, probabilities, etc) based on a file modalities: images and videos.
 To run a datafilter, use `processor.apply_data_filter()` method.
@@ -45,7 +45,7 @@ processor.apply_data_filter(datafilter)
 processor.df # new columns ['width', 'height', 'is_correct'] are added
 ```
 
-### Columnfilter
+## Columnfilter
 
 Columnfilters are filters that also calculates new metadata, but based on a existing metadata (texts, etc).
 To run a columnfilter, use `processor.apply_column_filter()` method.
@@ -59,7 +59,7 @@ processor.apply_column_filter(columnfilter)
 processor.df # new columns ["lang", "lang_score"] are added
 ```
 
-### Running filter on several GPUs
+## Running filter on several GPUs
 
 To run a datafilter on multiple GPUs use `MultiGPUDataFilter` class:
 
@@ -79,20 +79,20 @@ processor.apply_multi_gpu_data_filter(multigpufilter)
 ```
 See `help(MultiGPUDataFilter)` for more information.
 
-### Examples
+## Examples
 
 You can find usage examples [there](../examples).
 - [Image filters examples](../examples/image_filters_example.ipynb)
 - [Video filters examples](../examples/video_filters_example.ipynb)
 - [Text filters examples](../examples/text_filters_example.ipynb)
 
-### Creating new filter
+## Creating new filter
 
 To add your filter, you should create new filter class.
 If your filter uses only data from columns (e.g. _text_ modality), you should inherit your class from [ColumnFilter class](../DPF/filters/column_filter.py)
 If your filter uses data from files, you should inherit your class from [DataFilter class](../DPF/filters/data_filter.py)
 
-#### Creating DataFilter
+### Creating DataFilter
 
 To create a new datafilter, add new file in a folder with the modality used by your filter. 
 For example, if your filter uses _images_ modality, create file in [DPF/filters/images/](../DPF/filters/images) folder.
@@ -115,7 +115,7 @@ from DPF.filters import DataFilter
 help(DataFilter)
 ```
 
-**Example of custom DataFilter:**
+Example of custom DataFilter:
 ```python
 from typing import Any
 
@@ -167,7 +167,7 @@ class PHashFilter(ImageFilter):
 This filter reads images and calculates PHash **in dataloader**. 
 Then dataloader returns PHash strings and these strings are added in result dataframe. 
 
-#### Creating ColumnFilter
+### Creating ColumnFilter
 
 To create a new columnfilter, add new file in a folder with the modality used by your filter.
 Inherit your class from [ColumnFilter](../DPF/filters/column_filter.py) class.
@@ -183,7 +183,7 @@ from DPF.filters import ColumnFilter
 help(ColumnFilter)
 ```
 
-**Example of custom ColumnFilter:**
+Example of custom ColumnFilter:
 ```python
 from typing import Any
 from py3langid.langid import MODEL_FILE, LanguageIdentifier

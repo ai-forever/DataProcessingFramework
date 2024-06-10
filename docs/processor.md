@@ -1,4 +1,4 @@
-## DatasetProcessor guide
+# DatasetProcessor guide
 
 Dataset processor supports following features:
 - Update and change metadata
@@ -7,7 +7,7 @@ Dataset processor supports following features:
 - Convert dataset to other formats
 - View samples from a dataset
 
-### Example
+## Example
 ```python
 from DPF import ShardsDatasetConfig, DatasetReader
 
@@ -21,19 +21,19 @@ reader = DatasetReader()
 processor = reader.read_from_config(config)
 ```
 
-### Attributes
+## Attributes
 Dataset processor have three main attributes:
 - `processor.df` - Pandas dataframe with metadata
 - `processor.connector` - A connector to filesystem there dataset is located. Object of type `processor.connectors.Connector`
 - `processor.config` - Dataset config
 
-### Print summary about dataset
+## Print summary about dataset
 
 ```python
 processor.print_summary()
 ```
 
-### Update and change metadata
+## Update and change metadata
 
 Methods below modifying or adding columns to a dataset metadata (usually csv files).
 
@@ -50,7 +50,7 @@ Delete columns in dataset metadata:
 processor.delete_columns(['column_to_delete'])
 ```
 
-### View samples
+## View samples
 
 `processor.get_random_sample()` returns random sample from dataset.
 
@@ -64,15 +64,15 @@ print(metadata['caption'])
 Image.open(io.BytesIO(modality2bytes['image']))
 ```
 
-### Filters
+## Filters
 
 [Filters documentation](filters.md)
 
-### Transformation
+## Transformation
 
 [Transforms documentation](transforms.md)
 
-### Convert to other formats
+## Convert to other formats
 
 Convert to _shards_ format:
 

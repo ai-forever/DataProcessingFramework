@@ -7,7 +7,16 @@ from DPF.filters import ColumnFilter
 
 class LangFilter(ColumnFilter):
     """
-    LangFilter class
+    Filter for text language detection
+
+    Parameters
+    ----------
+    text_column_name: str = "text"
+        Name of column with texts
+    workers: int = 16
+        Number of processes to use
+    pbar: bool = True
+        Whether to use a progress bar
     """
 
     def __init__(

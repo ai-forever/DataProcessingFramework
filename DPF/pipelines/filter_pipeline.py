@@ -6,6 +6,7 @@ import pandas as pd
 from DPF.filters import ColumnFilter, DataFilter
 from DPF.filters.multigpu_filter import MultiGPUDataFilter
 from DPF.processors import DatasetProcessor
+from DPF.transforms import BaseFilesTransforms
 from DPF.utils.logger import init_logger, init_stdout_logger
 
 from .pipeline_stages import (
@@ -14,6 +15,7 @@ from .pipeline_stages import (
     FilterPipelineStage,
     PipelineStage,
     ShufflePipelineStage,
+    TransformPipelineStage,
 )
 from .types import OnErrorOptions
 
@@ -39,17 +41,17 @@ class FilterPipeline:
         datafilter: type[DataFilter],
         datafilter_kwargs: dict[str, Any],
         devices: Optional[list[str]] = None,
-        processor_run_kwargs: Optional[dict[str, Any]] = None,
+        processor_apply_kwargs: Optional[dict[str, Any]] = None,
         on_error: OnErrorOptions = "stop",
         skip_if_columns_exist: bool = True
     ) -> None:
-        if processor_run_kwargs is None:
-            processor_run_kwargs = {}
+        if processor_apply_kwargs is None:
+            processor_apply_kwargs = {}
 
         if devices is None:
             stage = FilterPipelineStage(
                 'datafilter', filter_class=datafilter,
-                filter_kwargs=datafilter_kwargs, processor_run_kwargs=processor_run_kwargs,
+                filter_kwargs=datafilter_kwargs, processor_apply_kwargs=processor_apply_kwargs,
                 skip_if_columns_exist=skip_if_columns_exist
             )
         elif len(devices) == 0:
@@ -57,7 +59,7 @@ class FilterPipeline:
             new_kwargs['device'] = devices[0]
             stage = FilterPipelineStage(
                 'datafilter', filter_class=datafilter,
-                filter_kwargs=new_kwargs, processor_run_kwargs=processor_run_kwargs,
+                filter_kwargs=new_kwargs, processor_apply_kwargs=processor_apply_kwargs,
                 skip_if_columns_exist=skip_if_columns_exist
             )
         else:
@@ -68,7 +70,7 @@ class FilterPipeline:
                     "datafilter_class": datafilter,
                     "datafilter_params": datafilter_kwargs
                 },
-                processor_run_kwargs=processor_run_kwargs,
+                processor_apply_kwargs=processor_apply_kwargs,
                 skip_if_columns_exist=skip_if_columns_exist
             )
 
@@ -80,16 +82,16 @@ class FilterPipeline:
         self,
         columnfilter: type[ColumnFilter],
         columnfilter_kwargs: dict[str, Any],
-        processor_run_kwargs: Optional[dict[str, Any]] = None,
+        processor_apply_kwargs: Optional[dict[str, Any]] = None,
         on_error: OnErrorOptions = "stop",
         skip_if_columns_exist: bool = True
     ) -> None:
-        if processor_run_kwargs is None:
-            processor_run_kwargs = {}
+        if processor_apply_kwargs is None:
+            processor_apply_kwargs = {}
 
         stage = FilterPipelineStage(
             'columnfilter', filter_class=columnfilter,
-            filter_kwargs=columnfilter_kwargs, processor_run_kwargs=processor_run_kwargs,
+            filter_kwargs=columnfilter_kwargs, processor_apply_kwargs=processor_apply_kwargs,
             skip_if_columns_exist=skip_if_columns_exist
         )
 
@@ -119,6 +121,21 @@ class FilterPipeline:
         on_error: OnErrorOptions = "stop"
     ) -> None:
         stage = DataFramePipelineStage(filter_func)
+        self.stages.append(
+            PipelineStageRunner(stage, on_error=on_error)
+        )
+
+    def add_transforms(
+        self,
+        transforms_class: type[BaseFilesTransforms],
+        transforms_kwargs: dict[str, Any],
+        processor_apply_kwargs: Optional[dict[str, Any]] = None,
+        on_error: OnErrorOptions = "stop"
+    ) -> None:
+        stage = TransformPipelineStage(
+            transforms_class, transforms_kwargs,
+            processor_apply_kwargs=processor_apply_kwargs
+        )
         self.stages.append(
             PipelineStageRunner(stage, on_error=on_error)
         )

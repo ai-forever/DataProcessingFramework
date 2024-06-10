@@ -38,6 +38,7 @@ filters = [
     'deep_translator',
     'huggingface_hub'
 ]
+nsfw_detector = ['tensorflow', 'autokeras']
 llava = [
     'transformers>=4.29',
     'LLaVA @ git+https://github.com/haotian-liu/LLaVA.git@bb4b22748618fb6cbec35d8d4642fbbd32dec76a'
@@ -50,6 +51,15 @@ video_llava = [
 lita = [
     'LITA @ git+https://github.com/NVlabs/LITA',
     'gdown'
+]
+grounding_gpt = [
+    'transformers==4.34.0',
+    'tokenizers==0.14',
+    'gradio==3.23',
+    'flash-attn==2.5.6',
+    'torch==2.1.2',
+    'torchvision==0.16.2',
+    'torchaudio==2.1.2'
 ]
 
 [tool.hatch.version]
@@ -78,11 +88,19 @@ disable_error_code = ["import-not-found"]
 
 [[tool.mypy.overrides]]
 module = "DPF.filters.videos.lita_filter"
-disable_error_code = ["import-not-found", "call-overload"]
+disable_error_code = ["import-not-found", "call-overload", "no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "DPF.filters.videos.grounding_gpt.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "DPF.filters.videos.grounding_gpt_filter"
+disable_error_code = ["import-not-found", "call-overload", "no-untyped-def", "no-untyped-call"]
 
 [[tool.mypy.overrides]]
 module = "DPF.filters.images.llava_captioning_filter"
-disable_error_code = ["import-not-found"]
+disable_error_code = ["import-not-found", "call-overload", "no-untyped-def"]
 
 [[tool.mypy.overrides]]
 module = "DPF.filters.images.ocr_filter"
@@ -100,7 +118,8 @@ profile = "black"
 [tool.ruff]
 extend-exclude = [
     "DPF/filters/videos/raft_core/*",
-    "DPF/filters/images/ocr_model/*"
+    "DPF/filters/images/ocr_model/*",
+    "DPF/filters/videos/grounding_gpt/*"
 ]
 
 [tool.ruff.lint]
