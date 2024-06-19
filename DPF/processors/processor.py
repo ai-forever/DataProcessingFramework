@@ -4,7 +4,7 @@ from typing import Any, Callable, Optional, Union
 
 import pandas as pd
 from torch.utils.data import DataLoader, Dataset
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 from DPF.configs import DatasetConfig, config2format
 from DPF.connectors import Connector, LocalConnector

@@ -5,7 +5,7 @@ from typing import Any
 
 import pandas as pd
 from torch.utils.data import DataLoader, Dataset
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 from DPF.dataloaders.dataloader_utils import identical_collate_fn
 from DPF.modalities import ModalityName
