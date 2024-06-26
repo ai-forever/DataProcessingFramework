@@ -16,6 +16,7 @@ requires-python = '>=3.9'
 dependencies = [
   "torch",
   "numpy",
+  "soundfile",
   "scipy",
   "pillow",
   "tqdm",
