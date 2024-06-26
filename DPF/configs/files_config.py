@@ -58,6 +58,7 @@ class FilesDatasetConfig(DatasetConfig):
         path: str,
         image_path_col: Optional[str] = None,
         video_path_col: Optional[str] = None,
+        audio_path_col: Optional[str] = None,
         text_col: Optional[str] = None,
     ) -> "FilesDatasetConfig":
         """
@@ -69,6 +70,8 @@ class FilesDatasetConfig(DatasetConfig):
             Name of column with image paths
         video_path_col: Optional[str] = None
             Name of column with video paths
+        audio_path_col: Optional[str] = None
+            Name of column with audio paths
         text_col: Optional[str] = None
             Name of column with text
 
@@ -82,6 +85,8 @@ class FilesDatasetConfig(DatasetConfig):
             datatypes.append(FileDataType(MODALITIES['image'], image_path_col))
         if video_path_col:
             datatypes.append(FileDataType(MODALITIES['video'], video_path_col))
+        if audio_path_col:
+            datatypes.append(FileDataType(MODALITIES['audio'], audio_path_col))
         if text_col:
             datatypes.append(ColumnDataType(MODALITIES['text'], text_col))
         assert len(datatypes) > 0, "At least one modality should be provided"
