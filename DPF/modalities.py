@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Literal, Optional
 
-ModalityName = Literal["image", "video", "text"]
+ModalityName = Literal["image", "video", "text", "audio"]
 
 
 @dataclass
@@ -46,6 +46,10 @@ MODALITIES = {
     'video': DataModality(
         'video', 'video_path',
         'video_name', None
+    ),
+    'audio': DataModality(
+        'audio', 'audio_path',
+        'audio_name', None
     ),
     'text': DataModality(
         'text', 'text_path',

@@ -11,6 +11,7 @@ List of implemented filters:
   - [BLIPCaptioningFilter](../DPF/filters/images/blip_captioning_filter.py) - captioning images using BLIP model
   - [CLIPLabelsFilter](../DPF/filters/images/cliplabels_filter.py) - calculate similarity of images with provided texts using CLIP model
   - [LLaVaCaptioningFilter](../DPF/filters/images/llava_captioning_filter.py) - captioning images using LLaVA models
+  - [LLaVa34bCaptioningFilter](../DPF/filters/images/llava34b_captioning_filter.py) - captioning images using LLaVA models, llava-v1.6-34b-hf
   - [NSFWFilter](../DPF/filters/images/nsfw_filter.py) - NSFW images detection
   - [CRAFTFilter](../DPF/filters/images/text_detection_filter.py) - text detection on image
   - [OCRFilter](../DPF/filters/images/ocr_filter.py) - text recognition

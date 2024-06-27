@@ -33,6 +33,7 @@ class ShardedFilesDatasetConfig(ShardedDatasetConfig):
         path: str,
         image_name_col: Optional[str] = None,
         video_name_col: Optional[str] = None,
+        audio_name_col: Optional[str] = None,
         text_col: Optional[str] = None,
         datafiles_ext: str = "csv",
     ) -> "ShardedFilesDatasetConfig":
@@ -45,6 +46,8 @@ class ShardedFilesDatasetConfig(ShardedDatasetConfig):
             Name of column with image filenames in shard
         video_name_col: Optional[str] = None
             Name of column with video filenames in shard
+        audio_name_col: Optional[str] = None
+            Name of column with audio filenames in shard
         text_col: Optional[str] = None
             Name of column with text
         datafiles_ext: str = "csv"
@@ -60,6 +63,8 @@ class ShardedFilesDatasetConfig(ShardedDatasetConfig):
             datatypes.append(ShardedDataType(MODALITIES['image'], image_name_col))
         if video_name_col:
             datatypes.append(ShardedDataType(MODALITIES['video'], video_name_col))
+        if audio_name_col:
+            datatypes.append(ShardedDataType(MODALITIES['audio'], audio_name_col))
         if text_col:
             datatypes.append(ColumnDataType(MODALITIES['text'], text_col))
         assert len(datatypes) > 0, "At least one modality should be provided"
