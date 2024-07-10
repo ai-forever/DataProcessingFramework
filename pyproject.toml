@@ -73,6 +73,10 @@ module = "DPF.filters.videos.raft_core.*"
 ignore_errors = true
 
 [[tool.mypy.overrides]]
+module = "DPF.filters.videos.pllava_filter_core.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
 module = "DPF.filters.videos.video_llava_filter"
 disable_error_code = ["import-not-found"]
 
@@ -100,7 +104,8 @@ profile = "black"
 [tool.ruff]
 extend-exclude = [
     "DPF/filters/videos/raft_core/*",
-    "DPF/filters/images/ocr_model/*"
+    "DPF/filters/images/ocr_model/*",
+    "DPF.filters.videos.pllava_filter_core.*"
 ]
 
 [tool.ruff.lint]
