@@ -1,7 +1,4 @@
 import sys
-
-sys.path.append('pllava_filter_core/')
-sys.path.append('../../../')
 import os
 from io import BytesIO
 from typing import Any, Optional
@@ -12,8 +9,8 @@ import torchvision
 from decord import VideoReader, cpu
 from huggingface_hub import snapshot_download
 from PIL import Image
-from tasks.eval.eval_utils import conv_templates
-from tasks.eval.model_utils import load_pllava
+from .pllava_filter_core.tasks.eval.eval_utils import conv_templates
+from .pllava_filter_core.tasks.eval.model_utils import load_pllava
 
 from DPF.filters.videos.video_filter import VideoFilter
 from DPF.types import ModalityToDataMapping
