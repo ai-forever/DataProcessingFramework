@@ -15,7 +15,7 @@ readme = 'README.md'
 requires-python = '>=3.9'
 dependencies = [
   "torch",
-  "numpy",
+  "numpy<2.0",
   "scipy",
   "pillow",
   "tqdm",
@@ -50,6 +50,13 @@ video_llava = [
 lita = [
     'LITA @ git+https://github.com/NVlabs/LITA',
     'gdown'
+]
+pllava = [
+    'moviepy==1.0.3',
+    'pandas==2.2.2',
+    'peft==0.10.0',
+    'transformers==4.37.1',
+    'flash-attn',
 ]
 
 [tool.hatch.version]
@@ -128,7 +135,7 @@ ignore = [
 ignore-init-module-imports = true
 
 [tool.ruff.lint.per-file-ignores]
-"__init__.py" = ["F401"]
+"__init__.py" = ["F401"]    
 
 [tool.ruff.lint.pyupgrade]
 keep-runtime-typing = true
