@@ -52,9 +52,9 @@ class PllavaFilter(VideoFilter):
     """
     def __init__(
         self,
-        model_path: str = 'ermu2001/pllava-34b',
-        weights_path: str = 'pllava_filter_core/MODELS/pllava-34b',
-        weights_dir: str = 'pllava_filter_core/MODELS/pllava-34b',
+        model_path: str = 'model_path',
+        weights_path: str = 'weights_path',
+        weights_dir: str = 'weights_dir',
         prompt: str = "short",
         do_sample: bool = True,
         batch_size: int = 16,
@@ -70,7 +70,9 @@ class PllavaFilter(VideoFilter):
         lora_alpha: int = 4,
         pbar: bool = True,
         _pbar_position: int = 0,
-        use_multi_gpus: bool = True
+        use_multi_gpus: bool = False,
+        prompts: dict = None
+
         ):
         super().__init__(pbar, _pbar_position)
         self.weights_dir = weights_dir
@@ -91,18 +93,26 @@ class PllavaFilter(VideoFilter):
         self.num_segments = num_segments
         self.num_frames = num_frames
         self.use_multi_gpus = use_multi_gpus
-        prompts = {
-            'detailed_video': 'Please provide a caption for this image. Speak confidently and describe everything clearly. Do not lie and describe only what you can see',
-            'pixart': 'Describe this image and its style in a very detailed manner',
-            'short': 'Describe this image very shortly in 1-2 short sentences',
-            'short-video': 'Describe this video very shortly in 1-2 short sentences. Describe what is happening in this video.'
-        }
+        if prompts is None:
+            self.prompts = {
+                'detailed_video': 'Please provide a caption for this image. Speak confidently and describe everything clearly. Do not lie and                        describe only what you can see',
+                'pixart': 'Describe this image and its style in a very detailed manner',
+                'short': 'Describe this image very shortly in 1-2 short sentences',
+                'short-video': 'Describe this video very shortly in 1-2 short sentences. Describe what is happening in this video.'
+            }
+        else:
+            self.prompts = prompts
 
+        self.input_ids = self.prompts[self.prompt_to_use]
+
+        self.conv = conv_templates[self.conv_mode].copy()
+        self.conv.user_query(self.input_ids, is_mm=True)
+        self.prompt = self.conv.get_prompt()
 
         if not os.path.exists(weights_path):
 
             repo_ids = [
-                'ermu2001/pllava-34b',
+                self.model_path
             ]
             for repo_id in repo_ids:
                 read_token = '...'
@@ -114,19 +124,19 @@ class PllavaFilter(VideoFilter):
                     local_dir_use_symlinks=True,
                     token=read_token,
                 )
+
         self.model, self.processor = load_pllava(
-            self.weights_path,
-            self.num_frames,
-            use_lora=self.use_lora,
-            weight_dir=self.weights_dir,
-            lora_alpha=self.lora_alpha,
-            use_multi_gpus=True)
+        self.weights_path,
+        self.num_frames,
+        use_lora=self.use_lora,
+        weight_dir=self.weights_dir,
+        lora_alpha=self.lora_alpha,
+        use_multi_gpus=self.use_multi_gpus)
 
-        self.input_ids = prompts[self.prompt_to_use]
 
-        self.conv = conv_templates[self.conv_mode].copy()
-        self.conv.user_query(self.input_ids, is_mm=True)
-        self.prompt = self.conv.get_prompt()
+        if not self.use_multi_gpus:
+            self.model = self.model.to(self.device)
+
 
     @property
     def result_columns(self) -> list[str]:
@@ -175,3 +185,28 @@ class PllavaFilter(VideoFilter):
         df_batch_labels[self.schema[1]].extend(all_outputs)
         df_batch_labels[self.key_column].extend(keys)
         return df_batch_labels
+
+
+
+class PllavaFilter_34b(PllavaFilter):
+    def __init__(self, **kwargs):
+        self.CUDA_VISIBLE_DEVICES = kwargs.pop('CUDA_VISIBLE_DEVICES', '0,1')
+        model_path: str = 'ermu2001/pllava-34b'
+        weights_path: str = 'pllava_filter_core/MODELS/pllava-34b'
+        weights_dir: str = 'pllava_filter_core/MODELS/pllava-34b'
+        use_multi_gpus: bool = True
+        prompts = {
+            'short': 'Describe this image very shortly in 1-2 short sentences'
+        }
+
+        super().__init__(model_path=model_path, weights_path=weights_path, weights_dir=weights_dir, prompts=prompts, use_multi_gpus=use_multi_gpus, **kwargs)
+        os.environ['CUDA_VISIBLE_DEVICES'] = self.CUDA_VISIBLE_DEVICES
+
+
+class PllavaFilter_13b(PllavaFilter):
+    def __init__(self, **kwargs):
+        model_path: str = 'ermu2001/pllava-13b'
+        weights_path: str = 'pllava_filter_core/MODELS/pllava-13b'
+        weights_dir: str = 'pllava_filter_core/MODELS/pllava-13b'
+
+        super().__init__(model_path=model_path, weights_path=weights_path, weights_dir=weights_dir, prompts=None, **kwargs)
