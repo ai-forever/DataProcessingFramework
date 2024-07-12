@@ -16,7 +16,7 @@ from .pllava_filter_core.tasks.eval.eval_utils import conv_templates
 from .pllava_filter_core.tasks.eval.model_utils import load_pllava
 
 
-def get_index(num_frames, num_segments):
+def get_index(num_frames: int, num_segments: int) -> np.ndarray:
     seg_size = float(num_frames - 1) / num_segments
     start = int(seg_size / 2)
     offsets = np.array([
@@ -24,7 +24,7 @@ def get_index(num_frames, num_segments):
     ])
     return offsets
 
-def load_video(video_path, num_segments=8, return_msg=False, num_frames=16, resolution=336):
+def load_video(video_path: str, num_segments: int = 8, return_msg: bool = False, num_frames: int = 16, resolution: int = 336) -> Any:
     transforms = torchvision.transforms.Resize(size=resolution)
     vr = VideoReader(video_path, ctx=cpu(0), num_threads=1)
     num_frames = len(vr)
@@ -36,7 +36,6 @@ def load_video(video_path, num_segments=8, return_msg=False, num_frames=16, reso
     if return_msg:
         fps = float(vr.get_avg_fps())
         sec = ", ".join([str(round(f / fps, 1)) for f in frame_indices])
-        # " " should be added in the start and end
         msg = f"The video contains {len(frame_indices)} frames sampled at {sec} seconds."
         return images_group, msg
     else:
