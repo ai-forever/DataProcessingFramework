@@ -16,7 +16,7 @@ from .pllava_filter_core.tasks.eval.eval_utils import conv_templates
 from .pllava_filter_core.tasks.eval.model_utils import load_pllava
 
 
-def get_index(num_frames: int, num_segments: int) -> np.ndarray[int]:
+def get_index(num_frames: int, num_segments: int) -> np.ndarray[Any, int]:
     seg_size = float(num_frames - 1) / num_segments
     start = int(seg_size / 2)
     offsets = np.array([
