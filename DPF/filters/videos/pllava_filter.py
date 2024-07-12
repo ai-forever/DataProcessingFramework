@@ -67,7 +67,7 @@ class PllavaFilter(VideoFilter):
         pbar: bool = True,
         _pbar_position: int = 0,
         use_multi_gpus: bool = False,
-        prompts: dict = None
+        prompts: Optional[dict] = None
 
         ):
         super().__init__(pbar, _pbar_position)
@@ -185,7 +185,7 @@ class PllavaFilter(VideoFilter):
 
 
 class PllavaFilter_34b(PllavaFilter):
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         self.CUDA_VISIBLE_DEVICES = kwargs.pop('CUDA_VISIBLE_DEVICES', '0,1')
         model_path: str = 'ermu2001/pllava-34b'
         weights_path: str = 'weights/pllava-34b'
@@ -200,7 +200,7 @@ class PllavaFilter_34b(PllavaFilter):
 
 
 class PllavaFilter_13b(PllavaFilter):
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         model_path: str = 'ermu2001/pllava-13b'
         weights_path: str = 'weights/pllava-13b'
         weights_dir: str = 'weights/pllava-13b'
