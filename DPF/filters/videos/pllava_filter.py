@@ -1,4 +1,3 @@
-import sys
 import os
 from io import BytesIO
 from typing import Any, Optional
@@ -9,11 +8,12 @@ import torchvision
 from decord import VideoReader, cpu
 from huggingface_hub import snapshot_download
 from PIL import Image
-from .pllava_filter_core.tasks.eval.eval_utils import conv_templates
-from .pllava_filter_core.tasks.eval.model_utils import load_pllava
 
 from DPF.filters.videos.video_filter import VideoFilter
 from DPF.types import ModalityToDataMapping
+
+from .pllava_filter_core.tasks.eval.eval_utils import conv_templates
+from .pllava_filter_core.tasks.eval.model_utils import load_pllava
 
 
 def get_index(num_frames, num_segments):
@@ -189,8 +189,8 @@ class PllavaFilter_34b(PllavaFilter):
     def __init__(self, **kwargs):
         self.CUDA_VISIBLE_DEVICES = kwargs.pop('CUDA_VISIBLE_DEVICES', '0,1')
         model_path: str = 'ermu2001/pllava-34b'
-        weights_path: str = 'pllava_filter_core/MODELS/pllava-34b'
-        weights_dir: str = 'pllava_filter_core/MODELS/pllava-34b'
+        weights_path: str = 'weights/pllava-34b'
+        weights_dir: str = 'weights/pllava-34b'
         use_multi_gpus: bool = True
         prompts = {
             'short': 'Describe this image very shortly in 1-2 short sentences'
@@ -203,7 +203,7 @@ class PllavaFilter_34b(PllavaFilter):
 class PllavaFilter_13b(PllavaFilter):
     def __init__(self, **kwargs):
         model_path: str = 'ermu2001/pllava-13b'
-        weights_path: str = 'pllava_filter_core/MODELS/pllava-13b'
-        weights_dir: str = 'pllava_filter_core/MODELS/pllava-13b'
+        weights_path: str = 'weights/pllava-13b'
+        weights_dir: str = 'weights/pllava-13b'
 
         super().__init__(model_path=model_path, weights_path=weights_path, weights_dir=weights_dir, prompts=None, **kwargs)
