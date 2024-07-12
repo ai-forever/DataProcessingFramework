@@ -16,13 +16,12 @@ from .pllava_filter_core.tasks.eval.eval_utils import conv_templates
 from .pllava_filter_core.tasks.eval.model_utils import load_pllava
 
 
-def get_index(num_frames: int, num_segments: int) -> np.ndarray[Any, int]:
+def get_index(num_frames: int, num_segments: int) -> np.ndarray[Any, dtype[Any]]:
     seg_size = float(num_frames - 1) / num_segments
     start = int(seg_size / 2)
-    offsets = np.array([
+    return np.array([
         start + int(np.round(seg_size * idx)) for idx in range(num_segments)
     ])
-    return offsets
 
 def load_video(video_bytes: BytesIO, num_segments: int = 8, return_msg: bool = False, num_frames: int = 16, resolution: int = 336) -> Any:
     transforms = torchvision.transforms.Resize(size=resolution)
