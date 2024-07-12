@@ -485,8 +485,7 @@ class PllavaForConditionalGeneration(PllavaPreTrainedModel):
                 image_features = self.multi_modal_projector(selected_image_feature,
                                                             media_type,
                                                             batch_size=batch_size,
-                                                            num_videos=pixel_values.shape[0]//self.config.num_frames//batch_size,)
-                print(image_features.shape, inputs_embeds.shape, input_ids.shape, attention_mask.shape, labels.shape)   
+                                                            num_videos=pixel_values.shape[0] // self.config.num_frames // batch_size,)
                 inputs_embeds, attention_mask, labels, position_ids = self._merge_input_ids_with_image_features(
                     image_features, inputs_embeds, input_ids, attention_mask, labels
                 )
