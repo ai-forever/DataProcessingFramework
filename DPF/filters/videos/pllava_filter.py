@@ -1,6 +1,6 @@
 import os
 from io import BytesIO
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 import numpy as np
 import torch
@@ -66,7 +66,7 @@ class PllavaFilter(VideoFilter):
         pbar: bool = True,
         _pbar_position: int = 0,
         use_multi_gpus: bool = False,
-        prompts: Optional[Dict[str, str]] = None
+        prompts: Optional[dict[str, str]] = None
 
         ):
         super().__init__(pbar, _pbar_position)
@@ -179,7 +179,7 @@ class PllavaFilter(VideoFilter):
 
 class Pllava34bFilter(PllavaFilter):
     def __init__(self, **kwargs: Any) -> None:
-        self.CUDA_VISIBLE_DEVICES = kwargs.pop('CUDA_VISIBLE_DEVICES', '0,1')
+        # self.CUDA_VISIBLE_DEVICES = kwargs.pop('CUDA_VISIBLE_DEVICES', '0,1')
         model_path: str = 'ermu2001/pllava-34b'
         weights_path: str = 'weights/pllava-34b'
         weights_dir: str = 'weights/pllava-34b'
@@ -188,7 +188,7 @@ class Pllava34bFilter(PllavaFilter):
             'short': 'Describe this image very shortly in 1-2 short sentences'
         }
         super().__init__(model_path=model_path, weights_path=weights_path, weights_dir=weights_dir, prompts=prompts, use_multi_gpus=use_multi_gpus, **kwargs)
-        os.environ['CUDA_VISIBLE_DEVICES'] = self.CUDA_VISIBLE_DEVICES
+        # os.environ['CUDA_VISIBLE_DEVICES'] = self.CUDA_VISIBLE_DEVICES
 
 
 class Pllava13bFilter(PllavaFilter):
