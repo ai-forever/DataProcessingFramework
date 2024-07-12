@@ -1,6 +1,6 @@
 import os
 from io import BytesIO
-from typing import Any, Optional
+from typing import Any, Dict, Optional
 
 import numpy as np
 import torch
@@ -16,7 +16,7 @@ from .pllava_filter_core.tasks.eval.eval_utils import conv_templates
 from .pllava_filter_core.tasks.eval.model_utils import load_pllava
 
 
-def get_index(num_frames: int, num_segments: int) -> np.ndarray:
+def get_index(num_frames: int, num_segments: int) -> np.ndarray[int]:
     seg_size = float(num_frames - 1) / num_segments
     start = int(seg_size / 2)
     offsets = np.array([
@@ -24,9 +24,9 @@ def get_index(num_frames: int, num_segments: int) -> np.ndarray:
     ])
     return offsets
 
-def load_video(video_path: str, num_segments: int = 8, return_msg: bool = False, num_frames: int = 16, resolution: int = 336) -> Any:
+def load_video(video_bytes: BytesIO, num_segments: int = 8, return_msg: bool = False, num_frames: int = 16, resolution: int = 336) -> Any:
     transforms = torchvision.transforms.Resize(size=resolution)
-    vr = VideoReader(video_path, ctx=cpu(0), num_threads=1)
+    vr = VideoReader(video_bytes, ctx=cpu(0), num_threads=1)
     num_frames = len(vr)
     frame_indices = get_index(num_frames, num_segments)
     images_group = []
@@ -67,7 +67,7 @@ class PllavaFilter(VideoFilter):
         pbar: bool = True,
         _pbar_position: int = 0,
         use_multi_gpus: bool = False,
-        prompts: Optional[dict] = None
+        prompts: Optional[Dict[str, str]] = None
 
         ):
         super().__init__(pbar, _pbar_position)
@@ -101,7 +101,7 @@ class PllavaFilter(VideoFilter):
 
         self.input_ids = self.prompts[self.prompt_to_use]
 
-        self.conv = conv_templates[self.conv_mode].copy()
+        self.conv = conv_templates[self.conv_mode].copy()  # type: ignore
         self.conv.user_query(self.input_ids, is_mm=True)
         self.prompt = self.conv.get_prompt()
 
@@ -122,12 +122,13 @@ class PllavaFilter(VideoFilter):
                 )
 
         self.model, self.processor = load_pllava(
-        self.weights_path,
-        self.num_frames,
-        use_lora=self.use_lora,
-        weight_dir=self.weights_dir,
-        lora_alpha=self.lora_alpha,
-        use_multi_gpus=self.use_multi_gpus)
+            self.weights_path,
+            self.num_frames,
+            use_lora=self.use_lora,
+            weight_dir=self.weights_dir,
+            lora_alpha=self.lora_alpha,
+            use_multi_gpus=self.use_multi_gpus
+        )  # type: ignore
 
 
         if not self.use_multi_gpus:
@@ -185,7 +186,7 @@ class PllavaFilter(VideoFilter):
 
 
 class PllavaFilter_34b(PllavaFilter):
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, **kwargs: Any) -> None:
         self.CUDA_VISIBLE_DEVICES = kwargs.pop('CUDA_VISIBLE_DEVICES', '0,1')
         model_path: str = 'ermu2001/pllava-34b'
         weights_path: str = 'weights/pllava-34b'
@@ -200,7 +201,7 @@ class PllavaFilter_34b(PllavaFilter):
 
 
 class PllavaFilter_13b(PllavaFilter):
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, **kwargs: Any) -> None:
         model_path: str = 'ermu2001/pllava-13b'
         weights_path: str = 'weights/pllava-13b'
         weights_dir: str = 'weights/pllava-13b'
