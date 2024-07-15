@@ -106,13 +106,14 @@ disable_error_code = ["attr-defined", "no-untyped-def", "no-untyped-call", "assi
 # isort setting
 [tool.isort]
 profile = "black"
+skip_glob = ["DPF/filters/videos/pllava_filter_core/*"]
 
 # ruff settings
 [tool.ruff]
 extend-exclude = [
     "DPF/filters/videos/raft_core/*",
     "DPF/filters/images/ocr_model/*",
-    "DPF.filters.videos.pllava_filter_core.*"
+    "DPF/filters/videos/pllava_filter_core/*"
 ]
 
 [tool.ruff.lint]

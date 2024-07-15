@@ -23,6 +23,7 @@ def get_index(num_frames: int, num_segments: int) -> np.ndarray[Any, Any]:
         start + int(np.round(seg_size * idx)) for idx in range(num_segments)
     ])
 
+
 def load_video(video_bytes: BytesIO, num_segments: int = 8, return_msg: bool = False, num_frames: int = 16, resolution: int = 336) -> Any:
     transforms = torchvision.transforms.Resize(size=resolution)
     vr = VideoReader(video_bytes, ctx=cpu(0), num_threads=1)
@@ -40,6 +41,7 @@ def load_video(video_bytes: BytesIO, num_segments: int = 8, return_msg: bool = F
     else:
         return images_group
 
+
 class PllavaFilter(VideoFilter):
     """
     Pllava inference class to get captions for videos.
@@ -51,6 +53,7 @@ class PllavaFilter(VideoFilter):
         weights_path: str,
         weights_dir: str,
         prompt: str = "short",
+        prompts: Optional[dict[str, str]] = None,
         do_sample: bool = True,
         batch_size: int = 16,
         conv_mode: str = 'eval_vcg_llavanext',
@@ -66,13 +69,8 @@ class PllavaFilter(VideoFilter):
         pbar: bool = True,
         _pbar_position: int = 0,
         use_multi_gpus: bool = False,
-<<<<<<< HEAD
         use_cache: bool = True,
-=======
->>>>>>> origin/dev_alisa
-        prompts: Optional[dict[str, str]] = None
-
-        ):
+    ):
         super().__init__(pbar, _pbar_position)
         self.weights_dir = weights_dir
         self.max_new_tokens = max_new_tokens
@@ -164,10 +162,14 @@ class PllavaFilter(VideoFilter):
         inputs = self.processor(text=input_ids_batch, images=video_tensors, return_tensors="pt")
         inputs = inputs.to(self.model.device)
         with torch.no_grad():
-            output_token = self.model.generate(**inputs, media_type='video',
-                                          do_sample=self.do_sample, max_new_tokens=self.max_new_tokens,temperature=self.temperature,
-                                          self.use_cache = True
-                                          )
+            output_token = self.model.generate(
+                **inputs,
+                media_type='video',
+                do_sample=self.do_sample,
+                max_new_tokens=self.max_new_tokens,
+                temperature=self.temperature,
+                use_cache = True
+            )
             output_texts = self.processor.batch_decode(output_token, skip_special_tokens=True, clean_up_tokenization_spaces=True)
         split_tag = self.conv.roles[-1]
         bug_split_tag = "<|im_start|> assistant\n"
@@ -182,10 +184,9 @@ class PllavaFilter(VideoFilter):
         return df_batch_labels
 
 
-
 class Pllava34bFilter(PllavaFilter):
+
     def __init__(self, **kwargs: Any) -> None:
-        # self.CUDA_VISIBLE_DEVICES = kwargs.pop('CUDA_VISIBLE_DEVICES', '0,1')
         model_path: str = 'ermu2001/pllava-34b'
         weights_path: str = 'weights/pllava-34b'
         weights_dir: str = 'weights/pllava-34b'
@@ -194,7 +195,6 @@ class Pllava34bFilter(PllavaFilter):
             'short': 'Describe this image very shortly in 1-2 short sentences'
         }
         super().__init__(model_path=model_path, weights_path=weights_path, weights_dir=weights_dir, prompts=prompts, use_multi_gpus=use_multi_gpus, **kwargs)
-        # os.environ['CUDA_VISIBLE_DEVICES'] = self.CUDA_VISIBLE_DEVICES
 
 
 class Pllava13bFilter(PllavaFilter):
