@@ -66,7 +66,10 @@ class PllavaFilter(VideoFilter):
         pbar: bool = True,
         _pbar_position: int = 0,
         use_multi_gpus: bool = False,
+<<<<<<< HEAD
         use_cache: bool = True,
+=======
+>>>>>>> origin/dev_alisa
         prompts: Optional[dict[str, str]] = None
 
         ):
