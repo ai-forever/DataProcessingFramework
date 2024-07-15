@@ -16,17 +16,16 @@ from .pllava_filter_core.tasks.eval.eval_utils import conv_templates
 from .pllava_filter_core.tasks.eval.model_utils import load_pllava
 
 
-def get_index(num_frames: int, num_segments: int) -> np.ndarray:
+def get_index(num_frames: int, num_segments: int) -> np.ndarray[Any, Any]:
     seg_size = float(num_frames - 1) / num_segments
     start = int(seg_size / 2)
-    offsets = np.array([
+    return np.array([
         start + int(np.round(seg_size * idx)) for idx in range(num_segments)
     ])
-    return offsets
 
-def load_video(video_path: str, num_segments: int = 8, return_msg: bool = False, num_frames: int = 16, resolution: int = 336) -> Any:
+def load_video(video_bytes: BytesIO, num_segments: int = 8, return_msg: bool = False, num_frames: int = 16, resolution: int = 336) -> Any:
     transforms = torchvision.transforms.Resize(size=resolution)
-    vr = VideoReader(video_path, ctx=cpu(0), num_threads=1)
+    vr = VideoReader(video_bytes, ctx=cpu(0), num_threads=1)
     num_frames = len(vr)
     frame_indices = get_index(num_frames, num_segments)
     images_group = []
@@ -48,9 +47,9 @@ class PllavaFilter(VideoFilter):
     """
     def __init__(
         self,
-        model_path: str = 'model_path',
-        weights_path: str = 'weights_path',
-        weights_dir: str = 'weights_dir',
+        model_path: str,
+        weights_path: str,
+        weights_dir: str,
         prompt: str = "short",
         do_sample: bool = True,
         batch_size: int = 16,
@@ -67,7 +66,8 @@ class PllavaFilter(VideoFilter):
         pbar: bool = True,
         _pbar_position: int = 0,
         use_multi_gpus: bool = False,
-        prompts: dict = None
+        use_cache: bool = True,
+        prompts: Optional[dict[str, str]] = None
 
         ):
         super().__init__(pbar, _pbar_position)
@@ -82,13 +82,16 @@ class PllavaFilter(VideoFilter):
         self.num_segments = batch_size
         self.num_workers = workers
         self.device = device
-        self.model_path = model_path
         self.prompt_to_use = prompt
         self.temperature = temperature
         self.resolution = resolution
         self.num_segments = num_segments
         self.num_frames = num_frames
+        self.use_cache = use_cache
         self.use_multi_gpus = use_multi_gpus
+
+        self.model_name = model_path.split('/')[-1]
+
         if prompts is None:
             self.prompts = {
                 'detailed_video': 'Please provide a caption for this image. Speak confidently and describe everything clearly. Do not lie and                        describe only what you can see',
@@ -101,34 +104,29 @@ class PllavaFilter(VideoFilter):
 
         self.input_ids = self.prompts[self.prompt_to_use]
 
-        self.conv = conv_templates[self.conv_mode].copy()
+        self.conv = conv_templates[self.conv_mode].copy()  # type: ignore
         self.conv.user_query(self.input_ids, is_mm=True)
         self.prompt = self.conv.get_prompt()
 
         if not os.path.exists(weights_path):
-
-            repo_ids = [
-                self.model_path
-            ]
-            for repo_id in repo_ids:
-                read_token = '...'
-                local_dir = repo_id.replace('ermu2001', 'pllava_filter_core/MODELS')
-                snapshot_download(
-                    repo_id,
-                    local_dir=local_dir,
-                    repo_type='model',
-                    local_dir_use_symlinks=True,
-                    token=read_token,
-                )
+            read_token = '...'
+            local_dir = model_path.replace('ermu2001', 'weights')
+            snapshot_download(
+                model_path,
+                local_dir=local_dir,
+                repo_type='model',
+                local_dir_use_symlinks=True,
+                token=read_token,
+            )
 
         self.model, self.processor = load_pllava(
-        self.weights_path,
-        self.num_frames,
-        use_lora=self.use_lora,
-        weight_dir=self.weights_dir,
-        lora_alpha=self.lora_alpha,
-        use_multi_gpus=self.use_multi_gpus)
-
+            self.weights_path,
+            self.num_frames,
+            use_lora=self.use_lora,
+            weight_dir=self.weights_dir,
+            lora_alpha=self.lora_alpha,
+            use_multi_gpus=self.use_multi_gpus
+        )  # type: ignore
 
         if not self.use_multi_gpus:
             self.model = self.model.to(self.device)
@@ -136,7 +134,7 @@ class PllavaFilter(VideoFilter):
 
     @property
     def result_columns(self) -> list[str]:
-        return [f"caption {self.model_path} prompt {self.prompt_to_use}"]
+        return [f"caption {self.model_name} prompt {self.prompt_to_use}"]
 
     @property
     def dataloader_kwargs(self) -> dict[str, Any]:
@@ -164,19 +162,17 @@ class PllavaFilter(VideoFilter):
         inputs = inputs.to(self.model.device)
         with torch.no_grad():
             output_token = self.model.generate(**inputs, media_type='video',
-                                          do_sample=self.do_sample, max_new_tokens=self.max_new_tokens,temperature=self.temperature
+                                          do_sample=self.do_sample, max_new_tokens=self.max_new_tokens,temperature=self.temperature,
+                                          self.use_cache = True
                                           )
             output_texts = self.processor.batch_decode(output_token, skip_special_tokens=True, clean_up_tokenization_spaces=True)
-        if self.conv.roles[-1] == "<|im_start|>assistant\n":
-            split_tag = "<|im_start|> assistant\n"
-        else:
-            split_tag = self.conv.roles[-1]
+        split_tag = self.conv.roles[-1]
+        bug_split_tag = "<|im_start|> assistant\n"
         all_outputs: list[Optional[str]] = []
         for output_text in output_texts:
-            output_text = output_text.split(split_tag)[-1]
+            output_text = output_text.split(split_tag)[-1].split(bug_split_tag)[-1]
             ending = self.conv.sep if isinstance(self.conv.sep, str) else self.conv.sep[1]
             output_text = output_text.removesuffix(ending).strip()
-            self.conv.messages[-1][1] = output_text
             all_outputs.append(output_text)
         df_batch_labels[self.schema[1]].extend(all_outputs)
         df_batch_labels[self.key_column].extend(keys)
@@ -184,9 +180,9 @@ class PllavaFilter(VideoFilter):
 
 
 
-class PllavaFilter_34b(PllavaFilter):
-    def __init__(self, **kwargs):
-        self.CUDA_VISIBLE_DEVICES = kwargs.pop('CUDA_VISIBLE_DEVICES', '0,1')
+class Pllava34bFilter(PllavaFilter):
+    def __init__(self, **kwargs: Any) -> None:
+        # self.CUDA_VISIBLE_DEVICES = kwargs.pop('CUDA_VISIBLE_DEVICES', '0,1')
         model_path: str = 'ermu2001/pllava-34b'
         weights_path: str = 'weights/pllava-34b'
         weights_dir: str = 'weights/pllava-34b'
@@ -194,13 +190,12 @@ class PllavaFilter_34b(PllavaFilter):
         prompts = {
             'short': 'Describe this image very shortly in 1-2 short sentences'
         }
-
         super().__init__(model_path=model_path, weights_path=weights_path, weights_dir=weights_dir, prompts=prompts, use_multi_gpus=use_multi_gpus, **kwargs)
-        os.environ['CUDA_VISIBLE_DEVICES'] = self.CUDA_VISIBLE_DEVICES
+        # os.environ['CUDA_VISIBLE_DEVICES'] = self.CUDA_VISIBLE_DEVICES
 
 
-class PllavaFilter_13b(PllavaFilter):
-    def __init__(self, **kwargs):
+class Pllava13bFilter(PllavaFilter):
+    def __init__(self, **kwargs: Any) -> None:
         model_path: str = 'ermu2001/pllava-13b'
         weights_path: str = 'weights/pllava-13b'
         weights_dir: str = 'weights/pllava-13b'
