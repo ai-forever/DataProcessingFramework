@@ -30,7 +30,16 @@ def get_phash(pil_img: Image.Image, hash_size: int = 8, highfreq_factor: int = 4
 
 class PHashFilter(ImageFilter):
     """
-    PHashFilter class
+    Filter for calculating PHash (perceptual hash) for images
+
+    Parameters
+    ----------
+    sim_hash_size: int = 8
+        Hash size for PHash
+    workers: int = 16
+        Number of processes to use for reading data and calculating flow scores
+    pbar: bool = True
+        Whether to use a progress bar
     """
 
     def __init__(

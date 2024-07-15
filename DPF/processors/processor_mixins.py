@@ -25,6 +25,8 @@ class ApplyTransformProcessorMixin:
 
         metadata_lists = None
         if len(transforms.required_metadata) > 0:
+            assert all(col in self._df.columns for col in transforms.required_metadata), \
+                f"Columns {[col not in self._df.columns for col in transforms.required_metadata]} are not presented"
             metadata_lists = {
                 col: self._df[col].tolist()
                 for col in transforms.required_metadata

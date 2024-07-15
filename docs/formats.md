@@ -1,11 +1,11 @@
-## Supported data formats
+# Supported data formats
 
 The dataset should be stored in one of the following formats:
 - Files
 - Shards
 - Sharded files
 
-### Files format
+## Files format
 
 The files format is a csv file with metadata and paths to images, videos, etc. A csv file can look like this:
 ```csv
@@ -28,7 +28,7 @@ reader = DatasetReader()
 processor = reader.read_from_config(config)
 ```
 
-### Shards format
+## Shards format
 
 In this format, the dataset is divided into shards of N samples each. 
 The files in each shard stored in `tar archive, and the metadata is stored in csv file. 
@@ -66,7 +66,7 @@ reader = DatasetReader()
 processor = reader.read_from_config(config)
 ```
 
-### Sharded files format
+## Sharded files format
 
 This format is similar to _shards_, but instead of tar archives, files are stored in folders.
 
