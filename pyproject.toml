@@ -18,7 +18,7 @@ dependencies = [
   "numpy",
   "soundfile",
   "scipy",
-  "pillow",
+  "pillow==10.3.0",
   "tqdm",
   "pandas",
   "pandarallel",
