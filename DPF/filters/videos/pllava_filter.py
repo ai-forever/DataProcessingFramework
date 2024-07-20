@@ -168,7 +168,7 @@ class PllavaFilter(VideoFilter):
                 do_sample=self.do_sample,
                 max_new_tokens=self.max_new_tokens,
                 temperature=self.temperature,
-                use_cache = True
+                use_cache = self.use_cache
             )
             output_texts = self.processor.batch_decode(output_token, skip_special_tokens=True, clean_up_tokenization_spaces=True)
         split_tag = self.conv.roles[-1]
@@ -182,19 +182,6 @@ class PllavaFilter(VideoFilter):
         df_batch_labels[self.schema[1]].extend(all_outputs)
         df_batch_labels[self.key_column].extend(keys)
         return df_batch_labels
-
-
-class Pllava34bFilter(PllavaFilter):
-
-    def __init__(self, **kwargs: Any) -> None:
-        model_path: str = 'ermu2001/pllava-34b'
-        weights_path: str = 'weights/pllava-34b'
-        weights_dir: str = 'weights/pllava-34b'
-        use_multi_gpus: bool = True
-        prompts = {
-            'short': 'Describe this image very shortly in 1-2 short sentences'
-        }
-        super().__init__(model_path=model_path, weights_path=weights_path, weights_dir=weights_dir, prompts=prompts, use_multi_gpus=use_multi_gpus, **kwargs)
 
 
 class Pllava13bFilter(PllavaFilter):
