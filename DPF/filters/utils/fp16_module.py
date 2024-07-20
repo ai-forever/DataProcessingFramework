@@ -57,12 +57,12 @@ class FP16Module(nn.Module):
     def state_dict(self, destination=None, prefix="", keep_vars=False):
         return self.module.state_dict(destination, prefix, keep_vars)
 
-    def load_state_dict(self, state_dict, strict=True):
+    def load_state_dict(self, state_dict, strict=True):       # type: ignore
         self.module.load_state_dict(state_dict, strict=strict)
 
     def get_param(self, item):
         return self.module.get_param(item)
 
-    def to(self, device, *args, **kwargs):
+    def to(self, device, *args, **kwargs):       # type: ignore
         self.module.to(device)
         return super().to(device, *args, **kwargs)
