@@ -1,6 +1,6 @@
 import multiprocessing
 from multiprocessing import Manager
-from typing import Any, Union
+from typing import Any, Callable, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -21,14 +21,19 @@ def run_one_process(
     i: int,
     index: pd.Series,
     results: list[pd.DataFrame],
-    filter_class: type[DataFilter],
-    filter_kwargs: dict[str, Any],
+    filter_class: Optional[type[DataFilter]],
+    filter_kwargs: Optional[dict[str, Any]],
+    datafilter_init_fn: Optional[Callable[[int, Union[str, torch.device]], DataFilter]],
     device: Union[str, torch.device],
     filter_run_kwargs: dict[str, Any]
 ) -> None:
     reader = DatasetReader(connector=connector)
     processor = reader.from_df(config, df)
-    datafilter = filter_class(**filter_kwargs, _pbar_position=i, device=device)  # type: ignore
+    if datafilter_init_fn:
+        datafilter = datafilter_init_fn(i, device)
+    else:
+        datafilter = filter_class(**filter_kwargs, _pbar_position=i, device=device)  # type: ignore
+
     datafilter._created_by_multigpu_data_filter = True
     processor.apply_data_filter(datafilter, **filter_run_kwargs)
     res = processor.df
@@ -44,26 +49,34 @@ class MultiGPUDataFilter:
     def __init__(
         self,
         devices: list[Union[torch.device, str]],
-        datafilter_class: type[DataFilter],
-        datafilter_params: dict[str, Any]
+        datafilter_class: Optional[type[DataFilter]] = None,
+        datafilter_params: Optional[dict[str, Any]] = None,
+        datafilter_init_fn: Optional[Callable[[int, Union[str, torch.device]], DataFilter]] = None
     ):
         """
         Parameters
         ----------
         devices: list[Union[torch.device, str]]
             List of devices to run datafilter on
-        datafilter_class: type[DataFilter]
+        datafilter_class: Optional[type[DataFilter]] = None
             Class of datafilter to use
-        datafilter_params: dict[str, Any]
+        datafilter_params: Optional[dict[str, Any]] = None
             Parameters for datafilter_class initialization
+        datafilter_init_fn: Optional[Callable[[int, Union[str, torch.device]], DataFilter]] = None
+            Initialization function for a datafilter. Takes _pbar_position as first arg and device as a second arg
         """
         self.filter_class = datafilter_class
         self.filter_params = datafilter_params
+        self.datafilter_init_fn = datafilter_init_fn
+        assert self.datafilter_init_fn or self.filter_class, "One method of filter initialization should be specified"
         self.devices = devices
         self.num_parts = len(devices)
 
         # getting result columns names
-        datafilter = self.filter_class(**self.filter_params, device=devices[0]) # type: ignore
+        if self.datafilter_init_fn:
+            datafilter = self.datafilter_init_fn(0, devices[0])
+        else:
+            datafilter = self.filter_class(**self.filter_params, device=devices[0]) # type: ignore
         self._result_columns = datafilter.result_columns
         del datafilter
         torch.cuda.empty_cache()
@@ -113,6 +126,7 @@ class MultiGPUDataFilter:
                     shared_results,
                     self.filter_class,
                     self.filter_params,
+                    self.datafilter_init_fn,
                     self.devices[i],
                     filter_run_kwargs
                 )

@@ -1,4 +1,5 @@
 import io
+from collections.abc import Iterable
 from typing import Any, Callable
 
 import imageio.v3 as iio
@@ -84,7 +85,7 @@ class ImageFilterAdapter(VideoFilter):
         return df_batch_labels
 
 
-def chunks(lst, n):
+def chunks(lst: list[Any], n: int) -> Iterable[list[Any]]:
     for i in range(0, len(lst), n):
         yield lst[i:i + n]
 
