@@ -31,6 +31,7 @@ List of implemented filters:
   - [RAFTOpticalFlowFilter](../DPF/filters/videos/raft_filter.py) - computes flow scores using [RAFT](https://github.com/princeton-vl/RAFT) model
   - [VideoLLaVAFilter](../DPF/filters/videos/video_llava_filter.py) - captioning videos using Video-LLaVA
   - [LITAFilter](../DPF/filters/videos/lita_filter.py) - captioning videos using [LITA model](https://github.com/NVlabs/LITA)
+  - [PllavaFilter](../DPF/filters/videos/pllava_filter.py) - captioning videos using [Pllava13b model](https://pllava.github.io)
 
 ## Datafilter
 
