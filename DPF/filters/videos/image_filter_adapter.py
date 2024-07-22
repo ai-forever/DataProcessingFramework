@@ -101,6 +101,12 @@ class MultiFrameImageFilterAdapter(VideoFilter):
     video_frames: list[float]
         List of positions of frames to use
         For example 0 means first frame, 0.5 means central frame and 1 means last frame
+    reduce_results_fn: Callable[[str, list[Any]], Any]
+        Function to convert an array of outputs into a single output.
+        Takes column name as a first arg and a list of outputs for every frame as a second argument.
+        Returns one value that will be used in that column.
+    batch_size: int = 8
+        Batch size for model (will only create batches within one video sample)
     workers: int = 8
         Number of pytorch dataloader workers
     pbar: bool = True
