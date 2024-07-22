@@ -69,7 +69,7 @@ class ImageFilterAdapter(VideoFilter):
         frame = iio.imread(io.BytesIO(video_bytes), index=frame_index, plugin="pyav")
 
         buff = io.BytesIO()
-        Image.fromarray(frame).convert('RGB').save(buff, format='JPEG', quality=95)
+        Image.fromarray(frame).convert('RGB').save(buff, format='JPEG', quality=95)  # type: ignore
         modality2data['image'] = buff.getvalue()
         metadata[self.image_filter.key_column] = ''
         return key, self.image_filter.preprocess_data(modality2data, metadata)

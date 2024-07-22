@@ -41,7 +41,7 @@ class ImageResizeTransforms(BaseFilesTransforms):
         width, height = self.resizer.get_new_size(img.width, img.height)
 
         if (width, height) != (img.width, img.height):
-            img = img.resize((width, height))  # type: ignore
+            img = img.resize((width, height))
             img.save(filepath, format=self.img_format)
 
         return TransformsFileData(filepath, {'width': width, 'height': height})
