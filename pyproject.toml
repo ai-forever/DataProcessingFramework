@@ -15,7 +15,7 @@ readme = 'README.md'
 requires-python = '>=3.9'
 dependencies = [
   "torch",
-  "numpy",
+  "numpy<2.0",
   "soundfile",
   "scipy",
   "pillow==10.3.0",
@@ -53,6 +53,13 @@ lita = [
     'LITA @ git+https://github.com/NVlabs/LITA',
     'gdown'
 ]
+pllava = [
+    'moviepy==1.0.3',
+    'pandas==2.2.2',
+    'peft==0.10.0',
+    'transformers==4.37.1',
+    'flash-attn',
+]
 grounding_gpt = [
     'transformers==4.34.0',
     'tokenizers==0.14',
@@ -81,6 +88,10 @@ ignore_errors = true
 
 [[tool.mypy.overrides]]
 module = "DPF.filters.videos.raft_core.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "DPF.filters.videos.pllava_filter_core.*"
 ignore_errors = true
 
 [[tool.mypy.overrides]]
@@ -114,12 +125,14 @@ disable_error_code = ["attr-defined", "no-untyped-def", "no-untyped-call", "assi
 # isort setting
 [tool.isort]
 profile = "black"
+skip_glob = ["DPF/filters/videos/pllava_filter_core/*"]
 
 # ruff settings
 [tool.ruff]
 extend-exclude = [
     "DPF/filters/videos/raft_core/*",
     "DPF/filters/images/ocr_model/*",
+    "DPF/filters/videos/pllava_filter_core/*",
     "DPF/filters/videos/grounding_gpt/*"
 ]
 
@@ -143,7 +156,7 @@ ignore = [
 ignore-init-module-imports = true
 
 [tool.ruff.lint.per-file-ignores]
-"__init__.py" = ["F401"]
+"__init__.py" = ["F401"]    
 
 [tool.ruff.lint.pyupgrade]
 keep-runtime-typing = true
