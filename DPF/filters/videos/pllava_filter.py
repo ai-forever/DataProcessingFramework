@@ -31,7 +31,7 @@ def load_video(video_bytes: BytesIO, num_segments: int = 8, return_msg: bool = F
     frame_indices = get_index(num_frames, num_segments)
     images_group = []
     for frame_index in frame_indices:
-        img = Image.fromarray(vr[frame_index].asnumpy())
+        img = Image.fromarray(vr[frame_index].asnumpy())  # type: ignore
         images_group.append(transforms(img))
     if return_msg:
         fps = float(vr.get_avg_fps())
