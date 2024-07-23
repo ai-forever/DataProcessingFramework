@@ -26,17 +26,18 @@ To run a complex datafilter or if you want to manually create a datafilter class
 from DPF.filters.images.llava_captioning_filter import LLaVaCaptioningFilter
 from DPF.filters.multigpu_filter import MultiGPUDataFilter
 
-def init_fn(pbar_pos: int, device: str):
-    print('INIT FN', pbar_pos, device)
+def init_fn(pbar_pos: int, device: str, params: dict):
+    print('INIT FN', pbar_pos, device, params)
 
     return LLaVaCaptioningFilter(
-        workers=8, prompt='short', batch_size=16, 
+        workers=8, prompt=params['prompt'], batch_size=16, 
         device=device, _pbar_position=pbar_pos
     )
 
 multigpufilter = MultiGPUDataFilter(
     ['cuda:0', 'cuda:1', 'cuda:2', 'cuda:3'],
-    datafilter_init_fn=init_fn
+    datafilter_init_fn=init_fn,
+    datafilter_init_fn_kwargs={'prompt': 'short'}
 )
 processor.apply_multi_gpu_data_filter(multigpufilter)
 ```
