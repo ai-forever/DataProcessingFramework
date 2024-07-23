@@ -37,7 +37,8 @@ filters = [
     'salesforce-lavis',
     'py3langid',
     'deep_translator',
-    'huggingface_hub'
+    'huggingface_hub',
+    'videohash'
 ]
 nsfw_detector = ['tensorflow', 'autokeras']
 llava = [

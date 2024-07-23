@@ -1,14 +1,13 @@
 import io
 from typing import Any
 import shutil
-from videohash import VideoHash
+from videohash import VideoHash  # type: ignore
 from uuid import uuid4
 import os
 
 from DPF.types import ModalityToDataMapping
 
 from .video_filter import VideoFilter
-
 
 
 class VideohashFilter(VideoFilter):
