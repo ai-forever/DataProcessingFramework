@@ -1,9 +1,9 @@
-import io
-from typing import Any
-import shutil
-from videohash import VideoHash  # type: ignore
-from uuid import uuid4
 import os
+import shutil
+from typing import Any
+from uuid import uuid4
+
+from videohash import VideoHash  # type: ignore
 
 from DPF.types import ModalityToDataMapping
 
@@ -23,7 +23,7 @@ class VideohashFilter(VideoFilter):
 
     @property
     def result_columns(self) -> list[str]:
-        return [f"video_hash"]
+        return ["video_hash"]
 
     @property
     def dataloader_kwargs(self) -> dict[str, Any]:
@@ -48,7 +48,7 @@ class VideohashFilter(VideoFilter):
         video_path = os.path.join(tmp_dir, 'video.mp4')
         with open(video_path, 'wb') as f:
             f.write(video_file)
-        
+
         hash_obj = VideoHash(path=video_path, storage_path=tmp_dir)
         shutil.rmtree(hash_obj.storage_path)
         os.remove(video_path)
