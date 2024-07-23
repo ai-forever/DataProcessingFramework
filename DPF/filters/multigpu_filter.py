@@ -23,14 +23,15 @@ def run_one_process(
     results: list[pd.DataFrame],
     filter_class: Optional[type[DataFilter]],
     filter_kwargs: Optional[dict[str, Any]],
-    datafilter_init_fn: Optional[Callable[[int, Union[str, torch.device]], DataFilter]],
+    datafilter_init_fn: Optional[Callable[[int, Union[str, torch.device], dict[str, Any]], DataFilter]],
+    datafilter_init_fn_kwargs: dict[str, Any],
     device: Union[str, torch.device],
     filter_run_kwargs: dict[str, Any]
 ) -> None:
     reader = DatasetReader(connector=connector)
     processor = reader.from_df(config, df)
     if datafilter_init_fn:
-        datafilter = datafilter_init_fn(i, device)
+        datafilter = datafilter_init_fn(i, device, datafilter_init_fn_kwargs)
     else:
         datafilter = filter_class(**filter_kwargs, _pbar_position=i, device=device)  # type: ignore
 
@@ -51,7 +52,8 @@ class MultiGPUDataFilter:
         devices: list[Union[torch.device, str]],
         datafilter_class: Optional[type[DataFilter]] = None,
         datafilter_params: Optional[dict[str, Any]] = None,
-        datafilter_init_fn: Optional[Callable[[int, Union[str, torch.device]], DataFilter]] = None
+        datafilter_init_fn: Optional[Callable[[int, Union[str, torch.device], dict[str, Any]], DataFilter]] = None,
+        datafilter_init_fn_kwargs: Optional[dict[str, Any]] = None,
     ):
         """
         Parameters
@@ -62,19 +64,22 @@ class MultiGPUDataFilter:
             Class of datafilter to use
         datafilter_params: Optional[dict[str, Any]] = None
             Parameters for datafilter_class initialization
-        datafilter_init_fn: Optional[Callable[[int, Union[str, torch.device]], DataFilter]] = None
+        datafilter_init_fn: Optional[Callable[[int, Union[str, torch.device], dict[str, Any]], DataFilter]] = None
             Initialization function for a datafilter. Takes _pbar_position as first arg and device as a second arg
+        datafilter_init_fn_kwargs: Optional[dict[str, Any]] = None
+            Additional parameters for datafilter_init_fn
         """
         self.filter_class = datafilter_class
         self.filter_params = datafilter_params
         self.datafilter_init_fn = datafilter_init_fn
+        self.datafilter_init_fn_kwargs = datafilter_init_fn_kwargs if datafilter_init_fn_kwargs is not None else {}
         assert self.datafilter_init_fn or self.filter_class, "One method of filter initialization should be specified"
         self.devices = devices
         self.num_parts = len(devices)
 
         # getting result columns names
         if self.datafilter_init_fn:
-            datafilter = self.datafilter_init_fn(0, devices[0])
+            datafilter = self.datafilter_init_fn(0, devices[0], self.datafilter_init_fn_kwargs)
         else:
             datafilter = self.filter_class(**self.filter_params, device=devices[0]) # type: ignore
         self._result_columns = datafilter.result_columns
@@ -127,6 +132,7 @@ class MultiGPUDataFilter:
                     self.filter_class,
                     self.filter_params,
                     self.datafilter_init_fn,
+                    self.datafilter_init_fn_kwargs,
                     self.devices[i],
                     filter_run_kwargs
                 )
