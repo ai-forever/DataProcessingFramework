@@ -72,6 +72,9 @@ grounding_gpt = [
     'torchvision==0.16.2',
     'torchaudio==2.1.2'
 ]
+dover = [
+    'DOVER @ git+https://github.com/teowu/DOVER-Dev'
+]
 
 [tool.hatch.version]
 path = "DPF/__init__.py"
