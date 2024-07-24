@@ -8,6 +8,7 @@ import numpy as np
 import torch
 from decord import VideoReader, bridge
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+import re
 
 
 prompt_templates = {
@@ -18,6 +19,40 @@ prompt_templates = {
 MODEL_PATH = "THUDM/cogvlm2-video-llama3-chat"
 TORCH_TYPE = torch.bfloat16 if torch.cuda.is_available() and torch.cuda.get_device_capability()[
     0] >= 8 else torch.float16
+
+compiled_regexs = [
+    (re.compile(r'the video (also )?is '), ''),
+    (re.compile(r'the video (also )?features '), ''),
+    (re.compile(r'the video (also )?shows '), ''),
+    (re.compile(r'the video (also )?depicts '), ''),
+    (re.compile(r'the video (also )?showcases '), ''),
+    (re.compile(r'the video (also )?captures '), ''),
+    (re.compile(r'the video (also )?provides '), ''),
+    (re.compile(r'the video (also )?showcases '), ''),
+    (re.compile(r'throughout the video, '), ''),
+]
+
+
+def clean_with_regex(caption):
+    lower_caption = str(caption).lower().strip() 
+    for re_compiled, replacement in compiled_regexs: 
+        iterator = reversed(list(re_compiled.finditer(lower_caption))) 
+        for match in iterator: 
+            pos = list(match.span()) 
+            caption = caption[:pos[0]] + replacement + caption[pos[1]:]
+            lower_caption = str(caption).lower().strip()
+            
+    if caption.count('-') > 2:
+        split_captions = []
+        for split_caption in caption.split():
+            if split_caption.count('-') > 2:
+                split_caption = re.sub(r'-', ' ', split_caption)
+            split_captions.append(split_caption)
+        caption = ' '.join(split_captions)
+        
+    caption = caption.strip('—-:/+=|@#&*')
+        
+    return caption.strip()
 
 
 class CogVLM2Filter(VideoFilter):
@@ -104,7 +139,7 @@ class CogVLM2Filter(VideoFilter):
 
     @property
     def result_columns(self) -> list[str]:
-        return [f"caption_cogvlm"]
+        return ["caption_cogvlm", "caption_cogvlm_clean"]
 
     @property
     def dataloader_kwargs(self) -> dict[str, Any]:
@@ -154,7 +189,9 @@ class CogVLM2Filter(VideoFilter):
             outputs = self.model.generate(**inputs, **gen_kwargs)
             outputs = outputs[:, inputs['input_ids'].shape[1]:]
             response = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+            response_clean = clean_with_regex(response)
         df_batch_labels[self.schema[1]].extend([response])
+        df_batch_labels[self.schema[2]].extend([response_clean])
         df_batch_labels[self.key_column].extend([key])
         return df_batch_labels
 
