@@ -13,16 +13,8 @@ from .video_filter import VideoFilter
 
 import ptlflow
 
+
 WEIGHTS_URL = 'https://dl.dropboxusercontent.com/s/4j4z58wuv8o0mfz/models.zip'
-
-
-def transform_frame(frame: MatLike, target_size: tuple[int, int]) -> Tensor:
-    frame = cv2.resize(frame, dsize=(target_size[0], target_size[1]), interpolation=cv2.INTER_LINEAR)
-    frame_tensor = torch.from_numpy(frame).permute(2, 0, 1).float()[None]
-
-    padder = InputPadder(frame_tensor.shape)  # type: ignore
-    frame_tensor = padder.pad(frame_tensor)[0]
-    return frame_tensor
 
 
 def transform_keep_ar(frame: MatLike, min_side_size: int) -> Tensor:

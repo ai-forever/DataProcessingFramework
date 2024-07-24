@@ -1,19 +1,60 @@
 import io
-from typing import Any, Optional
+from typing import Any
 import cv2
 import imageio.v3 as iio
 import numpy as np
 import torch
 from cv2.typing import MatLike
 from torch import Tensor
+import torch.nn.functional as F
 
 from DPF.types import ModalityToDataMapping
 
 from .video_filter import VideoFilter
 
 from pytorch_msssim import MS_SSIM
-from time import time
 
+
+def transform_keep_ar(frame: MatLike, min_side_size: int) -> Tensor:
+    h, w = frame.shape[:2]
+    aspect_ratio = w / h
+    if h <= w:
+        new_height = min_side_size
+        new_width = int(aspect_ratio * new_height)
+    else:
+        new_width = min_side_size
+        new_height = int(new_width / aspect_ratio)
+
+    frame = cv2.resize(frame, dsize=(new_width, new_height), interpolation=cv2.INTER_LINEAR)
+    frame_tensor = torch.from_numpy(frame).permute(2, 0, 1).float()[None]
+
+    padder = InputPadder(frame_tensor.shape)  # type: ignore
+    frame_tensor = padder.pad(frame_tensor)[0]
+    return frame_tensor
+
+
+class InputPadder:
+    """ Pads images such that dimensions are divisible by 8 """
+
+    def __init__(self, dims: list[int], mode: str = 'sintel'):
+        self.ht, self.wd = dims[-2:]
+        pad_ht = (((self.ht // 8) + 1) * 8 - self.ht) % 8
+        pad_wd = (((self.wd // 8) + 1) * 8 - self.wd) % 8
+        if mode == 'sintel':
+            self._pad = [pad_wd // 2, pad_wd - pad_wd // 2,
+                         pad_ht // 2, pad_ht - pad_ht // 2]
+        else:
+            self._pad = [pad_wd // 2, pad_wd - pad_wd // 2,
+                         0, pad_ht]
+
+    def pad(self, *inputs) -> list[Tensor]:  # type: ignore
+        return [F.pad(x, self._pad, mode='replicate') for x in inputs]
+
+    def unpad(self, x: Tensor) -> Tensor:
+        ht, wd = x.shape[-2:]
+        c = [self._pad[2], ht - self._pad[3], self._pad[0], wd - self._pad[1]]
+        return x[..., c[0]:c[1], c[2]:c[3]]
+    
 
 class StructuralDynamicsFilter(VideoFilter):
     """
@@ -81,7 +122,7 @@ class StructuralDynamicsFilter(VideoFilter):
         frames = iio.imread(io.BytesIO(video_file), plugin="pyav")
         frames_transformed = []
         frames_transformed = [
-            torch.from_numpy(frames[i]).permute(2, 0, 1).float()[None]
+            transform_keep_ar(frames[i], self.min_frame_size)
             for i in range(self.pass_frames, len(frames), self.pass_frames)
         ]
         return key, frames_transformed
@@ -101,13 +142,11 @@ class StructuralDynamicsFilter(VideoFilter):
                     current_frame_cuda = current_frame.to(self.device)
                     next_frame_cuda = next_frame.to(self.device)
 
-                    t0 = time()
                     ssim = self.model(
                         current_frame_cuda,
                         next_frame_cuda
                     )
                     values.extend(ssim.detach().cpu().numpy())
-                    # print('SSIM time=', time() - t0)
                 mean_value = np.mean(values)
                 mn = np.min(values)
                 mx = np.max(values)
