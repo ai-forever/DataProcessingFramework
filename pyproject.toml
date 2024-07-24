@@ -76,6 +76,9 @@ grounding_gpt = [
 dover = [
     'DOVER @ git+https://github.com/teowu/DOVER-Dev'
 ]
+complexity = [
+    'segment-anything @ git+https://github.com/facebookresearch/segment-anything.git'
+]
 cogvlm = ['pydantic==1.10.14', 
             'opencv-python==4.5.5.64',
             'decord>=0.6.0',
