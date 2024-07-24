@@ -40,7 +40,8 @@ filters = [
     'huggingface_hub',
     'opencv-contrib-python',
     'protobuf==3.20.0',
-    'pytorch_msssim'
+    'pytorch_msssim',
+    'ptlflow'
 ]
 nsfw_detector = ['tensorflow', 'autokeras']
 llava = [
