@@ -152,7 +152,7 @@ class StructuralDynamicsFilter(VideoFilter):
                 mx = np.max(values)
 
                 df_batch_labels[self.key_column].append(key)
-                df_batch_labels[self.schema[1]].append(round(mean_value, 6))
-                df_batch_labels[self.schema[2]].append(round(mx, 6))
-                df_batch_labels[self.schema[3]].append(round(mn, 6))
+                df_batch_labels[self.schema[1]].append(mean_value)
+                df_batch_labels[self.schema[2]].append(mx)
+                df_batch_labels[self.schema[3]].append(mn)
         return df_batch_labels

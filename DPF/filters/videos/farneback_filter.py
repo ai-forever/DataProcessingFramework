@@ -155,5 +155,5 @@ class GunnarFarnebackFilter(VideoFilter):
         for data in batch:
             key, mean_optical_flow = data
             df_batch_labels[self.key_column].append(key)
-            df_batch_labels[self.result_columns[0]].append(round(mean_optical_flow, 3))
+            df_batch_labels[self.result_columns[0]].append(mean_optical_flow)
         return df_batch_labels

@@ -196,5 +196,5 @@ class RAFTOpticalFlowFilter(VideoFilter):
                 mean_value = np.mean(mean_magnitudes)
 
                 df_batch_labels[self.key_column].append(key)
-                df_batch_labels[self.schema[1]].append(round(mean_value, 3))
+                df_batch_labels[self.schema[1]].append(mean_value)
         return df_batch_labels

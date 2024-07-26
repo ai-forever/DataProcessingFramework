@@ -114,7 +114,7 @@ class RPKnetOpticalFlowFilter(VideoFilter):
 
     @property
     def result_columns(self) -> list[str]:
-        return [f"optical_flow_rpk_mean", f"optical_flow_rpk_std"]
+        return [f"optical_flow_rpk_mean"]
 
     @property
     def dataloader_kwargs(self) -> dict[str, Any]:
@@ -144,9 +144,9 @@ class RPKnetOpticalFlowFilter(VideoFilter):
     def process_batch(self, batch: list[Any]) -> dict[str, list[Any]]:
         df_batch_labels = self._get_dict_from_schema()
 
-        magnitudes: list[float] = []
         for data in batch:
             key, frames = data
+            magnitudes: list[float] = []
             with torch.no_grad():
                 for i in range(0, len(frames)-1, self.frames_batch_size):
                     end = min(i+self.frames_batch_size, len(frames)-1)
@@ -166,9 +166,7 @@ class RPKnetOpticalFlowFilter(VideoFilter):
                     magnitude = ((flow[:,0]**2+flow[:,1]**2)**0.5).detach().cpu().numpy()
                     magnitudes.extend(magnitude)
                 mean_value = np.mean(magnitudes)
-                std_value = np.std(magnitudes)
 
                 df_batch_labels[self.key_column].append(key)
-                df_batch_labels[self.schema[1]].append(round(mean_value, 6))
-                df_batch_labels[self.schema[2]].append(round(std_value, 6))
+                df_batch_labels[self.schema[1]].append(mean_value)
         return df_batch_labels
