@@ -1,7 +1,8 @@
 from dataclasses import dataclass
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, Union
 
 import pandas as pd
+import torch
 
 from DPF.filters import ColumnFilter, DataFilter
 from DPF.filters.multigpu_filter import MultiGPUDataFilter
@@ -38,12 +39,13 @@ class FilterPipeline:
 
     def add_datafilter(
         self,
-        datafilter: type[DataFilter],
-        datafilter_kwargs: dict[str, Any],
+        datafilter: Optional[type[DataFilter]] = None,
+        datafilter_kwargs: dict[str, Any] = None,
         devices: Optional[list[str]] = None,
         processor_apply_kwargs: Optional[dict[str, Any]] = None,
         on_error: OnErrorOptions = "stop",
-        skip_if_columns_exist: bool = True
+        skip_if_columns_exist: bool = True,
+        constant_gpu: bool = False
     ) -> None:
         if processor_apply_kwargs is None:
             processor_apply_kwargs = {}
@@ -52,7 +54,7 @@ class FilterPipeline:
             stage = FilterPipelineStage(
                 'datafilter', filter_class=datafilter,
                 filter_kwargs=datafilter_kwargs, processor_apply_kwargs=processor_apply_kwargs,
-                skip_if_columns_exist=skip_if_columns_exist
+                skip_if_columns_exist=skip_if_columns_exist, constant_gpu=constant_gpu
             )
         elif len(devices) == 0:
             new_kwargs = datafilter_kwargs.copy()
@@ -60,7 +62,7 @@ class FilterPipeline:
             stage = FilterPipelineStage(
                 'datafilter', filter_class=datafilter,
                 filter_kwargs=new_kwargs, processor_apply_kwargs=processor_apply_kwargs,
-                skip_if_columns_exist=skip_if_columns_exist
+                skip_if_columns_exist=skip_if_columns_exist, constant_gpu=constant_gpu
             )
         else:
             stage = FilterPipelineStage(
@@ -69,9 +71,10 @@ class FilterPipeline:
                     "devices": devices,
                     "datafilter_class": datafilter,
                     "datafilter_params": datafilter_kwargs
-                },
+                    },
                 processor_apply_kwargs=processor_apply_kwargs,
-                skip_if_columns_exist=skip_if_columns_exist
+                skip_if_columns_exist=skip_if_columns_exist,
+                constant_gpu=constant_gpu
             )
 
         self.stages.append(
