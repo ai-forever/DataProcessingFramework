@@ -2,6 +2,7 @@ from functools import partial
 from typing import Optional, Union
 
 import pandas as pd
+import numpy as np
 from tqdm.contrib.concurrent import process_map
 
 from DPF.configs import (
@@ -42,6 +43,7 @@ class DatasetReader:
         if connector is None:
             connector = LocalConnector()
         self.connector = connector
+        self.local_connector = LocalConnector()
 
     def _read_and_validate_dataframes(
         self,
@@ -270,7 +272,10 @@ class DatasetReader:
             Instance of FilesDatasetProcessor dataset
         """
         table_path = config.table_path.rstrip("/")
-        df = self.connector.read_dataframe(table_path)
+        try:
+            df = self.connector.read_dataframe(table_path)
+        except:
+            df = self.local_connector.read_dataframe(table_path)
 
         required_columns = list(config.user_column2default_column.keys())
         column_set = set(df.columns.tolist())
@@ -287,6 +292,12 @@ class DatasetReader:
             if isinstance(datatype, FileDataType):
                 path_col = datatype.modality.path_column
                 df[path_col] = df[path_col].apply(lambda x: self.connector.join(config.base_path, x))
+
+                # process .tar files with offsets
+                for i, row in df.iterrows():
+                    if isinstance(df.at[i,'tar_offset'], np.int64) and isinstance(df.at[i,'size'], np.int64):
+                        df.at[i, path_col] += f'?tar_offset={df.at[i,"tar_offset"]}?size={df.at[i,"size"]}'
+
 
         return FilesDatasetProcessor(
             connector=self.connector,
