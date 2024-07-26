@@ -16,14 +16,21 @@ class ComplexDataFilter(DataFilter):
 
     def __init__(
         self,
-        datafilters: list[DataFilter],
+        datafilters,
+        kwargs,
         workers: int,
         pbar: bool = True,
-        _pbar_position: int = 0
+        _pbar_position: int = 0,
+        device = 'cuda:0'
     ):
         super().__init__(pbar, _pbar_position)
-        self.datafilters = datafilters
+        self.datafilters = []
         self.workers = workers
+        self.device = device
+
+        for filter, kwarg in zip(datafilters, kwargs):
+            kwarg['device'] = self.device
+            self.datafilters.append(filter(**kwarg))
 
         assert len(self.datafilters) > 0
         assert all(

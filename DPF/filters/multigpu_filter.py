@@ -1,6 +1,6 @@
 import multiprocessing
 from multiprocessing import Manager
-from typing import Any, Callable, Optional, Union
+from typing import Any, Union
 
 import numpy as np
 import pandas as pd
@@ -13,34 +13,6 @@ from DPF.dataset_reader import DatasetReader
 from .data_filter import DataFilter
 
 
-# TODO(review) - один вызов в MultiGPUFilter, нужно перенести его внутрь класса
-def run_one_process(
-    config: DatasetConfig,
-    connector: Connector,
-    df: pd.DataFrame,
-    i: int,
-    index: pd.Series,
-    results: list[pd.DataFrame],
-    filter_class: Optional[type[DataFilter]],
-    filter_kwargs: Optional[dict[str, Any]],
-    datafilter_init_fn: Optional[Callable[[int, Union[str, torch.device]], DataFilter]],
-    device: Union[str, torch.device],
-    filter_run_kwargs: dict[str, Any]
-) -> None:
-    reader = DatasetReader(connector=connector)
-    processor = reader.from_df(config, df)
-    if datafilter_init_fn:
-        datafilter = datafilter_init_fn(i, device)
-    else:
-        datafilter = filter_class(**filter_kwargs, _pbar_position=i, device=device)  # type: ignore
-
-    datafilter._created_by_multigpu_data_filter = True
-    processor.apply_data_filter(datafilter, **filter_run_kwargs)
-    res = processor.df
-    res.set_index(index, inplace=True)
-    results.append(res)
-
-
 class MultiGPUDataFilter:
     """
     Class for multi-gpu inference
@@ -49,36 +21,31 @@ class MultiGPUDataFilter:
     def __init__(
         self,
         devices: list[Union[torch.device, str]],
-        datafilter_class: Optional[type[DataFilter]] = None,
-        datafilter_params: Optional[dict[str, Any]] = None,
-        datafilter_init_fn: Optional[Callable[[int, Union[str, torch.device]], DataFilter]] = None
+        datafilter_class: type[DataFilter],
+        datafilter_params: dict[str, Any]
     ):
         """
         Parameters
         ----------
         devices: list[Union[torch.device, str]]
             List of devices to run datafilter on
-        datafilter_class: Optional[type[DataFilter]] = None
+        datafilter_class: type[DataFilter]
             Class of datafilter to use
-        datafilter_params: Optional[dict[str, Any]] = None
+        datafilter_params: dict[str, Any]
             Parameters for datafilter_class initialization
-        datafilter_init_fn: Optional[Callable[[int, Union[str, torch.device]], DataFilter]] = None
-            Initialization function for a datafilter. Takes _pbar_position as first arg and device as a second arg
         """
         self.filter_class = datafilter_class
         self.filter_params = datafilter_params
-        self.datafilter_init_fn = datafilter_init_fn
-        assert self.datafilter_init_fn or self.filter_class, "One method of filter initialization should be specified"
         self.devices = devices
         self.num_parts = len(devices)
 
+        self.filters = []
+        for i in range(self.num_parts):
+            self.filters.append(datafilter_class(**datafilter_params, _pbar_position=i, device=devices[i]))
+            self.filters[i]._created_by_multigpu_data_filter = True
+
         # getting result columns names
-        if self.datafilter_init_fn:
-            datafilter = self.datafilter_init_fn(0, devices[0])
-        else:
-            datafilter = self.filter_class(**self.filter_params, device=devices[0]) # type: ignore
-        self._result_columns = datafilter.result_columns
-        del datafilter
+        self._result_columns = self.filters[0].result_columns
         torch.cuda.empty_cache()
 
     @property
@@ -124,10 +91,6 @@ class MultiGPUDataFilter:
                     i,
                     df_splits[i].index,  # type: ignore
                     shared_results,
-                    self.filter_class,
-                    self.filter_params,
-                    self.datafilter_init_fn,
-                    self.devices[i],
                     filter_run_kwargs
                 )
             )
@@ -135,7 +98,7 @@ class MultiGPUDataFilter:
         processes = []
         context = multiprocessing.get_context('spawn')
         for param in params:
-            p = context.Process(target=run_one_process, args=param)
+            p = context.Process(target=self.run_one_process, args=param)
             p.start()
             processes.append(p)
 
@@ -145,3 +108,21 @@ class MultiGPUDataFilter:
         res_df = pd.concat(shared_results)
         res_df.sort_index(inplace=True)
         return res_df
+    
+    
+    def run_one_process(
+        self,
+        config: DatasetConfig,
+        connector: Connector,
+        df: pd.DataFrame,
+        i: int,
+        index: pd.Series,
+        results: list[pd.DataFrame],
+        filter_run_kwargs: dict[str, Any]
+    ) -> None:
+        reader = DatasetReader(connector=connector)
+        processor = reader.from_df(config, df)
+        processor.apply_data_filter(self.filters[i], **filter_run_kwargs)
+        res = processor.df
+        res.set_index(index, inplace=True)
+        results.append(res)
