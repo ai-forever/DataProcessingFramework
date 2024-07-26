@@ -8,13 +8,13 @@ from DPF.types import ModalityToDataMapping
 from DPF.utils import read_image_rgb_from_bytes
 from .img_filter import ImageFilter
 
-class FaceFocusFilter(ImageFilter):
+class FocusFilter(ImageFilter):
     """
     Filter for detecting faces and checking if the face is in focus.
 
     Parameters
     ----------
-    threshold: float = 2000.0
+    face_focus_threshold: float = 2000.0
         Threshold value for the Tenengrad variance focus measure to determine if the face is in focus.
     workers: int = 16
         Number of processes to use for reading data and calculating focus scores.
@@ -27,22 +27,21 @@ class FaceFocusFilter(ImageFilter):
     def __init__(
         self,
         threshold: float = 2000.0,
-        detect_face = True,
         workers: int = 1,
         batch_size: int = 1,
         pbar: bool = True,
-        _pbar_position: int = 0
+        _pbar_position: int = 0,
+        detect_face = True
     ):
         super().__init__(pbar, _pbar_position)
         self.threshold = threshold
-        self.detect_face = detect_face
         self.num_workers = workers
         self.batch_size = batch_size
-
+        self.detect_face = detect_face
 
     @property
     def result_columns(self) -> list[str]:
-        return ["face_detected", "in_focus", "focus_measure"]
+        return ["in_focus", "focus_measure"]
 
     @property
     def dataloader_kwargs(self) -> dict[str, Any]:
@@ -66,17 +65,15 @@ class FaceFocusFilter(ImageFilter):
         df_batch_labels = self._get_dict_from_schema()
 
         for key, image in batch:
-            info = process_image(image, 
-                                      threshold=self.threshold,
-                                      detect_face=self.detect_face)
-            if info:
-                df_batch_labels["face_detected"].append(info["face_detected"])
-                df_batch_labels["in_focus"].append(info["in_focus"])
-                df_batch_labels["focus_measure"].append(info["focus_measure"])
+            face_info = process_image(image, threshold=self.threshold)
+            if face_info:
+                df_batch_labels["face_detected"].append(True)
+                df_batch_labels["face_in_focus"].append(face_info["face_in_focus"])
+                df_batch_labels["face_focus_measure"].append(face_info["face_focus_measure"])
             else:
                 df_batch_labels["face_detected"].append(False)
-                df_batch_labels["in_focus"].append(False)
-                df_batch_labels["focus_measure"].append(0.0)
+                df_batch_labels["face_in_focus"].append(False)
+                df_batch_labels["face_focus_measure"].append(0.0)
             df_batch_labels[self.key_column].append(key)
 
         return df_batch_labels
@@ -93,22 +90,14 @@ def tenengrad_variance(image):
     tenengrad_variance = np.mean(gx_squared + gy_squared)
     return tenengrad_variance
 
-def process_image(image, threshold=2000.0, detect_face=True):
-    
+def process_image(image, threshold=2000.0):
     # Calculate the focus measure for the entire image
     focus_measure = tenengrad_variance(image)
     
-    if not detect_face:
-        # Check if the face is in focus
-        in_focus = focus_measure > threshold
-        return {
-            "face_detected":False,
-            "in_focus":in_focus,
-            "focus_measure":focus_measure
-        }
-
-    # Detect faces in the image
+    if not detect_faces:
+        return focus_measure
     
+    # Detect faces in the image
     faces = DeepFace.extract_faces(image, 
                     enforce_detection=False, 
                     detector_backend='retinaface')
@@ -125,19 +114,20 @@ def process_image(image, threshold=2000.0, detect_face=True):
         face['facial_area']['confidence'] = face['confidence']
         if face['facial_area']['left_eye'] is not None and face['facial_area']['right_eye'] is not None:
             
+            
+            
             # Extract the face region
             x, y, w, h = face['facial_area']['x'], face['facial_area']['y'], face['facial_area']['w'], face['facial_area']['h']
             face_region = image[y:y+h, x:x+w]
             
             # Calculate the focus measure for the face region
-            focus_measure = tenengrad_variance(face_region)
+            face_focus_measure = tenengrad_variance(face_region)
             
             # Check if the face is in focus
-            in_focus = focus_measure > threshold
+            face_in_focus = face_focus_measure > threshold
         
             # Add the focus information to the face dictionary
-            face['facial_area']['face_detected'] = True
-            face['facial_area']['in_focus'] = in_focus
-            face['facial_area']['focus_measure'] = focus_measure
+            face['facial_area']['face_in_focus'] = face_in_focus
+            face['facial_area']['face_focus_measure'] = face_focus_measure
             
             return face['facial_area']

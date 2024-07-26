@@ -9,6 +9,7 @@ from DPF.types import ModalityToDataMapping
 
 from .video_filter import VideoFilter
 
+Image.MAX_IMAGE_PIXELS = None 
 
 class ImageFilterAdapter(VideoFilter):
     """
