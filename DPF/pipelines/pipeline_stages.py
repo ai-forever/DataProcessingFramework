@@ -68,8 +68,7 @@ class FilterPipelineStage(PipelineStage):
         filter_class: Union[type[DataFilter], type[ColumnFilter], type[MultiGPUDataFilter]],
         filter_kwargs: dict[str, Any],
         processor_apply_kwargs: Optional[dict[str, Any]] = None,
-        skip_if_columns_exist: bool = True,
-        constant_gpu: bool = False
+        skip_if_columns_exist: bool = True
     ):
         self.filter_type = filter_type
         self.filter_class = filter_class
@@ -81,20 +80,12 @@ class FilterPipelineStage(PipelineStage):
 
         self.skip_if_columns_exist = skip_if_columns_exist
 
-        self.constant_gpu = constant_gpu
-        if constant_gpu:
-            self.filter_obj = self.filter_class(**self.filter_kwargs)
-
-
     @property
     def stage_name(self) -> str:
         return f"FilterPipelineStage(filter_class={self.filter_class}, filter_kwargs={self.filter_kwargs})"
 
     def run(self, processor: DatasetProcessor, logger: logging.Logger) -> None:
-        if self.constant_gpu:
-            filter_obj = self.filter_obj
-        else:
-            filter_obj = self.filter_class(**self.filter_kwargs)
+        filter_obj = self.filter_class(**self.filter_kwargs)
 
         columns_to_be_added = filter_obj.result_columns
         columns_intersection = set(processor.columns).intersection(set(columns_to_be_added))
