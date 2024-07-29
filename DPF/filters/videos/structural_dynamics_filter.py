@@ -1,8 +1,5 @@
 import io
-import os
-from typing import Any, Optional
-from urllib.request import urlopen
-from zipfile import ZipFile
+from typing import Any
 
 import cv2
 import imageio.v3 as iio
@@ -10,23 +7,12 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from cv2.typing import MatLike
+from pytorch_msssim import MS_SSIM
 from torch import Tensor
 
 from DPF.types import ModalityToDataMapping
 
-from .raft_core.model import RAFT
 from .video_filter import VideoFilter
-
-WEIGHTS_URL = 'https://dl.dropboxusercontent.com/s/4j4z58wuv8o0mfz/models.zip'
-
-
-def transform_frame(frame: MatLike, target_size: tuple[int, int]) -> Tensor:
-    frame = cv2.resize(frame, dsize=(target_size[0], target_size[1]), interpolation=cv2.INTER_LINEAR)
-    frame_tensor = torch.from_numpy(frame).permute(2, 0, 1).float()[None]
-
-    padder = InputPadder(frame_tensor.shape)  # type: ignore
-    frame_tensor = padder.pad(frame_tensor)[0]
-    return frame_tensor
 
 
 def transform_keep_ar(frame: MatLike, min_side_size: int) -> Tensor:
@@ -70,27 +56,21 @@ class InputPadder:
         return x[..., c[0]:c[1], c[2]:c[3]]
 
 
-class RAFTOpticalFlowFilter(VideoFilter):
+class StructuralDynamicsFilter(VideoFilter):
     """
-    RAFT model inference class to get mean optical flow each video.
-        The video's current and next frame are used for optical flow calculation between them.
-        After, the mean value of optical flow for the entire video is calculated on the array of optical flow between two frames.
-    More info about the model here: https://github.com/princeton-vl/RAFT
+
+    Structural dynamics score from https://arxiv.org/pdf/2407.01094
+        The video's current and next frame are used for MS-SSIM calculation between them.
+        After, the mean value of scores for the entire video is calculated on the array of scores between two frames.
 
     Parameters
     ----------
     pass_frames: int = 12
         Number of frames to pass. pass_frames = 1, if need to process all frames.
-    num_passes: Optional[int] = None
-        Number of flow scores calculations in one video. Set None to calculate flow scores on all video
     min_frame_size: int = 512
         The size of the minimum side of the video frame after resizing
     frames_batch_size: int = 16
         Batch size during one video processing
-    use_small_model: bool = False
-        Whether to use small RAFT model
-    raft_iters: int = 20
-        Number of RAFT model iterations
     device: str = "cuda:0"
         Device to use
     workers: int = 16
@@ -102,11 +82,8 @@ class RAFTOpticalFlowFilter(VideoFilter):
     def __init__(
         self,
         pass_frames: int = 10,
-        num_passes: Optional[int] = None,
         min_frame_size: int = 512,
         frames_batch_size: int = 16,
-        use_small_model: bool = False,
-        raft_iters: int = 20,
         device: str = "cuda:0",
         workers: int = 16,
         pbar: bool = True,
@@ -118,33 +95,13 @@ class RAFTOpticalFlowFilter(VideoFilter):
 
         assert pass_frames >= 1, "Number of pass_frames should be greater or equal to 1."
         self.pass_frames = pass_frames
-        self.num_passes = num_passes
         self.min_frame_size = min_frame_size
         self.frames_batch_size = frames_batch_size
-        self.raft_iters = raft_iters
-
-        resp = urlopen(WEIGHTS_URL)
-        zipped_files = ZipFile(io.BytesIO(resp.read()))
-
-        if use_small_model:
-            self.model_name = "raft_small"
-            model_weights_path = os.path.join("models", "raft-small.pth")
-        else:
-            self.model_name = "raft"
-            model_weights_path = os.path.join("models", "raft-things.pth")
-
-        self.model = RAFT(small=use_small_model)
-
-        model_weights = torch.load(zipped_files.open(model_weights_path))
-        model_weights = {key.replace("module.", ""): value for key, value in model_weights.items()}
-        self.model.load_state_dict(model_weights)
-
-        self.model.to(self.device)
-        self.model.eval()
+        self.model = MS_SSIM(data_range=255, size_average=False, channel=3, win_size=11)
 
     @property
     def result_columns(self) -> list[str]:
-        return [f"optical_flow_{self.model_name}"]
+        return ["structural_dynamics", 'structural_dynamics_max', 'structural_dynamics_min']
 
     @property
     def dataloader_kwargs(self) -> dict[str, Any]:
@@ -163,18 +120,17 @@ class RAFTOpticalFlowFilter(VideoFilter):
         video_file = modality2data['video']
 
         frames = iio.imread(io.BytesIO(video_file), plugin="pyav")
-        max_frame_to_process = self.num_passes*self.pass_frames if self.num_passes else len(frames)
         frames_transformed = []
         frames_transformed = [
             transform_keep_ar(frames[i], self.min_frame_size)
-            for i in range(self.pass_frames, min(max_frame_to_process+1, len(frames)), self.pass_frames)
+            for i in range(self.pass_frames, len(frames), self.pass_frames)
         ]
         return key, frames_transformed
 
     def process_batch(self, batch: list[Any]) -> dict[str, list[Any]]:
         df_batch_labels = self._get_dict_from_schema()
 
-        mean_magnitudes: list[float] = []
+        values: list[float] = []
         for data in batch:
             key, frames = data
             with torch.no_grad():
@@ -186,15 +142,17 @@ class RAFTOpticalFlowFilter(VideoFilter):
                     current_frame_cuda = current_frame.to(self.device)
                     next_frame_cuda = next_frame.to(self.device)
 
-                    _, flow = self.model(
+                    ssim = self.model(
                         current_frame_cuda,
-                        next_frame_cuda,
-                        iters=self.raft_iters, test_mode=True
+                        next_frame_cuda
                     )
-                    magnitude = ((flow[:,0]**2+flow[:,1]**2)**0.5).flatten(start_dim=1).mean(dim=1).detach().cpu().numpy()
-                    mean_magnitudes.extend(magnitude)
-                mean_value = np.mean(mean_magnitudes)
+                    values.extend(ssim.detach().cpu().numpy())
+                mean_value = np.mean(values)
+                mn = np.min(values)
+                mx = np.max(values)
 
                 df_batch_labels[self.key_column].append(key)
                 df_batch_labels[self.schema[1]].append(mean_value)
+                df_batch_labels[self.schema[2]].append(mx)
+                df_batch_labels[self.schema[3]].append(mn)
         return df_batch_labels

@@ -18,7 +18,7 @@ def transform_frame(frame: MatLike, target_size: tuple[int, int]) -> MatLike:
 
 
 def transform_keep_ar(frame: MatLike, min_side_size: int) -> MatLike:
-    h, w = frame.shape[:2]
+    h, w = frame.shape[:2]  # type: ignore
     aspect_ratio = w / h
     if h <= w:
         new_height = min_side_size
@@ -155,5 +155,5 @@ class GunnarFarnebackFilter(VideoFilter):
         for data in batch:
             key, mean_optical_flow = data
             df_batch_labels[self.key_column].append(key)
-            df_batch_labels[self.result_columns[0]].append(round(mean_optical_flow, 3))
+            df_batch_labels[self.result_columns[0]].append(mean_optical_flow)
         return df_batch_labels

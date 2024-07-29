@@ -1,12 +1,10 @@
 import io
-import os
 from typing import Any, Optional
-from urllib.request import urlopen
-from zipfile import ZipFile
 
 import cv2
 import imageio.v3 as iio
 import numpy as np
+import ptlflow
 import torch
 import torch.nn.functional as F
 from cv2.typing import MatLike
@@ -14,19 +12,9 @@ from torch import Tensor
 
 from DPF.types import ModalityToDataMapping
 
-from .raft_core.model import RAFT
 from .video_filter import VideoFilter
 
 WEIGHTS_URL = 'https://dl.dropboxusercontent.com/s/4j4z58wuv8o0mfz/models.zip'
-
-
-def transform_frame(frame: MatLike, target_size: tuple[int, int]) -> Tensor:
-    frame = cv2.resize(frame, dsize=(target_size[0], target_size[1]), interpolation=cv2.INTER_LINEAR)
-    frame_tensor = torch.from_numpy(frame).permute(2, 0, 1).float()[None]
-
-    padder = InputPadder(frame_tensor.shape)  # type: ignore
-    frame_tensor = padder.pad(frame_tensor)[0]
-    return frame_tensor
 
 
 def transform_keep_ar(frame: MatLike, min_side_size: int) -> Tensor:
@@ -70,12 +58,12 @@ class InputPadder:
         return x[..., c[0]:c[1], c[2]:c[3]]
 
 
-class RAFTOpticalFlowFilter(VideoFilter):
+class RPKnetOpticalFlowFilter(VideoFilter):
     """
-    RAFT model inference class to get mean optical flow each video.
+    RPKnet model inference class to get mean optical flow each video.
         The video's current and next frame are used for optical flow calculation between them.
         After, the mean value of optical flow for the entire video is calculated on the array of optical flow between two frames.
-    More info about the model here: https://github.com/princeton-vl/RAFT
+    More info about the model here: https://github.com/hmorimitsu/ptlflow
 
     Parameters
     ----------
@@ -85,12 +73,10 @@ class RAFTOpticalFlowFilter(VideoFilter):
         Number of flow scores calculations in one video. Set None to calculate flow scores on all video
     min_frame_size: int = 512
         The size of the minimum side of the video frame after resizing
+    norm: bool = True
+        Normalize flow or not
     frames_batch_size: int = 16
         Batch size during one video processing
-    use_small_model: bool = False
-        Whether to use small RAFT model
-    raft_iters: int = 20
-        Number of RAFT model iterations
     device: str = "cuda:0"
         Device to use
     workers: int = 16
@@ -104,9 +90,8 @@ class RAFTOpticalFlowFilter(VideoFilter):
         pass_frames: int = 10,
         num_passes: Optional[int] = None,
         min_frame_size: int = 512,
+        norm: bool = True,
         frames_batch_size: int = 16,
-        use_small_model: bool = False,
-        raft_iters: int = 20,
         device: str = "cuda:0",
         workers: int = 16,
         pbar: bool = True,
@@ -121,30 +106,15 @@ class RAFTOpticalFlowFilter(VideoFilter):
         self.num_passes = num_passes
         self.min_frame_size = min_frame_size
         self.frames_batch_size = frames_batch_size
-        self.raft_iters = raft_iters
+        self.norm = norm
 
-        resp = urlopen(WEIGHTS_URL)
-        zipped_files = ZipFile(io.BytesIO(resp.read()))
-
-        if use_small_model:
-            self.model_name = "raft_small"
-            model_weights_path = os.path.join("models", "raft-small.pth")
-        else:
-            self.model_name = "raft"
-            model_weights_path = os.path.join("models", "raft-things.pth")
-
-        self.model = RAFT(small=use_small_model)
-
-        model_weights = torch.load(zipped_files.open(model_weights_path))
-        model_weights = {key.replace("module.", ""): value for key, value in model_weights.items()}
-        self.model.load_state_dict(model_weights)
-
+        self.model = ptlflow.get_model('rpknet', pretrained_ckpt='things')
         self.model.to(self.device)
         self.model.eval()
 
     @property
     def result_columns(self) -> list[str]:
-        return [f"optical_flow_{self.model_name}"]
+        return ["optical_flow_rpk_mean"]
 
     @property
     def dataloader_kwargs(self) -> dict[str, Any]:
@@ -174,9 +144,9 @@ class RAFTOpticalFlowFilter(VideoFilter):
     def process_batch(self, batch: list[Any]) -> dict[str, list[Any]]:
         df_batch_labels = self._get_dict_from_schema()
 
-        mean_magnitudes: list[float] = []
         for data in batch:
             key, frames = data
+            magnitudes: list[float] = []
             with torch.no_grad():
                 for i in range(0, len(frames)-1, self.frames_batch_size):
                     end = min(i+self.frames_batch_size, len(frames)-1)
@@ -186,14 +156,16 @@ class RAFTOpticalFlowFilter(VideoFilter):
                     current_frame_cuda = current_frame.to(self.device)
                     next_frame_cuda = next_frame.to(self.device)
 
-                    _, flow = self.model(
-                        current_frame_cuda,
-                        next_frame_cuda,
-                        iters=self.raft_iters, test_mode=True
-                    )
-                    magnitude = ((flow[:,0]**2+flow[:,1]**2)**0.5).flatten(start_dim=1).mean(dim=1).detach().cpu().numpy()
-                    mean_magnitudes.extend(magnitude)
-                mean_value = np.mean(mean_magnitudes)
+                    inputs = torch.stack([current_frame_cuda, next_frame_cuda], dim=1)
+
+                    flow = self.model({'images': inputs})['flows'][:, 0]
+                    if self.norm:
+                        h, w = current_frame.shape[-2:]
+                        flow[:, 0] = flow[:, 0] / w
+                        flow[:, 1] = flow[:, 1] / h
+                    magnitude = ((flow[:,0]**2+flow[:,1]**2)**0.5).detach().cpu().numpy()
+                    magnitudes.extend(magnitude)
+                mean_value = np.mean(magnitudes)
 
                 df_batch_labels[self.key_column].append(key)
                 df_batch_labels[self.schema[1]].append(mean_value)
