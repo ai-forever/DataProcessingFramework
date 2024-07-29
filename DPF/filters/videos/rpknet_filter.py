@@ -1,24 +1,24 @@
 import io
 from typing import Any, Optional
+
 import cv2
 import imageio.v3 as iio
 import numpy as np
+import ptlflow
 import torch
 import torch.nn.functional as F
 from cv2.typing import MatLike
 from torch import Tensor
 
 from DPF.types import ModalityToDataMapping
+
 from .video_filter import VideoFilter
-
-import ptlflow
-
 
 WEIGHTS_URL = 'https://dl.dropboxusercontent.com/s/4j4z58wuv8o0mfz/models.zip'
 
 
 def transform_keep_ar(frame: MatLike, min_side_size: int) -> Tensor:
-    h, w = frame.shape[:2]
+    h, w = frame.shape[:2]  # type: ignore
     aspect_ratio = w / h
     if h <= w:
         new_height = min_side_size
@@ -114,7 +114,7 @@ class RPKnetOpticalFlowFilter(VideoFilter):
 
     @property
     def result_columns(self) -> list[str]:
-        return [f"optical_flow_rpk_mean"]
+        return ["optical_flow_rpk_mean"]
 
     @property
     def dataloader_kwargs(self) -> dict[str, Any]:
@@ -157,7 +157,7 @@ class RPKnetOpticalFlowFilter(VideoFilter):
                     next_frame_cuda = next_frame.to(self.device)
 
                     inputs = torch.stack([current_frame_cuda, next_frame_cuda], dim=1)
-                    
+
                     flow = self.model({'images': inputs})['flows'][:, 0]
                     if self.norm:
                         h, w = current_frame.shape[-2:]

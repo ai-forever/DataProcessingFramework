@@ -37,29 +37,12 @@ class S3Connector(Connector):
 
     def read_file(self, filepath: str, binary: bool) -> io.BytesIO:
         mode = "rb" if binary else "rt"
-        if '.tar' in filepath and '?tar_offset=' in filepath and '?size=' in filepath:
-            filepath = self._preprocess_filepath(filepath)
-            offset = filepath.split('?tar_offset=')[1].split('?size=')[0]
-            size = filepath.split('?size=')[1]
-            filepath = filepath.split('?')[0]
-            offset = int(offset)
-            size = int(size)
-            s3 = self.s3client._get_client()
-            range_header = "bytes=%d-%d" % (offset, offset + size - 1)
-            bucket_name = filepath.split('/')[0]
-            tar_key = filepath.replace(bucket_name, '')[1:]
-            video_obj = s3.get_object(Bucket=bucket_name, Key=tar_key, Range=range_header)
-            res = video_obj["Body"].read()
+        with self.s3client.open(self._preprocess_filepath(filepath), mode=mode) as f:
             if mode == "rb":
-                res = io.BytesIO(res)
+                res = io.BytesIO(f.read())
                 res.seek(0)
-        else:
-            with self.s3client.open(self._preprocess_filepath(filepath), mode=mode) as f:
-                if mode == "rb":
-                    res = io.BytesIO(f.read())
-                    res.seek(0)
-                else:
-                    res = f.read()
+            else:
+                res = f.read()
         return res
 
     def save_file(

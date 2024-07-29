@@ -1,6 +1,6 @@
 import multiprocessing
 from multiprocessing import Manager
-from typing import Any, Union, Optional, Callable
+from typing import Any, Callable, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -60,9 +60,9 @@ class MultiGPUDataFilter:
         ----------
         devices: list[Union[torch.device, str]]
             List of devices to run datafilter on
-        datafilter_class: type[DataFilter]
+        datafilter_class: Optional[type[DataFilter]] = None
             Class of datafilter to use
-        datafilter_params: dict[str, Any]
+        datafilter_params: Optional[dict[str, Any]] = None
             Parameters for datafilter_class initialization
         datafilter_init_fn: Optional[Callable[[int, Union[str, torch.device], dict[str, Any]], DataFilter]] = None
             Initialization function for a datafilter. Takes _pbar_position as first arg and device as a second arg
@@ -76,11 +76,6 @@ class MultiGPUDataFilter:
         assert self.datafilter_init_fn or self.filter_class, "One method of filter initialization should be specified"
         self.devices = devices
         self.num_parts = len(devices)
-
-        self.filters = []
-        for i in range(self.num_parts):
-            self.filters.append(datafilter_class(**datafilter_params, _pbar_position=i, device=devices[i]))
-            self.filters[i]._created_by_multigpu_data_filter = True
 
         # getting result columns names
         if self.datafilter_init_fn:
@@ -146,7 +141,7 @@ class MultiGPUDataFilter:
         processes = []
         context = multiprocessing.get_context('spawn')
         for param in params:
-            p = context.Process(target=self.run_one_process, args=param)
+            p = context.Process(target=run_one_process, args=param)
             p.start()
             processes.append(p)
 
@@ -156,21 +151,3 @@ class MultiGPUDataFilter:
         res_df = pd.concat(shared_results)
         res_df.sort_index(inplace=True)
         return res_df
-    
-    
-    def run_one_process(
-        self,
-        config: DatasetConfig,
-        connector: Connector,
-        df: pd.DataFrame,
-        i: int,
-        index: pd.Series,
-        results: list[pd.DataFrame],
-        filter_run_kwargs: dict[str, Any]
-    ) -> None:
-        reader = DatasetReader(connector=connector)
-        processor = reader.from_df(config, df)
-        processor.apply_data_filter(self.filters[i], **filter_run_kwargs)
-        res = processor.df
-        res.set_index(index, inplace=True)
-        results.append(res)

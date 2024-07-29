@@ -18,7 +18,7 @@ def transform_frame(frame: MatLike, target_size: tuple[int, int]) -> MatLike:
 
 
 def transform_keep_ar(frame: MatLike, min_side_size: int) -> MatLike:
-    h, w = frame.shape[:2]
+    h, w = frame.shape[:2]  # type: ignore
     aspect_ratio = w / h
     if h <= w:
         new_height = min_side_size

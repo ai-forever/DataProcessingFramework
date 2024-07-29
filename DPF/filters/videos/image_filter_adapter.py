@@ -30,16 +30,14 @@ class ImageFilterAdapter(VideoFilter):
 
     def __init__(
         self,
-        imagefilter_class: type[ImageFilter],
-        imagefilter_kwargs: dict[str, Any],
+        image_filter: ImageFilter,
         video_frame: float,
-        device: str = "cuda:0",
         workers: int = 8,
         pbar: bool = True,
         _pbar_position: int = 0
     ):
         super().__init__(pbar, _pbar_position)
-        self.image_filter = imagefilter_class(**imagefilter_kwargs, device=device)
+        self.image_filter = image_filter
         self.video_frame = video_frame
         self.num_workers = workers
 
@@ -117,18 +115,16 @@ class MultiFrameImageFilterAdapter(VideoFilter):
 
     def __init__(
         self,
-        imagefilter_class: type[ImageFilter],
-        imagefilter_kwargs: dict[str, Any],
+        image_filter: ImageFilter,
         video_frames: list[float],
         reduce_results_fn: Callable[[str, list[Any]], Any],
-        device: str = "cuda:0",
         batch_size: int = 8,
         workers: int = 8,
         pbar: bool = True,
         _pbar_position: int = 0
     ):
         super().__init__(pbar, _pbar_position)
-        self.image_filter = imagefilter_class(**imagefilter_kwargs, device=device)
+        self.image_filter = image_filter
         self.video_frames = video_frames
         self.reduce_results_fn = reduce_results_fn
         self.batch_size = batch_size

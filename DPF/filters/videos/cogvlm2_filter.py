@@ -1,15 +1,15 @@
+import re
 from io import BytesIO
 from typing import Any
 
-from DPF.types import ModalityToDataMapping
-
-from .video_filter import VideoFilter
 import numpy as np
 import torch
 from decord import VideoReader, bridge
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
-import re
 
+from DPF.types import ModalityToDataMapping
+
+from .video_filter import VideoFilter
 
 prompt_templates = {
     'detailed_video': 'Describe this video and its style in a very detailed manner',
@@ -33,15 +33,15 @@ compiled_regexs = [
 ]
 
 
-def clean_with_regex(caption):
-    lower_caption = str(caption).lower().strip() 
-    for re_compiled, replacement in compiled_regexs: 
-        iterator = reversed(list(re_compiled.finditer(lower_caption))) 
-        for match in iterator: 
-            pos = list(match.span()) 
+def clean_with_regex(caption: str) -> str:
+    lower_caption = str(caption).lower().strip()
+    for re_compiled, replacement in compiled_regexs:
+        iterator = reversed(list(re_compiled.finditer(lower_caption)))
+        for match in iterator:
+            pos = list(match.span())
             caption = caption[:pos[0]] + replacement + caption[pos[1]:]
             lower_caption = str(caption).lower().strip()
-            
+
     if caption.count('-') > 2:
         split_captions = []
         for split_caption in caption.split():
@@ -49,9 +49,9 @@ def clean_with_regex(caption):
                 split_caption = re.sub(r'-', ' ', split_caption)
             split_captions.append(split_caption)
         caption = ' '.join(split_captions)
-        
+
     caption = caption.strip('—-:/+=|@#&*')
-        
+
     return caption.strip()
 
 
@@ -156,8 +156,8 @@ class CogVLM2Filter(VideoFilter):
     ) -> Any:
         key = metadata[self.key_column]
         video_file = BytesIO(modality2data['video'])
-        video_file = self.load_video(video_file, strategy=self.strategy)
-        return key, video_file
+        loaded_video_file = self.load_video(video_file, strategy=self.strategy)
+        return key, loaded_video_file
 
     def process_batch(self, batch: list[Any]) -> dict[str, list[Any]]:
         df_batch_labels = self._get_dict_from_schema()
@@ -196,12 +196,11 @@ class CogVLM2Filter(VideoFilter):
         return df_batch_labels
 
 
-    def load_video(self, video_path, strategy='chat'):
+    def load_video(self, video_path: BytesIO, strategy: str = 'chat') -> torch.Tensor:
         bridge.set_bridge('torch')
         num_frames = self.num_frames
 
         decord_vr = VideoReader(uri=video_path)
-        frame_id_list = None
         total_frames = len(decord_vr)
         if strategy == 'base':
             frame_id_list = np.linspace(0, total_frames - 1, num_frames, dtype=int)
@@ -209,13 +208,15 @@ class CogVLM2Filter(VideoFilter):
             timestamps = decord_vr.get_frame_timestamp(np.arange(total_frames))
             timestamps = [i[0] for i in timestamps]
             max_second = round(max(timestamps)) + 1
-            frame_id_list = []
+            frame_id_list = []  # type: ignore
             for second in range(max_second):
                 closest_num = min(timestamps, key=lambda x: abs(x - second))
                 index = timestamps.index(closest_num)
-                frame_id_list.append(index)
+                frame_id_list.append(index)  # type: ignore
                 if len(frame_id_list) >= num_frames:
                     break
-        video_data = decord_vr.get_batch(frame_id_list)
+        else:
+            frame_id_list = None
+        video_data: torch.Tensor = decord_vr.get_batch(frame_id_list)
         video_data = video_data.permute(3, 0, 1, 2)
         return video_data

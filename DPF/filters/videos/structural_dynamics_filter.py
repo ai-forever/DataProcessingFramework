@@ -1,18 +1,18 @@
 import io
 from typing import Any
+
 import cv2
 import imageio.v3 as iio
 import numpy as np
 import torch
-from cv2.typing import MatLike
-from torch import Tensor
 import torch.nn.functional as F
+from cv2.typing import MatLike
+from pytorch_msssim import MS_SSIM
+from torch import Tensor
 
 from DPF.types import ModalityToDataMapping
 
 from .video_filter import VideoFilter
-
-from pytorch_msssim import MS_SSIM
 
 
 def transform_keep_ar(frame: MatLike, min_side_size: int) -> Tensor:
@@ -54,7 +54,7 @@ class InputPadder:
         ht, wd = x.shape[-2:]
         c = [self._pad[2], ht - self._pad[3], self._pad[0], wd - self._pad[1]]
         return x[..., c[0]:c[1], c[2]:c[3]]
-    
+
 
 class StructuralDynamicsFilter(VideoFilter):
     """
@@ -101,7 +101,7 @@ class StructuralDynamicsFilter(VideoFilter):
 
     @property
     def result_columns(self) -> list[str]:
-        return [f"structural_dynamics", 'structural_dynamics_max', 'structural_dynamics_min']
+        return ["structural_dynamics", 'structural_dynamics_max', 'structural_dynamics_min']
 
     @property
     def dataloader_kwargs(self) -> dict[str, Any]:

@@ -1,15 +1,15 @@
 import os
 from typing import Any
 from urllib.request import urlretrieve
+
 import numpy as np
 import torch
-
-from ...types import ModalityToDataMapping
-from DPF.utils import read_image_rgb_from_bytes
-from .img_filter import ImageFilter
-
 from segment_anything import SamAutomaticMaskGenerator, sam_model_registry
 
+from DPF.utils import read_image_rgb_from_bytes
+
+from ...types import ModalityToDataMapping
+from .img_filter import ImageFilter
 
 WEIGHTS_URL = {'vit_h': 'https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth',
                'vit_l': 'https://dl.fbaipublicfiles.com/segment_anything/sam_vit_l_0b3195.pth',
@@ -57,7 +57,7 @@ class ComplexityFilter(ImageFilter):
         self.model_name = model_name
         self.weights_folder = weights_folder
         self.points_per_side = points_per_side
-        
+
         # Download checkpoints
         path_to_model = os.path.join(self.weights_folder, self.model_name + '.pth')
         if not os.path.exists(path_to_model):
@@ -67,7 +67,7 @@ class ComplexityFilter(ImageFilter):
         sam = sam_model_registry[self.model_name](checkpoint=path_to_model)
         sam = sam.to(torch.device(self.device))
         self.mask_generator = SamAutomaticMaskGenerator(
-                                sam, points_per_batch=batch_size, 
+                                sam, points_per_batch=batch_size,
                                 points_per_side=points_per_side
                                 )
 
@@ -111,7 +111,7 @@ class ComplexityFilter(ImageFilter):
                 mean_area = np.mean(areas) / hw
             else:
                 max_area = mean_area = 0
-                    
+
             df_batch_labels["complexity_num_segments"].extend([num_segments])
             df_batch_labels["complexity_max_segment_area"].extend([max_area])
             df_batch_labels["complexity_mean_segment_area"].extend([mean_area])

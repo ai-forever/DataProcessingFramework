@@ -80,7 +80,7 @@ class FilterPipelineStage(PipelineStage):
             self.processor_apply_kwargs = {}
 
         self.skip_if_columns_exist = skip_if_columns_exist
-        
+
         self.constant_gpu = constant_gpu
         if constant_gpu:
             self.filter_obj = self.filter_class(**self.filter_kwargs)

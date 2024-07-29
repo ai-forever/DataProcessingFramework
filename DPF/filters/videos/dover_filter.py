@@ -1,21 +1,19 @@
 import os
+from io import BytesIO
 from typing import Any
 from urllib.request import urlretrieve
-from io import BytesIO
+
+import decord
 import numpy as np
 import torch
+import yaml
+from decord import VideoReader
+from dover.datasets import UnifiedFrameSampler, get_single_view  # type: ignore
+from dover.models import DOVER  # type: ignore
 
 from DPF.types import ModalityToDataMapping
-from .video_filter import VideoFilter
-import yaml
 
-from dover.datasets import (
-    UnifiedFrameSampler,
-    get_single_view,
-)
-import decord
-from decord import VideoReader
-from dover.models import DOVER
+from .video_filter import VideoFilter
 
 WEIGHTS_URL = {'dover': 'https://github.com/QualityAssessment/DOVER/releases/download/v0.1.0/DOVER.pth',
                'dover_plus_plus': 'https://huggingface.co/teowu/DOVER/resolve/main/DOVER_plus_plus.pth',
@@ -26,7 +24,7 @@ CONFIGS_URL = {'dover': 'https://raw.githubusercontent.com/teowu/DOVER-Dev/maste
                'dover-mobile': 'https://raw.githubusercontent.com/teowu/DOVER-Dev/master/dover-mobile.yml'}
 
 
-def fuse_results(results: list):
+def fuse_results(results: list[float]) -> dict[str, np.ndarray]:  # type: ignore
     t, a = (results[0] + 0.0758) / 0.0129, (results[1] - 0.1253) / 0.0318
     # t, a = (results[0] - 0.1107) / 0.07355, (results[1] + 0.08285) / 0.03774
     x = t * 0.6104 + a * 0.3896
@@ -37,8 +35,8 @@ def fuse_results(results: list):
     }
 
 
-def spatial_temporal_view_decomposition(
-    video_path, sample_types, samplers, is_train=False, augment=False,
+def spatial_temporal_view_decomposition(  # type: ignore
+    video_path: str | BytesIO, sample_types: dict, samplers: dict, is_train: bool = False, augment: bool = False,  # type: ignore
 ):
     video = {}
     decord.bridge.set_bridge("torch")
@@ -62,6 +60,7 @@ def spatial_temporal_view_decomposition(
     for stype, sopt in sample_types.items():
         sampled_video[stype] = get_single_view(video[stype], stype, **sopt)
     return sampled_video, frame_inds
+
 
 class DOVERFilter(VideoFilter):
     """
@@ -98,7 +97,7 @@ class DOVERFilter(VideoFilter):
 
         self.model_name = model_name
         self.weights_folder = weights_folder
-        
+
         # Download checkpoints and configs
         path_to_model = os.path.join(self.weights_folder, self.model_name + '.pth')
         if not os.path.exists(path_to_model):
@@ -108,9 +107,9 @@ class DOVERFilter(VideoFilter):
         if not os.path.exists(path_to_config):
             os.makedirs(self.weights_folder, exist_ok=True)
             urlretrieve(CONFIGS_URL[self.model_name], path_to_config)
-        
+
         # Load model
-        with open(path_to_config, "r") as f:
+        with open(path_to_config) as f:
             opt = yaml.safe_load(f)
         self.model = DOVER(**opt["model"]["args"]).to(self.device)
         state_dict = torch.load(path_to_model, map_location=self.device)
@@ -122,7 +121,7 @@ class DOVERFilter(VideoFilter):
 
     @property
     def result_columns(self) -> list[str]:
-        return [f"dover_aesthetic", f"dover_technical", f"dover_overall"]
+        return ["dover_aesthetic", "dover_technical", "dover_overall"]
 
     @property
     def dataloader_kwargs(self) -> dict[str, Any]:
@@ -144,7 +143,7 @@ class DOVERFilter(VideoFilter):
             torch.FloatTensor([123.675, 116.28, 103.53]),
             torch.FloatTensor([58.395, 57.12, 57.375])
         )
-        
+
         temporal_samplers = {}
         for stype, sopt in self.dopt["sample_types"].items():
             if "t_frag" not in sopt:
@@ -183,7 +182,7 @@ class DOVERFilter(VideoFilter):
         key, views = batch[0]
         for k, v in views.items():
             views[k] = v.to(self.device)
-                
+
         with torch.no_grad():
             results = [r.mean().item() for r in self.model(views)]
             rescaled_results = fuse_results(results)
