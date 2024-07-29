@@ -4,12 +4,13 @@ from urllib.request import urlretrieve
 
 import numpy as np
 import torch
-from segment_anything import SamAutomaticMaskGenerator, sam_model_registry
+from segment_anything import SamAutomaticMaskGenerator, sam_model_registry  # type: ignore
 
 from DPF.utils import read_image_rgb_from_bytes
 
 from ...types import ModalityToDataMapping
 from .img_filter import ImageFilter
+
 
 WEIGHTS_URL = {'vit_h': 'https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth',
                'vit_l': 'https://dl.fbaipublicfiles.com/segment_anything/sam_vit_l_0b3195.pth',
