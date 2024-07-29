@@ -41,7 +41,7 @@ filters = [
     'opencv-contrib-python',
     'protobuf==3.20.0',
     'pytorch_msssim',
-    'ptlflow'
+    'ptlflow',
     'videohash'
 ]
 nsfw_detector = ['tensorflow', 'autokeras']
@@ -80,29 +80,30 @@ dover = [
 complexity = [
     'segment-anything @ git+https://github.com/facebookresearch/segment-anything.git'
 ]
-cogvlm = ['pydantic==1.10.14', 
-            'opencv-python==4.5.5.64',
-            'decord>=0.6.0',
-            'torch==2.1.0',
-            'torchvision== 0.16.0',
-            'pytorchvideo==0.1.5',
-            'transformers==4.40',
-            'pillow',
-            'chainlit>=1.0',
-            'pydantic>=2.7.1',
-            'timm>=0.9.16',
-            'openai>=1.30.1',
-            'loguru>=0.7.2',
-            'einops',
-            'sse-starlette>=2.1.0',
-            'bitsandbytes>=0.43.1',
-            'flask',
-            'gunicorn',
-            'gevent',
-            'requests',
-            'xformers',
-            'huggingface-hub>=0.23.0',
-            ]
+cogvlm = [
+    'pydantic==1.10.14', 
+    'opencv-python==4.5.5.64',
+    'decord>=0.6.0',
+    'torch==2.1.0',
+    'torchvision== 0.16.0',
+    'pytorchvideo==0.1.5',
+    'transformers==4.40',
+    'pillow',
+    'chainlit>=1.0',
+    'pydantic>=2.7.1',
+    'timm>=0.9.16',
+    'openai>=1.30.1',
+    'loguru>=0.7.2',
+    'einops',
+    'sse-starlette>=2.1.0',
+    'bitsandbytes>=0.43.1',
+    'flask',
+    'gunicorn',
+    'gevent',
+    'requests',
+    'xformers',
+    'huggingface-hub>=0.23.0',
+]
 
 [tool.hatch.version]
 path = "DPF/__init__.py"
