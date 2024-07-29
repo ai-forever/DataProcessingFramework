@@ -42,6 +42,7 @@ filters = [
     'protobuf==3.20.0',
     'pytorch_msssim',
     'ptlflow'
+    'videohash'
 ]
 nsfw_detector = ['tensorflow', 'autokeras']
 llava = [
