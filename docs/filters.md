@@ -11,6 +11,7 @@ List of implemented filters:
   - [BLIPCaptioningFilter](../DPF/filters/images/blip_captioning_filter.py) - captioning images using BLIP model
   - [CLIPLabelsFilter](../DPF/filters/images/cliplabels_filter.py) - calculate similarity of images with provided texts using CLIP model
   - [LLaVaCaptioningFilter](../DPF/filters/images/llava_captioning_filter.py) - captioning images using LLaVA models
+  - [LLaVa34bCaptioningFilter](../DPF/filters/images/llava34b_captioning_filter.py) - captioning images using LLaVA models, llava-v1.6-34b-hf
   - [NSFWFilter](../DPF/filters/images/nsfw_filter.py) - NSFW images detection
   - [CRAFTFilter](../DPF/filters/images/text_detection_filter.py) - text detection on image
   - [OCRFilter](../DPF/filters/images/ocr_filter.py) - text recognition
@@ -30,6 +31,10 @@ List of implemented filters:
   - [RAFTOpticalFlowFilter](../DPF/filters/videos/raft_filter.py) - computes flow scores using [RAFT](https://github.com/princeton-vl/RAFT) model
   - [VideoLLaVAFilter](../DPF/filters/videos/video_llava_filter.py) - captioning videos using Video-LLaVA
   - [LITAFilter](../DPF/filters/videos/lita_filter.py) - captioning videos using [LITA model](https://github.com/NVlabs/LITA)
+  - [PllavaFilter](../DPF/filters/videos/pllava_filter.py) - captioning videos using [Pllava model](https://pllava.github.io)
+  - [GroundingGPTFilter](../DPF/filters/videos/grounding_gpt_filter.py) - captioning using [grounding gpt model](https://github.com/lzw-lzw/GroundingGPT)
+- `audios`:
+  - [AudioInfoFilter](../DPF/filters/audios/info_filter.py) - gather basic info about audios (duration, sample_rate, correctness)
 
 ## Datafilter
 
@@ -57,26 +62,6 @@ columnfilter = LangFilter(workers=16)
 processor.apply_column_filter(columnfilter)
 processor.df # new columns ["lang", "lang_score"] are added
 ```
-
-## Running filter on several GPUs
-
-To run a datafilter on multiple GPUs use `MultiGPUDataFilter` class:
-
-```python
-from DPF.filters.images.llava_captioning_filter import LLaVaCaptioningFilter
-from DPF.filters.multigpu_filter import MultiGPUDataFilter
-
-multigpufilter = MultiGPUDataFilter(
-    ['cuda:0', 'cuda:1', 'cuda:2', 'cuda:3'],
-    LLaVaCaptioningFilter,
-    dict(
-        pbar=True, workers=8,
-        prompt='short', batch_size=16
-    )
-)
-processor.apply_multi_gpu_data_filter(multigpufilter)
-```
-See `help(MultiGPUDataFilter)` for more information.
 
 ## Examples
 

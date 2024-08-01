@@ -30,7 +30,7 @@ def transform_frame(frame: MatLike, target_size: tuple[int, int]) -> Tensor:
 
 
 def transform_keep_ar(frame: MatLike, min_side_size: int) -> Tensor:
-    h, w = frame.shape[:2]
+    h, w = frame.shape[:2]  # type: ignore
     aspect_ratio = w / h
     if h <= w:
         new_height = min_side_size
@@ -196,5 +196,5 @@ class RAFTOpticalFlowFilter(VideoFilter):
                 mean_value = np.mean(mean_magnitudes)
 
                 df_batch_labels[self.key_column].append(key)
-                df_batch_labels[self.schema[1]].append(round(mean_value, 3))
+                df_batch_labels[self.schema[1]].append(mean_value)
         return df_batch_labels
