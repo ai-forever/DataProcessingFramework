@@ -38,7 +38,12 @@ filters = [
     'py3langid',
     'deep_translator',
     'huggingface_hub',
+    'scikit-image',
+    'scikit-learn',
+    'joblib',
+    'retinaface_pytorch'
     'opencv-contrib-python',
+    'opencv-python',
     'protobuf==3.20.0',
     'pytorch_msssim',
     'ptlflow',

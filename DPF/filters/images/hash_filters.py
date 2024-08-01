@@ -9,6 +9,7 @@ from DPF.utils import read_image_rgb_from_bytes
 from ...types import ModalityToDataMapping
 from .img_filter import ImageFilter
 
+Image.MAX_IMAGE_PIXELS = None 
 
 def get_phash(pil_img: Image.Image, hash_size: int = 8, highfreq_factor: int = 4) -> str:
     img_size = hash_size * highfreq_factor
