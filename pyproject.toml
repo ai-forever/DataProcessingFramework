@@ -38,7 +38,9 @@ filters = [
     'deep_translator',
     'huggingface_hub',
     'scikit-image',
-    'deepface'
+    'scikit-learn',
+    'joblib',
+    'retinaface_pytorch'
 ]
 nsfw_detector = ['tensorflow', 'autokeras']
 llava = [
