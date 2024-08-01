@@ -1,7 +1,15 @@
 import os
-from typing import Any
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Any, Dict, List
 import cv2
 import torch
+from torch.multiprocessing import Pool, set_start_method
+# Set the start method to 'spawn' at the beginning of your script
+try:
+    set_start_method('spawn')
+except RuntimeError:
+    pass
+from functools import partial
 import numpy as np
 from scipy.stats import kurtosis
 from DPF.types import ModalityToDataMapping
@@ -56,8 +64,9 @@ class FaceFocusFilter(ImageFilter):
         key = metadata[self.key_column]
         try:
             pil_image = read_image_rgb_from_bytes(modality2data['image'])
-            image = np.array(pil_image)
-            return key, image
+            numpy_image = np.array(pil_image)
+            opencv_image = cv2.cvtColor(numpy_image, cv2.COLOR_RGB2BGR)
+            return key, opencv_image
         except (OSError, UnidentifiedImageError, ValueError) as e:
             print(f"Error processing image for key {key}: {str(e)}")
             return key, None
@@ -86,6 +95,23 @@ class FaceFocusFilter(ImageFilter):
             df_batch_labels[self.key_column].append(key)
 
         return df_batch_labels
+
+    # def process_batch(self, batch: list[Any]) -> dict[str, list[Any]]:
+    #     df_batch_labels = self._get_dict_from_schema()
+
+    #     # Create a partial function with self.process_image
+    #     process_image_partial = partial(self.process_image)
+
+    #     # Use multiprocessing to process images in parallel
+    #     with Pool() as pool:
+    #         results = pool.map(process_image_partial, [image for _, image in batch])
+
+    #     for (key, _), info in zip(batch, results):
+    #         for column in self.result_columns:
+    #             df_batch_labels[column].append(info.get(column, 0 if column in ['face_focus_measure', 'bg_focus_measure', 'faces_count', 'confidence'] else False))
+    #         df_batch_labels[self.key_column].append(key)
+
+    #     return df_batch_labels
 
     def tenengrad_variance(self, image):
         """
@@ -132,7 +158,7 @@ class FaceFocusFilter(ImageFilter):
         # Get the face with the highest confidence
         face = max(faces, key=lambda x: x['score'])
         
-        faces = [x for x in faces if x['score']>0.5]
+        faces = [x for x in faces if x['score'] > 0.5]
 
         bbox = face['bbox']
         landmarks = face['landmarks']
