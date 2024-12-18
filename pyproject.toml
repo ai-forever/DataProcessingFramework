@@ -38,7 +38,11 @@ filters = [
     'py3langid',
     'deep_translator',
     'huggingface_hub',
-    'videohash'
+    'scikit-image',
+    'scikit-learn',
+    'joblib',
+    'retinaface_pytorch'
+     'videohash'
 ]
 nsfw_detector = ['tensorflow', 'autokeras']
 llava = [

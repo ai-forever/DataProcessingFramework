@@ -11,6 +11,7 @@ import torchvision.transforms as transforms
 # TODO(review) - зависимость отсутствует в requirements.txt
 from PIL import Image
 
+Image.MAX_IMAGE_PIXELS = None 
 
 # TODO(review) - зачем наследоваться от object?
 class ResizeNormalize:

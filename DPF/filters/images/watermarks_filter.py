@@ -11,7 +11,7 @@ try:
 except ImportError:
     from torch.utils.data import default_collate
 
-from huggingface_hub import cached_download, hf_hub_url
+from huggingface_hub import hf_hub_download, hf_hub_url
 from torchvision import models, transforms
 
 from DPF.filters.utils import FP16Module
@@ -46,11 +46,14 @@ def get_watermarks_detection_model(
     num_ftrs = model_ft.fc.in_features
     model_ft.fc = nn.Linear(num_ftrs, 2)
 
-    config_file_url = hf_hub_url(repo_id=config["repo_id"], filename=config["filename"])
-    cached_download(
-        config_file_url, cache_dir=cache_dir, force_filename=config["filename"]
+    # Download weights directly using hf_hub_download
+    weights_path = hf_hub_download(
+        repo_id=config["repo_id"],
+        filename=config["filename"],
+        cache_dir=cache_dir
     )
-    weights = torch.load(os.path.join(cache_dir, config["filename"]), device)
+    
+    weights = torch.load(weights_path, device)
     model_ft.load_state_dict(weights)
 
     if fp16:
@@ -113,7 +116,7 @@ class WatermarksFilter(ImageFilter):
 
     @property
     def result_columns(self) -> list[str]:
-        return [f"watermark_{self.watermarks_model}"]
+        return ["watermark_filter_pass"]
 
     @property
     def dataloader_kwargs(self) -> dict[str, Any]:
@@ -141,8 +144,10 @@ class WatermarksFilter(ImageFilter):
 
         with torch.no_grad():
             outputs = self.model(batch)
-            df_batch_labels[f"watermark_{self.watermarks_model}"].extend(
-                torch.max(outputs, 1)[1].cpu().reshape(-1).tolist()
+            # Get predictions (0 or 1) and convert to boolean (True if no watermark, False if watermark)
+            predictions = torch.max(outputs, 1)[1].cpu().reshape(-1).tolist()
+            df_batch_labels["watermark_filter_pass"].extend(
+                [pred == 0 for pred in predictions]
             )
         df_batch_labels[self.key_column].extend(keys)
 

@@ -2,6 +2,7 @@ from io import BytesIO
 
 from PIL import Image
 
+Image.MAX_IMAGE_PIXELS = None 
 
 def read_image_rgb(path: str, force_rgb: bool = True) -> Image.Image:
     pil_img = Image.open(path)

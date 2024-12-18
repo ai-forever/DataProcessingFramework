@@ -8,6 +8,7 @@ from DPF.transforms.base_file_transforms import (
 )
 from DPF.transforms.resizer import Resizer
 
+Image.MAX_IMAGE_PIXELS = None 
 
 class ImageResizeTransforms(BaseFilesTransforms):
 

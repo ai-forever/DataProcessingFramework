@@ -4,7 +4,7 @@ from typing import Any
 import pandas as pd
 from deep_translator import GoogleTranslator
 from deep_translator.base import BaseTranslator
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 from DPF.filters import ColumnFilter
 

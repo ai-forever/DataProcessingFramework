@@ -13,7 +13,7 @@ class CRAFTFilter(ImageFilter):
 
     def __init__(
         self,
-        weights_folder: str,
+        weights_folder: str = "/tmp/datasets_utils",
         use_refiner: bool = False,
         device: str = "cuda:0",
         workers: int = 16,
@@ -31,7 +31,7 @@ class CRAFTFilter(ImageFilter):
 
     @property
     def result_columns(self) -> list[str]:
-        return ["text_boxes", "num_text_boxes", "text_area"]
+        return ["text_boxes", "num_text_boxes", "text_area", "text_detection_pass"]
 
     @property
     def dataloader_kwargs(self) -> dict[str, Any]:
@@ -61,5 +61,6 @@ class CRAFTFilter(ImageFilter):
         df_batch_labels["num_text_boxes"].append(len(boxes))
         df_batch_labels["text_area"].append(boxes_area(boxes)/(orig_size[0]*orig_size[1]))
         df_batch_labels[self.key_column].append(key)
+        df_batch_labels["text_detection_pass"].append(len(boxes) == 0)
 
         return df_batch_labels
